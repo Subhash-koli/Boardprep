@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { BookOpen, Eye, EyeOff, Mail, Lock, User, ArrowLeft, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, CheckCircle } from "lucide-react";
 import { useApp } from "./context/AppContext";
+
+const LogoImage = new URL("../../imports/logo.png", import.meta.url).href;
 
 function AuthLayout({ children, title, subtitle }: { children: React.ReactNode; title: string; subtitle: string }) {
   const { setView } = useApp();
@@ -11,10 +13,8 @@ function AuthLayout({ children, title, subtitle }: { children: React.ReactNode; 
           <ArrowLeft size={20} />
         </button>
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-[#F97316] rounded-lg flex items-center justify-center">
-            <BookOpen size={15} className="text-white" />
-          </div>
-          <span className="text-white font-semibold" style={{ fontFamily: "Poppins, sans-serif" }}>MahaBoard Prep</span>
+          <img src={LogoImage} alt="MahaBoard Prep Logo" className="w-10 h-10 sm:w-12 sm:h-12 object-contain" />
+          <span className="text-white font-semibold text-lg sm:text-xl" style={{ fontFamily: "Poppins, sans-serif" }}>MahaBoard Prep</span>
         </div>
       </nav>
       <div className="flex-1 flex items-center justify-center p-4">

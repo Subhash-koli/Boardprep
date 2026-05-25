@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { BookOpen, Lock, Mail, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { Lock, Mail, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useApp } from "../context/AppContext";
+
+const LogoImage = new URL("../../../imports/logo.png", import.meta.url).href;
 
 export function AdminLogin() {
   const { setView, setUser } = useApp();
@@ -27,12 +29,10 @@ export function AdminLogin() {
     <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
         <div className="flex items-center gap-2 mb-6">
-          <div className="w-10 h-10 bg-[#F97316] rounded-xl flex items-center justify-center">
-            <BookOpen size={20} className="text-white" />
-          </div>
+          <img src={LogoImage} alt="MahaBoard Prep Logo" className="w-12 h-12 object-contain" />
           <div>
-            <h1 className="text-lg" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}>MahaBoard Prep</h1>
-            <p className="text-gray-400 text-xs">Admin Panel</p>
+            <h1 className="text-xl sm:text-2xl" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}>MahaBoard Prep</h1>
+            <p className="text-gray-400 text-xs sm:text-sm">Admin Panel</p>
           </div>
         </div>
 

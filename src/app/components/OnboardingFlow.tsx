@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { BookOpen, ChevronRight, CheckCircle } from "lucide-react";
+import { ChevronRight, CheckCircle } from "lucide-react";
 import { useApp } from "./context/AppContext";
 import type { Standard, Medium } from "./data/mockData";
 import { subjects } from "./data/mockData";
+
+const LogoImage = new URL("../../imports/logo.png", import.meta.url).href;
 
 const steps = ["Your Standard", "Medium of Instruction", "Preferred Subjects"];
 
@@ -33,11 +35,9 @@ export function OnboardingFlow() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
-      <nav className="bg-[#1E3A8A] px-4 py-4 flex items-center gap-2">
-        <div className="w-7 h-7 bg-[#F97316] rounded-lg flex items-center justify-center">
-          <BookOpen size={15} className="text-white" />
-        </div>
-        <span className="text-white font-semibold" style={{ fontFamily: "Poppins, sans-serif" }}>MahaBoard Prep</span>
+      <nav className="bg-[#1E3A8A] px-4 py-3 sm:py-4 flex items-center gap-2 sm:gap-3">
+        <img src={LogoImage} alt="MahaBoard Prep Logo" className="w-10 h-10 sm:w-12 sm:h-12 object-contain" />
+        <span className="text-white font-semibold text-lg sm:text-xl" style={{ fontFamily: "Poppins, sans-serif" }}>MahaBoard Prep</span>
       </nav>
 
       <div className="flex-1 flex items-center justify-center p-4">

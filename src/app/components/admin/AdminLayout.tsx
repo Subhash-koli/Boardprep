@@ -1,7 +1,9 @@
 import { ReactNode, useState } from "react";
-import { BookOpen, LayoutDashboard, FileText, Brain, Users, Bell, BarChart3, FolderTree, LogOut, Menu, X, ChevronRight } from "lucide-react";
+import { LayoutDashboard, FileText, Brain, Users, Bell, BarChart3, FolderTree, LogOut, Menu, X, ChevronRight } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import type { View } from "../context/AppContext";
+
+const LogoImage = new URL("../../../imports/logo.png", import.meta.url).href;
 
 const navItems: { icon: any; label: string; view: View }[] = [
   { icon: LayoutDashboard, label: "Dashboard", view: "admin-dashboard" },
@@ -25,11 +27,9 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       <aside className="hidden lg:flex flex-col w-60 bg-slate-900 fixed h-full z-30">
         <div className="p-5 border-b border-slate-700">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-[#F97316] rounded-lg flex items-center justify-center">
-              <BookOpen size={17} className="text-white" />
-            </div>
+            <img src={LogoImage} alt="MahaBoard Prep Logo" className="w-10 h-10 object-contain" />
             <div>
-              <div className="text-white font-bold text-sm" style={{ fontFamily: "Poppins, sans-serif" }}>MahaBoard</div>
+              <div className="text-white font-bold text-base" style={{ fontFamily: "Poppins, sans-serif" }}>MahaBoard</div>
               <div className="text-slate-400 text-xs">Admin Panel</div>
             </div>
           </div>
@@ -67,10 +67,8 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           <aside className="absolute left-0 top-0 bottom-0 w-64 bg-slate-900 flex flex-col">
             <div className="p-4 border-b border-slate-700 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-[#F97316] rounded-lg flex items-center justify-center">
-                  <BookOpen size={14} className="text-white" />
-                </div>
-                <span className="text-white font-bold text-sm" style={{ fontFamily: "Poppins, sans-serif" }}>Admin Panel</span>
+                <img src={LogoImage} alt="MahaBoard Prep Logo" className="w-9 h-9 object-contain" />
+                <span className="text-white font-bold text-base" style={{ fontFamily: "Poppins, sans-serif" }}>Admin Panel</span>
               </div>
               <button onClick={() => setMobileOpen(false)} className="text-slate-300"><X size={18} /></button>
             </div>
@@ -109,9 +107,29 @@ export function AdminLayout({ children }: { children: ReactNode }) {
             </span>
           </div>
         </header>
-        <main className="flex-1 p-4 sm:p-6">
+        <main className="flex-1 p-4 sm:p-6 pb-20 lg:pb-6">
           {children}
         </main>
+        
+        {/* Mobile Bottom Navigation */}
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
+          <nav className="flex items-center justify-around px-2">
+            {navItems.map(item => (
+              <button
+                key={item.view}
+                onClick={() => setView(item.view)}
+                className={`flex-1 flex flex-col items-center justify-center py-3 px-2 transition-all text-xs ${
+                  view === item.view
+                    ? "text-slate-700 border-t-2 border-[#F97316] bg-orange-50"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <item.icon size={22} />
+                <span className="mt-1 font-medium text-[10px]">{item.label.split(" ")[0]}</span>
+              </button>
+            ))}
+          </nav>
+        </div>
       </div>
     </div>
   );
