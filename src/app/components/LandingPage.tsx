@@ -1,4 +1,4 @@
-import { BookOpen, Brain, BarChart3, Users, ChevronRight, Star, Target, CheckCircle, Zap, Trophy, FlaskConical, Stethoscope, Atom, GraduationCap, School, BookMarked, Calculator, Microscope, type LucideIcon } from "lucide-react";
+import { BookOpen, Brain, BarChart3, Users, ChevronRight, Star, Target, CheckCircle, Zap, Trophy, FlaskConical, Stethoscope, Atom, GraduationCap, School, BookMarked, Calculator, Microscope, Crown, Lock, type LucideIcon } from "lucide-react";
 import { useApp } from "./context/AppContext";
 import { useState, useEffect } from "react";
 
@@ -28,6 +28,75 @@ const examGoals: { icon: LucideIcon; label: string; iconColor: string; bg: strin
   { icon: GraduationCap, label: "HSC Class 12", iconColor: "text-blue-600",   bg: "bg-blue-50",   text: "text-blue-700",   border: "border-blue-200",   tags: ["Physics", "Chemistry", "Maths", "Biology", "Economics"] },
   { icon: Atom,          label: "JEE Mains",    iconColor: "text-violet-600", bg: "bg-violet-50", text: "text-violet-700", border: "border-violet-200", tags: ["Physics", "Chemistry", "Mathematics"],                    comingSoon: true },
   { icon: Stethoscope,   label: "NEET UG",      iconColor: "text-green-600",  bg: "bg-green-50",  text: "text-green-700",  border: "border-green-200",  tags: ["Physics", "Chemistry", "Botany", "Zoology"],            comingSoon: true },
+];
+
+const plans = [
+  {
+    name: "Starter",
+    price: "Free",
+    period: "forever",
+    desc: "Perfect to explore the platform",
+    color: "border-gray-200",
+    badge: null as string | null,
+    badgeBg: "",
+    btnClass: "border-2 border-[#1E3A8A] text-[#1E3A8A] hover:bg-[#1E3A8A] hover:text-white",
+    popular: false,
+    features: [
+      { label: "5 Past Year Papers / month",      included: true },
+      { label: "3 MCQ Quizzes / month",           included: true },
+      { label: "Test Series",                     included: false },
+      { label: "Negative Marking Engine",          included: false },
+      { label: "Basic Analytics",                 included: true },
+      { label: "Bookmarks",                       included: false },
+      { label: "SSC Class 10 Content only",       included: true },
+      { label: "PDF Downloads",                   included: false },
+      { label: "Email Support",                   included: false },
+    ],
+  },
+  {
+    name: "Scholar",
+    price: "₹99",
+    period: "/ month",
+    desc: "Great for board exam students",
+    color: "border-orange-300",
+    badge: null as string | null,
+    badgeBg: "",
+    btnClass: "bg-[#F97316] hover:bg-orange-600 text-white shadow-[0_4px_14px_rgba(249,115,22,0.4)]",
+    popular: false,
+    features: [
+      { label: "All Past Year Papers",            included: true },
+      { label: "20 MCQ Quizzes / month",          included: true },
+      { label: "Test Series",                     included: false },
+      { label: "Negative Marking Engine",         included: true },
+      { label: "Advanced Analytics",              included: true },
+      { label: "Bookmarks",                       included: true },
+      { label: "SSC + HSC Content",               included: true },
+      { label: "PDF Downloads",                   included: true },
+      { label: "Email Support",                   included: true },
+    ],
+  },
+  {
+    name: "Champion",
+    price: "₹199",
+    period: "/ month",
+    desc: "For serious NEET & JEE aspirants",
+    color: "border-transparent",
+    badge: "Most Popular" as string | null,
+    badgeBg: "bg-[#F97316]",
+    btnClass: "bg-white text-[#1E3A8A] hover:bg-blue-50 font-bold shadow-[0_4px_14px_rgba(255,255,255,0.3)]",
+    popular: true,
+    features: [
+      { label: "All Past Year Papers",               included: true },
+      { label: "Unlimited MCQ Quizzes",              included: true },
+      { label: "Full Test Series",                   included: true },
+      { label: "Negative Marking Engine",            included: true },
+      { label: "Full Analytics + Percentile",        included: true },
+      { label: "Bookmarks",                          included: true },
+      { label: "All Exams — NEET, JEE, SSC, HSC",   included: true },
+      { label: "PDF Downloads",                      included: true },
+      { label: "Priority Support",                   included: true },
+    ],
+  },
 ];
 
 export function LandingPage() {
@@ -291,6 +360,87 @@ export function LandingPage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── Pricing ── */}
+      <section className="py-14 sm:py-20 px-3 sm:px-4 bg-[#F0F4FF]">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-10 sm:mb-14">
+            <div className="inline-flex items-center gap-2 bg-orange-100 text-orange-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-4">
+              <Crown size={13} /> Choose Your Plan
+            </div>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl mb-3" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}>
+              Simple, Transparent Pricing
+            </h2>
+            <p className="text-gray-500 text-sm sm:text-base max-w-xl mx-auto">
+              Start free, upgrade when you're ready. No hidden fees. Cancel anytime.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-stretch">
+            {plans.map(plan => (
+              <div
+                key={plan.name}
+                className={`relative rounded-2xl border-2 flex flex-col transition-transform hover:-translate-y-1 ${
+                  plan.popular
+                    ? "bg-gradient-to-b from-[#1E3A8A] to-[#1e4da8] text-white border-transparent shadow-[0_20px_60px_rgba(30,58,138,0.35)] scale-[1.03]"
+                    : "bg-white text-gray-800 shadow-sm hover:shadow-lg " + plan.color
+                }`}
+              >
+                {/* Popular badge */}
+                {plan.badge && (
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+                    <span className={`${plan.badgeBg} text-white text-[11px] font-bold px-4 py-1 rounded-full shadow-md tracking-wide`}>
+                      {plan.badge}
+                    </span>
+                  </div>
+                )}
+
+                <div className="p-6 sm:p-7 flex flex-col flex-1">
+                  {/* Header */}
+                  <div className="mb-5">
+                    <div className={`text-xs font-semibold uppercase tracking-widest mb-1 ${plan.popular ? "text-blue-200" : "text-gray-400"}`}>
+                      {plan.name}
+                    </div>
+                    <div className="flex items-end gap-1 mb-1">
+                      <span className="text-3xl sm:text-4xl" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 800 }}>
+                        {plan.price}
+                      </span>
+                      <span className={`text-sm mb-1 ${plan.popular ? "text-blue-200" : "text-gray-400"}`}>{plan.period}</span>
+                    </div>
+                    <p className={`text-xs ${plan.popular ? "text-blue-200" : "text-gray-500"}`}>{plan.desc}</p>
+                  </div>
+
+                  {/* Features */}
+                  <ul className="space-y-2.5 mb-7 flex-1">
+                    {plan.features.map(f => (
+                      <li key={f.label} className={`flex items-start gap-2.5 text-sm ${!f.included ? (plan.popular ? "opacity-40" : "opacity-40") : ""}`}>
+                        {f.included
+                          ? <CheckCircle size={16} className={`flex-shrink-0 mt-0.5 ${plan.popular ? "text-green-300" : "text-green-500"}`} />
+                          : <Lock size={14} className={`flex-shrink-0 mt-0.5 ${plan.popular ? "text-blue-300" : "text-gray-300"}`} />
+                        }
+                        <span className={plan.popular ? "text-blue-50" : "text-gray-600"}>{f.label}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* CTA */}
+                  <button
+                    onClick={() => setView("register")}
+                    className={`w-full py-3 rounded-xl text-sm font-bold transition-all duration-200 hover:scale-105 active:scale-95 ${plan.btnClass}`}
+                  >
+                    {plan.price === "Free" ? "Get Started Free" : `Get ${plan.name}`}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Bottom note */}
+          <p className="text-center text-xs text-gray-400 mt-8">
+            All plans include a <span className="font-semibold text-gray-600">7-day free trial</span> of Scholar features. No credit card required for Starter.
+          </p>
         </div>
       </section>
 
