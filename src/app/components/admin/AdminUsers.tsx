@@ -6,15 +6,15 @@ import type { Student } from "../data/mockData";
 export function AdminUsers() {
   const [studentList, setStudentList] = useState(students);
   const [search, setSearch] = useState("");
-  const [filterStandard, setFilterStandard] = useState("all");
+  const [filterGoal, setFilterGoal] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
   const filtered = studentList.filter(s => {
     const matchSearch = s.name.toLowerCase().includes(search.toLowerCase()) || s.email.toLowerCase().includes(search.toLowerCase());
-    const matchStandard = filterStandard === "all" || s.standard === filterStandard;
+    const matchGoal = filterGoal === "all" || s.goalCategories.includes(filterGoal as any);
     const matchStatus = filterStatus === "all" || (filterStatus === "blocked" ? s.isBlocked : !s.isBlocked);
-    return matchSearch && matchStandard && matchStatus;
+    return matchSearch && matchGoal && matchStatus;
   });
 
   const toggleBlock = (id: string) => {
@@ -26,8 +26,11 @@ export function AdminUsers() {
     <div className="max-w-5xl mx-auto">
       {/* Student Detail Modal */}
       {selectedStudent && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center sm:p-4">
+          <div className="bg-white rounded-t-3xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[92vh] sm:max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-center pt-3 pb-1 sm:hidden">
+              <div className="w-10 h-1 bg-gray-200 rounded-full" />
+            </div>
             <div className="p-6">
               <div className="flex items-center justify-between mb-5">
                 <h3 style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600, color: "#1E3A8A" }}>Student Profile</h3>
@@ -51,7 +54,7 @@ export function AdminUsers() {
 
               <div className="grid grid-cols-2 gap-3 mb-5">
                 {[
-                  { icon: BookOpen, label: "Standard", value: `${selectedStudent.standard}th` },
+                  { icon: BookOpen, label: "Primary Goal", value: selectedStudent.goalLabels[0] ?? "—" },
                   { icon: Brain, label: "Medium", value: selectedStudent.medium },
                   { icon: Trophy, label: "Total Attempts", value: selectedStudent.totalAttempts },
                   { icon: Calendar, label: "Streak", value: `${selectedStudent.streak} days` },
@@ -77,10 +80,10 @@ export function AdminUsers() {
               </div>
 
               <div className="mb-5">
-                <div className="text-xs text-gray-500 mb-2">Enrolled Subjects</div>
+                <div className="text-xs text-gray-500 mb-2">Exam Goals</div>
                 <div className="flex flex-wrap gap-1.5">
-                  {selectedStudent.subjects.map(sub => (
-                    <span key={sub} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-lg">{sub}</span>
+                  {selectedStudent.goalLabels.map(label => (
+                    <span key={label} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-lg">{label}</span>
                   ))}
                 </div>
               </div>
@@ -96,12 +99,12 @@ export function AdminUsers() {
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
         <div>
           <h2 className="text-xl" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}>Students</h2>
           <p className="text-gray-500 text-sm">{studentList.length} registered students</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs bg-green-100 text-green-700 px-3 py-1.5 rounded-full">{studentList.filter(s => !s.isBlocked).length} Active</span>
           <span className="text-xs bg-red-100 text-red-600 px-3 py-1.5 rounded-full">{studentList.filter(s => s.isBlocked).length} Blocked</span>
         </div>
@@ -120,13 +123,18 @@ export function AdminUsers() {
           />
         </div>
         <select
-          value={filterStandard}
-          onChange={e => setFilterStandard(e.target.value)}
+          value={filterGoal}
+          onChange={e => setFilterGoal(e.target.value)}
           className="border border-gray-200 rounded-xl py-2.5 px-3 text-sm focus:outline-none focus:border-[#1E3A8A] bg-white"
         >
-          <option value="all">All Standards</option>
-          <option value="10">10th (SSC)</option>
-          <option value="12">12th (HSC)</option>
+          <option value="all">All Exam Goals</option>
+          <option value="neet">NEET UG</option>
+          <option value="jee-mains">JEE Mains</option>
+          <option value="jee-advanced">JEE Advanced</option>
+          <option value="board-10">SSC Class 10</option>
+          <option value="board-12">HSC Class 12</option>
+          <option value="mht-cet-pcb">MHT-CET PCB</option>
+          <option value="mht-cet-pcm">MHT-CET PCM</option>
         </select>
         <select
           value={filterStatus}
@@ -146,7 +154,7 @@ export function AdminUsers() {
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
                 <th className="text-left px-4 py-3 text-xs text-gray-500" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600 }}>Student</th>
-                <th className="text-left px-4 py-3 text-xs text-gray-500 hidden sm:table-cell" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600 }}>Standard</th>
+                <th className="text-left px-4 py-3 text-xs text-gray-500 hidden sm:table-cell" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600 }}>Goal</th>
                 <th className="text-left px-4 py-3 text-xs text-gray-500 hidden md:table-cell" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600 }}>Attempts</th>
                 <th className="text-left px-4 py-3 text-xs text-gray-500 hidden md:table-cell" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600 }}>Avg Score</th>
                 <th className="text-left px-4 py-3 text-xs text-gray-500" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600 }}>Status</th>
@@ -167,7 +175,7 @@ export function AdminUsers() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 hidden sm:table-cell text-sm text-gray-600">{student.standard}th · <span className="capitalize">{student.medium}</span></td>
+                  <td className="px-4 py-3 hidden sm:table-cell text-sm text-gray-600">{student.goalLabels[0] ?? "—"}</td>
                   <td className="px-4 py-3 hidden md:table-cell text-sm text-gray-600">{student.totalAttempts}</td>
                   <td className="px-4 py-3 hidden md:table-cell">
                     <div className="flex items-center gap-2">

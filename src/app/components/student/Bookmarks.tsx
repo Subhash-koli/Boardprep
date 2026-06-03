@@ -1,31 +1,50 @@
-import { Bookmark, BookOpen, Brain, Trash2, Eye, ChevronRight } from "lucide-react";
+import { useState } from "react";
+import { Bookmark, BookOpen, Brain, Trash2, Eye, ChevronRight, FileText, SlidersHorizontal } from "lucide-react";
 import { useApp } from "../context/AppContext";
-import { papers, quizzes } from "../data/mockData";
+import { papers, quizzes, PAPER_TYPE_CONFIG, DIFFICULTY_CONFIG } from "../data/mockData";
+
+type Tab = "all" | "papers" | "quizzes";
 
 export function Bookmarks() {
-  const { bookmarks, toggleBookmark, setView, setSelectedPaperId, setSelectedQuizId } = useApp();
+  const { bookmarks, toggleBookmark, setView, setSelectedPaperId, setSelectedQuizId, currentGoal } = useApp();
+  const [tab, setTab] = useState<Tab>("all");
 
   const bookmarkedPapers = bookmarks
     .filter(b => b.type === "paper")
     .map(b => ({ bookmark: b, paper: papers.find(p => p.id === b.refId) }))
-    .filter(b => b.paper);
+    .filter((b): b is { bookmark: typeof b.bookmark; paper: NonNullable<typeof b.paper> } => !!b.paper);
 
   const bookmarkedQuizzes = bookmarks
     .filter(b => b.type === "quiz")
     .map(b => ({ bookmark: b, quiz: quizzes.find(q => q.id === b.refId) }))
-    .filter(b => b.quiz);
+    .filter((b): b is { bookmark: typeof b.bookmark; quiz: NonNullable<typeof b.quiz> } => !!b.quiz);
 
-  if (bookmarks.length === 0) {
+  const totalCount = bookmarks.length;
+  const papersCount = bookmarkedPapers.length;
+  const quizzesCount = bookmarkedQuizzes.length;
+
+  // Empty state
+  if (totalCount === 0) {
     return (
       <div className="max-w-2xl mx-auto">
-        <h2 className="text-xl mb-6" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}>Bookmarks</h2>
+        <h2 className="text-xl font-bold text-[#1E3A8A] font-['Poppins'] mb-6">Bookmarks</h2>
         <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
-          <Bookmark size={48} className="mx-auto mb-3 text-gray-300" />
-          <p className="text-gray-500 mb-2">No bookmarks yet</p>
-          <p className="text-gray-400 text-sm mb-5">Save papers and quizzes for quick access</p>
-          <div className="flex gap-3 justify-center">
-            <button onClick={() => setView("papers")} className="bg-[#1E3A8A] text-white px-5 py-2 rounded-xl text-sm">Browse Papers</button>
-            <button onClick={() => setView("quizzes")} className="border border-[#1E3A8A] text-[#1E3A8A] px-5 py-2 rounded-xl text-sm">Browse Quizzes</button>
+          <Bookmark size={48} className="mx-auto mb-4 text-gray-200" />
+          <p className="text-gray-600 font-semibold font-['Poppins'] mb-1">No bookmarks yet</p>
+          <p className="text-gray-400 text-sm mb-6">Save papers and quizzes for quick access later</p>
+          <div className="flex gap-3 justify-center flex-wrap px-4">
+            <button
+              onClick={() => setView("papers")}
+              className="bg-[#1E3A8A] text-white px-5 py-2.5 rounded-xl text-sm font-semibold min-h-[44px]"
+            >
+              Browse Papers
+            </button>
+            <button
+              onClick={() => setView("quizzes")}
+              className="border border-[#1E3A8A] text-[#1E3A8A] px-5 py-2.5 rounded-xl text-sm font-semibold min-h-[44px]"
+            >
+              Browse Quizzes
+            </button>
           </div>
         </div>
       </div>
@@ -34,76 +53,186 @@ export function Bookmarks() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h2 className="text-xl mb-1" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}>Bookmarks</h2>
-      <p className="text-gray-500 text-sm mb-5">{bookmarks.length} saved item{bookmarks.length !== 1 ? "s" : ""}</p>
+      {/* ── Header ── */}
+      <div className="mb-5">
+        <h2 className="text-xl font-bold text-[#1E3A8A] font-['Poppins']">Bookmarks</h2>
+        <p className="text-gray-500 text-sm mt-0.5">
+          {totalCount} saved item{totalCount !== 1 ? "s" : ""}
+        </p>
+      </div>
 
-      {bookmarkedPapers.length > 0 && (
+      {/* ── Tabs ── */}
+      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-5 w-full sm:w-fit">
+        {([
+          { value: "all",     label: "All",     count: totalCount },
+          { value: "papers",  label: "Papers",  count: papersCount },
+          { value: "quizzes", label: "Quizzes", count: quizzesCount },
+        ] as const).map(t => (
+          <button
+            key={t.value}
+            onClick={() => setTab(t.value)}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 min-h-[40px] cursor-pointer select-none ${
+              tab === t.value
+                ? "bg-gradient-to-r from-[#1E3A8A] to-[#2563EB] text-white shadow-[0_4px_12px_rgba(30,58,138,0.35)]"
+                : "text-gray-500 hover:text-[#1E3A8A] hover:bg-white/60 active:scale-95"
+            }`}
+          >
+            {t.label}
+            {t.count > 0 && (
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${tab === t.value ? "bg-white/20 text-white" : "bg-gray-200 text-gray-600"}`}>
+                {t.count}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Papers Section ── */}
+      {(tab === "all" || tab === "papers") && bookmarkedPapers.length > 0 && (
         <div className="mb-6">
-          <h3 className="flex items-center gap-2 mb-3" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600, color: "#1E3A8A" }}>
-            <BookOpen size={17} /> Question Papers ({bookmarkedPapers.length})
-          </h3>
+          {tab === "all" && (
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-gray-800 font-['Poppins'] flex items-center gap-2 text-sm">
+                <BookOpen size={16} className="text-blue-600" /> Question Papers
+                <span className="text-xs text-gray-400 font-normal">({papersCount})</span>
+              </h3>
+              <button onClick={() => setTab("papers")} className="text-xs text-[#1E3A8A] hover:underline">
+                View all
+              </button>
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {bookmarkedPapers.map(({ bookmark, paper }) => paper && (
-              <div key={bookmark.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-start gap-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <BookOpen size={18} className="text-blue-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-800 truncate" style={{ fontFamily: "Poppins, sans-serif" }}>{paper.title}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{paper.subject} · {paper.year} · {paper.marks} marks</p>
-                  <div className="flex gap-2 mt-2">
-                    <button
-                      onClick={() => { setSelectedPaperId(paper.id); setView("paper-detail"); }}
-                      className="text-xs bg-[#1E3A8A] text-white px-3 py-1 rounded-lg flex items-center gap-1"
-                    >
-                      <Eye size={11} /> View
-                    </button>
-                    <button
-                      onClick={() => toggleBookmark("paper", paper.id)}
-                      className="text-xs text-red-400 hover:text-red-600 border border-red-200 hover:bg-red-50 px-2 py-1 rounded-lg flex items-center gap-1 transition-colors"
-                    >
-                      <Trash2 size={11} /> Remove
-                    </button>
+            {bookmarkedPapers.map(({ bookmark, paper }) => {
+              const typeCfg = PAPER_TYPE_CONFIG[paper.type];
+              return (
+                <div
+                  key={bookmark.id}
+                  className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-start gap-3 hover:shadow-md transition-shadow"
+                >
+                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <BookOpen size={17} className="text-blue-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                      <span
+                        className="text-[10px] px-2 py-0.5 rounded-full font-medium border"
+                        style={{ background: typeCfg.bg, color: typeCfg.text, borderColor: typeCfg.border }}
+                      >
+                        {typeCfg.label}
+                      </span>
+                      <span className="text-[10px] text-gray-400">{paper.year}</span>
+                    </div>
+                    <p className="text-sm font-semibold text-gray-800 font-['Poppins'] leading-snug line-clamp-2">
+                      {paper.title}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-0.5">{paper.subject} · {paper.marks}M · {paper.durationMinutes}min</p>
+                    <div className="flex gap-2 mt-2.5">
+                      <button
+                        onClick={() => { setSelectedPaperId(paper.id); setView("paper-detail"); }}
+                        className="text-xs bg-[#1E3A8A] text-white px-3 py-1.5 rounded-lg flex items-center gap-1 font-medium min-h-[30px]"
+                      >
+                        <Eye size={11} /> View
+                      </button>
+                      <button
+                        onClick={() => toggleBookmark("paper", paper.id)}
+                        className="text-xs text-red-400 hover:text-red-600 border border-red-200 hover:bg-red-50 px-2 py-1.5 rounded-lg flex items-center gap-1 transition-colors min-h-[30px]"
+                      >
+                        <Trash2 size={11} /> Remove
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
 
-      {bookmarkedQuizzes.length > 0 && (
+      {/* ── Quizzes Section ── */}
+      {(tab === "all" || tab === "quizzes") && bookmarkedQuizzes.length > 0 && (
         <div>
-          <h3 className="flex items-center gap-2 mb-3" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600, color: "#1E3A8A" }}>
-            <Brain size={17} /> MCQ Quizzes ({bookmarkedQuizzes.length})
-          </h3>
+          {tab === "all" && (
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-gray-800 font-['Poppins'] flex items-center gap-2 text-sm">
+                <Brain size={16} className="text-violet-600" /> MCQ Quizzes
+                <span className="text-xs text-gray-400 font-normal">({quizzesCount})</span>
+              </h3>
+              <button onClick={() => setTab("quizzes")} className="text-xs text-[#1E3A8A] hover:underline">
+                View all
+              </button>
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {bookmarkedQuizzes.map(({ bookmark, quiz }) => quiz && (
-              <div key={bookmark.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-start gap-3">
-                <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Brain size={18} className="text-purple-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-800 truncate" style={{ fontFamily: "Poppins, sans-serif" }}>{quiz.title}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{quiz.questionsCount} questions · {quiz.timeLimitMinutes} min · <span className="capitalize">{quiz.difficulty}</span></p>
-                  <div className="flex gap-2 mt-2">
-                    <button
-                      onClick={() => { setSelectedQuizId(quiz.id); setView("quiz-detail"); }}
-                      className="text-xs bg-purple-600 text-white px-3 py-1 rounded-lg flex items-center gap-1"
-                    >
-                      Start <ChevronRight size={11} />
-                    </button>
-                    <button
-                      onClick={() => toggleBookmark("quiz", quiz.id)}
-                      className="text-xs text-red-400 hover:text-red-600 border border-red-200 hover:bg-red-50 px-2 py-1 rounded-lg flex items-center gap-1 transition-colors"
-                    >
-                      <Trash2 size={11} /> Remove
-                    </button>
+            {bookmarkedQuizzes.map(({ bookmark, quiz }) => {
+              const diffCfg = DIFFICULTY_CONFIG[quiz.difficulty] ?? DIFFICULTY_CONFIG.medium;
+              const ms = quiz.markingScheme;
+              return (
+                <div
+                  key={bookmark.id}
+                  className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-start gap-3 hover:shadow-md transition-shadow"
+                >
+                  <div className="w-10 h-10 bg-violet-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Brain size={17} className="text-violet-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                      <span
+                        className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                        style={{ backgroundColor: diffCfg.bg, color: diffCfg.text }}
+                      >
+                        {diffCfg.label}
+                      </span>
+                      {ms.hasNegativeMarking && (
+                        <span className="text-[10px] bg-red-50 text-red-600 px-1.5 py-0.5 rounded-full">
+                          +{ms.correctMarks}/{ms.wrongMarks}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm font-semibold text-gray-800 font-['Poppins'] leading-snug line-clamp-2">
+                      {quiz.title}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {quiz.questionsCount}Q · {quiz.timeLimitMinutes}min · {quiz.totalMarks}M
+                    </p>
+                    <div className="flex gap-2 mt-2.5">
+                      <button
+                        onClick={() => { setSelectedQuizId(quiz.id); setView("quiz-detail"); }}
+                        className="text-xs bg-violet-600 hover:bg-violet-700 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 font-medium min-h-[30px] transition-colors"
+                      >
+                        Start <ChevronRight size={11} />
+                      </button>
+                      <button
+                        onClick={() => toggleBookmark("quiz", quiz.id)}
+                        className="text-xs text-red-400 hover:text-red-600 border border-red-200 hover:bg-red-50 px-2 py-1.5 rounded-lg flex items-center gap-1 transition-colors min-h-[30px]"
+                      >
+                        <Trash2 size={11} /> Remove
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
+        </div>
+      )}
+
+      {/* Empty state for tab with no content */}
+      {tab === "papers" && papersCount === 0 && (
+        <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
+          <FileText size={36} className="mx-auto mb-3 text-gray-200" />
+          <p className="text-gray-500 font-medium text-sm">No paper bookmarks yet</p>
+          <button onClick={() => setView("papers")} className="mt-3 text-[#1E3A8A] text-sm hover:underline">
+            Browse Papers
+          </button>
+        </div>
+      )}
+      {tab === "quizzes" && quizzesCount === 0 && (
+        <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
+          <Brain size={36} className="mx-auto mb-3 text-gray-200" />
+          <p className="text-gray-500 font-medium text-sm">No quiz bookmarks yet</p>
+          <button onClick={() => setView("quizzes")} className="mt-3 text-[#1E3A8A] text-sm hover:underline">
+            Browse Quizzes
+          </button>
         </div>
       )}
     </div>

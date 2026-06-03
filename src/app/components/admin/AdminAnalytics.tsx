@@ -19,9 +19,12 @@ const mediumData = [
   { name: "Marathi", value: 15 },
 ];
 
-const standardData = [
-  { name: "10th SSC", value: students.filter(s => s.standard === "10").length },
-  { name: "12th HSC", value: students.filter(s => s.standard === "12").length },
+const examDistData = [
+  { name: "NEET UG",    value: students.filter(s => s.goalCategories.includes("neet")).length },
+  { name: "Board 10th", value: students.filter(s => s.goalCategories.includes("board-10")).length },
+  { name: "Board 12th", value: students.filter(s => s.goalCategories.includes("board-12")).length },
+  { name: "JEE Mains",  value: students.filter(s => s.goalCategories.includes("jee-mains")).length },
+  { name: "MHT-CET",    value: students.filter(s => s.goalCategories.some(g => g.startsWith("mht"))).length },
 ];
 
 const dailyAttempts = [
@@ -50,7 +53,7 @@ export function AdminAnalytics() {
     .slice(0, 5);
 
   const topQuizzes = [...quizzes]
-    .sort((a, b) => b.attemptCount - a.attemptCount)
+    .sort((a, b) => b.analytics.totalAttempts - a.analytics.totalAttempts)
     .slice(0, 5);
 
   return (
@@ -122,15 +125,17 @@ export function AdminAnalytics() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
           <h3 className="mb-4" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600, color: "#1E3A8A" }}>Medium Distribution</h3>
-          <div className="flex items-center gap-4">
-            <ResponsiveContainer width={140} height={140}>
-              <PieChart>
-                <Pie data={mediumData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} paddingAngle={3} dataKey="value">
-                  {mediumData.map((_, i) => <Cell key={i} fill={COLORS[i]} />)}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="flex-1 space-y-2">
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="w-full sm:w-[140px] flex-shrink-0" style={{ height: 140 }}>
+              <ResponsiveContainer width="100%" height={140}>
+                <PieChart>
+                  <Pie data={mediumData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} paddingAngle={3} dataKey="value">
+                    {mediumData.map((_, i) => <Cell key={i} fill={COLORS[i]} />)}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex-1 w-full space-y-2">
               {mediumData.map((d, i) => (
                 <div key={d.name} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -145,27 +150,29 @@ export function AdminAnalytics() {
         </div>
 
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-          <h3 className="mb-4" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600, color: "#1E3A8A" }}>Standard Distribution</h3>
-          <div className="flex items-center gap-4">
-            <ResponsiveContainer width={140} height={140}>
-              <PieChart>
-                <Pie data={standardData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} paddingAngle={3} dataKey="value">
-                  {standardData.map((_, i) => <Cell key={i} fill={COLORS[i]} />)}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="flex-1 space-y-3">
-              {standardData.map((d, i) => (
+          <h3 className="mb-4" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600, color: "#1E3A8A" }}>Goal Distribution</h3>
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="w-full sm:w-[140px] flex-shrink-0" style={{ height: 140 }}>
+              <ResponsiveContainer width="100%" height={140}>
+                <PieChart>
+                  <Pie data={examDistData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} paddingAngle={3} dataKey="value">
+                    {examDistData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex-1 w-full space-y-3">
+              {examDistData.map((d, i) => (
                 <div key={d.name}>
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i] }} />
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
                       <span className="text-xs text-gray-600">{d.name}</span>
                     </div>
                     <span className="text-xs font-semibold text-gray-700">{d.value}</span>
                   </div>
                   <div className="h-1.5 bg-gray-100 rounded-full">
-                    <div className="h-full rounded-full" style={{ width: `${(d.value / students.length) * 100}%`, backgroundColor: COLORS[i] }} />
+                    <div className="h-full rounded-full" style={{ width: `${students.length > 0 ? (d.value / students.length) * 100 : 0}%`, backgroundColor: COLORS[i % COLORS.length] }} />
                   </div>
                 </div>
               ))}
@@ -202,12 +209,12 @@ export function AdminAnalytics() {
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <span className="w-6 h-6 rounded-lg bg-orange-50 text-orange-600 text-xs flex items-center justify-center flex-shrink-0 font-bold">{i + 1}</span>
-                    <p className="text-sm text-gray-700 truncate max-w-[180px]">{q.title}</p>
+                    <p className="text-sm text-gray-700 truncate flex-1">{q.title}</p>
                   </div>
-                  <span className="text-xs text-gray-500 flex-shrink-0">{q.attemptCount.toLocaleString()}</span>
+                  <span className="text-xs text-gray-500 flex-shrink-0">{q.analytics.totalAttempts.toLocaleString()}</span>
                 </div>
                 <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden ml-8">
-                  <div className="h-full bg-[#F97316] rounded-full" style={{ width: `${(q.attemptCount / topQuizzes[0].attemptCount) * 100}%` }} />
+                  <div className="h-full bg-[#F97316] rounded-full" style={{ width: `${(q.analytics.totalAttempts / (topQuizzes[0]?.analytics.totalAttempts || 1)) * 100}%` }} />
                 </div>
               </div>
             ))}

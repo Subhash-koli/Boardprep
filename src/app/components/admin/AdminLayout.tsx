@@ -27,9 +27,9 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       <aside className="hidden lg:flex flex-col w-60 bg-slate-900 fixed h-full z-30">
         <div className="p-5 border-b border-slate-700">
           <div className="flex items-center gap-2">
-            <img src={LogoImage} alt="MahaBoard Prep Logo" className="w-10 h-10 object-contain" />
+            <img src={LogoImage} alt="ParikshaCrack Logo" className="w-10 h-10 object-contain" />
             <div>
-              <div className="text-white font-bold text-base" style={{ fontFamily: "Poppins, sans-serif" }}>MahaBoard</div>
+              <div className="text-white font-bold text-base" style={{ fontFamily: "Poppins, sans-serif" }}>ParikshaCrack</div>
               <div className="text-slate-400 text-xs">Admin Panel</div>
             </div>
           </div>
@@ -51,7 +51,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
             <div className="w-7 h-7 bg-[#F97316] rounded-full flex items-center justify-center text-white text-xs font-bold">A</div>
             <div>
               <div className="text-white text-xs" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 500 }}>Admin</div>
-              <div className="text-slate-400 text-xs">admin@mahaboard.in</div>
+              <div className="text-slate-400 text-xs">admin@ParikshaCrack.in</div>
             </div>
           </div>
           <button onClick={logout} className="flex items-center gap-2 text-slate-400 hover:text-white text-xs px-2 py-1.5 rounded-lg hover:bg-slate-800 transition-colors">
@@ -67,7 +67,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           <aside className="absolute left-0 top-0 bottom-0 w-64 bg-slate-900 flex flex-col">
             <div className="p-4 border-b border-slate-700 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <img src={LogoImage} alt="MahaBoard Prep Logo" className="w-9 h-9 object-contain" />
+                <img src={LogoImage} alt="ParikshaCrack Logo" className="w-9 h-9 object-contain" />
                 <span className="text-white font-bold text-base" style={{ fontFamily: "Poppins, sans-serif" }}>Admin Panel</span>
               </div>
               <button onClick={() => setMobileOpen(false)} className="text-slate-300"><X size={18} /></button>
@@ -112,20 +112,21 @@ export function AdminLayout({ children }: { children: ReactNode }) {
         </main>
         
         {/* Mobile Bottom Navigation */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
-          <nav className="flex items-center justify-around px-2">
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50"
+          style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+          <nav className="flex items-stretch overflow-x-auto scrollbar-none px-1" style={{ minHeight: "60px" }}>
             {navItems.map(item => (
               <button
                 key={item.view}
                 onClick={() => setView(item.view)}
-                className={`flex-1 flex flex-col items-center justify-center py-3 px-2 transition-all text-xs ${
+                className={`flex-shrink-0 flex flex-col items-center justify-center py-2 px-1 min-w-[56px] sm:flex-1 transition-all text-xs ${
                   view === item.view
                     ? "text-slate-700 border-t-2 border-[#F97316] bg-orange-50"
                     : "text-gray-500 hover:text-gray-700"
                 }`}
               >
-                <item.icon size={22} />
-                <span className="mt-1 font-medium text-[10px]">{item.label.split(" ")[0]}</span>
+                <item.icon size={20} />
+                <span className="mt-0.5 font-medium text-[9px] sm:text-[10px] leading-tight">{item.label.split(" ")[0]}</span>
               </button>
             ))}
           </nav>

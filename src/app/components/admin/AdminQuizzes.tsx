@@ -12,7 +12,7 @@ export function AdminQuizzes() {
   const [expandedQuiz, setExpandedQuiz] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    title: "", standard: "10" as "10" | "12", subjectId: "", chapter: "",
+    title: "", goalCategory: "board-10" as string, subjectId: "", chapter: "",
     difficulty: "medium" as "easy" | "medium" | "hard", timeLimitMinutes: 15,
     totalMarks: 10, instructions: "Read each question carefully before answering.", status: "draft" as any,
   });
@@ -67,7 +67,7 @@ export function AdminQuizzes() {
 
   const handleEdit = (quiz: Quiz) => {
     setEditing(quiz);
-    setFormData({ title: quiz.title, standard: quiz.standard, subjectId: quiz.subjectId, chapter: quiz.chapter, difficulty: quiz.difficulty, timeLimitMinutes: quiz.timeLimitMinutes, totalMarks: quiz.totalMarks, instructions: quiz.instructions, status: quiz.status });
+    setFormData({ title: quiz.title, goalCategory: quiz.goalCategory ?? "board-10", subjectId: quiz.subjectId, chapter: quiz.chapter, difficulty: quiz.difficulty, timeLimitMinutes: quiz.timeLimitMinutes, totalMarks: quiz.totalMarks, instructions: quiz.instructions, status: quiz.status });
     setQuestions(quiz.questions.map(q => ({ ...q })));
     setShowForm(true);
   };
@@ -80,7 +80,7 @@ export function AdminQuizzes() {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
         <div>
           <h2 className="text-xl" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}>MCQ Quizzes</h2>
           <p className="text-gray-500 text-sm">{quizList.length} quizzes total</p>
@@ -112,7 +112,13 @@ export function AdminQuizzes() {
               <input value={formData.title} onChange={e => setFormData(p => ({ ...p, title: e.target.value }))} placeholder="e.g. Mathematics - Quadratic Equations Quiz" className="w-full border border-gray-200 rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-[#1E3A8A] bg-gray-50" />
             </div>
             {[
-              { label: "Standard", key: "standard", opts: [{ value: "10", label: "10th (SSC)" }, { value: "12", label: "12th (HSC)" }] },
+              { label: "Exam Goal", key: "goalCategory", opts: [
+                  { value: "board-10", label: "SSC (10th)" },
+                  { value: "board-12", label: "HSC (12th)" },
+                  { value: "neet",     label: "NEET UG" },
+                  { value: "jee-mains",label: "JEE Mains" },
+                  { value: "mht-cet-pcb", label: "MHT-CET PCB" },
+                ] },
               { label: "Difficulty", key: "difficulty", opts: [{ value: "easy", label: "Easy" }, { value: "medium", label: "Medium" }, { value: "hard", label: "Hard" }] },
               { label: "Time Limit (min)", key: "timeLimitMinutes", type: "number" },
               { label: "Total Marks", key: "totalMarks", type: "number" },
@@ -133,7 +139,7 @@ export function AdminQuizzes() {
               <label className="text-xs text-gray-500 mb-1 block">Subject *</label>
               <select value={formData.subjectId} onChange={e => setFormData(p => ({ ...p, subjectId: e.target.value }))} className="w-full border border-gray-200 rounded-xl py-2.5 px-3 text-sm focus:outline-none focus:border-[#1E3A8A] bg-gray-50">
                 <option value="">Select Subject</option>
-                {subjects.filter(s => s.standard === formData.standard).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                {subjects.filter(s => s.goalCategory === formData.goalCategory).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
             <div>
@@ -220,29 +226,37 @@ export function AdminQuizzes() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
-                {["Title", "Subject", "Difficulty", "Questions", "Status", "Attempts", "Actions"].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-xs text-gray-500" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600 }}>{h}</th>
-                ))}
+                <th className="text-left px-4 py-3 text-xs text-gray-500" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600 }}>Title</th>
+                <th className="text-left px-4 py-3 text-xs text-gray-500 hidden sm:table-cell" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600 }}>Subject</th>
+                <th className="text-left px-4 py-3 text-xs text-gray-500 hidden md:table-cell" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600 }}>Difficulty</th>
+                <th className="text-left px-4 py-3 text-xs text-gray-500 hidden md:table-cell" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600 }}>Qs</th>
+                <th className="text-left px-4 py-3 text-xs text-gray-500" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600 }}>Status</th>
+                <th className="text-left px-4 py-3 text-xs text-gray-500 hidden lg:table-cell" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600 }}>Attempts</th>
+                <th className="text-right px-4 py-3 text-xs text-gray-500" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600 }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map(quiz => (
                 <tr key={quiz.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3">
-                    <p className="text-sm font-medium text-gray-800 line-clamp-1">{quiz.title}</p>
-                    <p className="text-xs text-gray-400">{quiz.chapter}</p>
+                  <td className="px-4 py-3 max-w-[160px] sm:max-w-none">
+                    <p className="text-sm font-medium text-gray-800 truncate">{quiz.title}</p>
+                    <p className="text-xs text-gray-400 truncate sm:hidden">{quiz.subject}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5 sm:hidden">
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full capitalize ${diffColor[quiz.difficulty]}`}>{quiz.difficulty}</span>
+                      <span className="text-[10px] text-gray-400">{quiz.questionsCount} Qs</span>
+                    </div>
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{quiz.subject}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 hidden sm:table-cell text-sm text-gray-600">{quiz.subject}</td>
+                  <td className="px-4 py-3 hidden md:table-cell">
                     <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${diffColor[quiz.difficulty]}`}>{quiz.difficulty}</span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{quiz.questionsCount}</td>
+                  <td className="px-4 py-3 hidden md:table-cell text-sm text-gray-600">{quiz.questionsCount}</td>
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-0.5 rounded-full ${quiz.status === "published" ? "bg-green-100 text-green-700" : quiz.status === "scheduled" ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-gray-500"}`}>{quiz.status}</span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{quiz.analytics.totalAttempts.toLocaleString()}</td>
+                  <td className="px-4 py-3 hidden lg:table-cell text-sm text-gray-600">{quiz.analytics.totalAttempts.toLocaleString()}</td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center justify-end gap-1">
                       <button onClick={() => handleEdit(quiz)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"><Edit2 size={13} /></button>
                       <button onClick={() => setQuizList(prev => prev.filter(q => q.id !== quiz.id))} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={13} /></button>
                     </div>

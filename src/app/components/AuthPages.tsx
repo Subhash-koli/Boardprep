@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, CheckCircle } from "lucide-react";
 import { useApp } from "./context/AppContext";
+import { seedGoal1, seedGoal2 } from "./context/AppContext";
 
 const LogoImage = new URL("../../imports/logo.png", import.meta.url).href;
 
@@ -13,8 +14,8 @@ function AuthLayout({ children, title, subtitle }: { children: React.ReactNode; 
           <ArrowLeft size={20} />
         </button>
         <div className="flex items-center gap-2">
-          <img src={LogoImage} alt="MahaBoard Prep Logo" className="w-10 h-10 sm:w-12 sm:h-12 object-contain" />
-          <span className="text-white font-semibold text-lg sm:text-xl" style={{ fontFamily: "Poppins, sans-serif" }}>MahaBoard Prep</span>
+          <img src={LogoImage} alt="ParikshaCrack Logo" className="w-10 h-10 sm:w-12 sm:h-12 object-contain" />
+          <span className="text-white font-semibold text-lg sm:text-xl" style={{ fontFamily: "Poppins, sans-serif" }}>ParikshaCrack</span>
         </div>
       </nav>
       <div className="flex-1 flex items-center justify-center p-4">
@@ -67,7 +68,16 @@ export function LoginPage() {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      setUser({ id: "u_demo", name: "Priya Sharma", email, standard: "12", medium: "semi-english", subjects: ["Physics", "Chemistry", "Mathematics & Statistics"], streak: 15, isAdmin: false });
+      setUser({
+        id: "u_demo",
+        name: "Priya Sharma",
+        email,
+        goals: [seedGoal1, seedGoal2],
+        currentGoalId: seedGoal1.id,
+        medium: "semi-english",
+        streak: 15,
+        isAdmin: false,
+      });
       setView("dashboard");
     }, 1000);
   };
@@ -115,7 +125,7 @@ export function RegisterPage() {
   };
 
   return (
-    <AuthLayout title="Create your account" subtitle="Join thousands of Maharashtra Board students">
+    <AuthLayout title="Create your account" subtitle="Join thousands of students preparing with ParikshaCrack">
       <form onSubmit={handleRegister}>
         <InputField label="Full name" value={name} onChange={setName} placeholder="Priya Sharma" icon={User} />
         <InputField label="Email address" type="email" value={email} onChange={setEmail} placeholder="you@email.com" icon={Mail} />
@@ -160,7 +170,16 @@ export function VerifyOTPPage() {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      setUser({ id: "u_new", name: "New Student", email: authEmail, standard: "10", medium: "english", subjects: [], streak: 0, isAdmin: false });
+      setUser({
+        id: `u_${Date.now()}`,
+        name: "New Student",
+        email: authEmail,
+        goals: [],
+        currentGoalId: "",
+        medium: "english",
+        streak: 0,
+        isAdmin: false,
+      });
       setView("onboarding");
     }, 800);
   };

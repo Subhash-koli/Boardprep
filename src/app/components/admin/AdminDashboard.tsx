@@ -106,7 +106,7 @@ export function AdminDashboard() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-gray-700 truncate">{s.name}</p>
-                  <p className="text-xs text-gray-400">{s.standard}th · {s.totalAttempts} attempts</p>
+                  <p className="text-xs text-gray-400">{s.goalLabels[0]} · {s.totalAttempts} attempts</p>
                 </div>
                 <span className={`text-xs px-2 py-0.5 rounded-full ${s.isBlocked ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600"}`}>
                   {s.isBlocked ? "Blocked" : "Active"}
@@ -121,9 +121,9 @@ export function AdminDashboard() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           { label: "Daily Active Users", value: adminAnalyticsData.dailyActiveUsers, icon: TrendingUp },
-          { label: "10th Students", value: students.filter(s => s.standard === "10").length, icon: Users },
-          { label: "12th Students", value: students.filter(s => s.standard === "12").length, icon: Users },
-          { label: "Blocked Accounts", value: students.filter(s => s.isBlocked).length, icon: Users },
+          { label: "NEET Students",     value: students.filter(s => s.goalCategories.includes("neet")).length, icon: Users },
+          { label: "Board Students",    value: students.filter(s => s.goalCategories.some(g => g.startsWith("board"))).length, icon: Users },
+          { label: "Blocked Accounts",  value: students.filter(s => s.isBlocked).length, icon: Users },
         ].map(s => (
           <div key={s.label} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-center">
             <div className="text-xl" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}>{s.value}</div>

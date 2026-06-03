@@ -1,10 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
-import { ArrowLeft, Clock, CheckCircle, XCircle, ChevronLeft, ChevronRight, Flag, Send, Brain, Target, Timer, BookOpen } from "lucide-react";
+import {
+  ArrowLeft, Clock, CheckCircle, XCircle, ChevronLeft, ChevronRight,
+  Flag, Send, Brain, Target, Timer, BookOpen, Zap, TrendingUp, AlertTriangle
+} from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { quizzes } from "../data/mockData";
 import type { QuizAttempt } from "../data/mockData";
 
-// --- Quiz Detail Page ---
+// ─────────────────────────────────────────────────────────────────────────────
+// Quiz Detail Page
+// ─────────────────────────────────────────────────────────────────────────────
+
 export function QuizDetail() {
   const { selectedQuizId, setView, setCurrentAttempt } = useApp();
   const [selectedMode, setSelectedMode] = useState<"practice" | "exam" | null>(null);
@@ -12,10 +18,13 @@ export function QuizDetail() {
   const quiz = quizzes.find(q => q.id === selectedQuizId);
   if (!quiz) return (
     <div className="text-center py-20">
+      <Brain size={36} className="mx-auto mb-3 text-gray-200" />
       <p className="text-gray-400">Quiz not found.</p>
-      <button onClick={() => setView("quizzes")} className="text-[#1E3A8A] mt-3">Back</button>
+      <button onClick={() => setView("quizzes")} className="text-[#1E3A8A] mt-3 text-sm">← Back to Quizzes</button>
     </div>
   );
+
+  const ms = quiz.markingScheme;
 
   const startQuiz = () => {
     if (!selectedMode) return;
@@ -23,63 +32,119 @@ export function QuizDetail() {
       quizId: quiz.id,
       mode: selectedMode,
       answers: {},
-      startedAt: new Date(),
+      flagged: [],
+      currentQuestionIndex: 0,
+      startedAt: new Date().toISOString(),
     });
     setView("quiz-attempt");
   };
 
-  const diffColor = { easy: "text-green-600 bg-green-50", medium: "text-orange-600 bg-orange-50", hard: "text-red-600 bg-red-50" };
+  const diffColors: Record<string, string> = {
+    easy:   "text-green-700 bg-green-50",
+    medium: "text-amber-700 bg-amber-50",
+    hard:   "text-red-700 bg-red-50",
+    mixed:  "text-violet-700 bg-violet-50",
+  };
 
   return (
     <div className="max-w-2xl mx-auto">
-      <button onClick={() => setView("quizzes")} className="flex items-center gap-2 text-gray-500 hover:text-[#1E3A8A] mb-4 text-sm">
+      <button onClick={() => setView("quizzes")} className="flex items-center gap-2 text-gray-500 hover:text-[#1E3A8A] mb-4 text-sm min-h-[44px]">
         <ArrowLeft size={16} /> Back to Quizzes
       </button>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-5">
+        {/* Badges */}
         <div className="flex flex-wrap gap-2 mb-3">
-          <span className={`text-xs px-2.5 py-1 rounded-full capitalize ${diffColor[quiz.difficulty]}`}>{quiz.difficulty}</span>
+          <span className={`text-xs px-2.5 py-1 rounded-full capitalize font-medium ${diffColors[quiz.difficulty] ?? diffColors.medium}`}>
+            {quiz.difficulty}
+          </span>
           <span className="text-xs bg-blue-50 text-[#1E3A8A] px-2.5 py-1 rounded-full">{quiz.subject}</span>
+          {ms.hasNegativeMarking && (
+            <span className="text-xs bg-red-50 text-red-600 px-2.5 py-1 rounded-full flex items-center gap-1 font-medium">
+              <Zap size={10} /> Negative Marking
+            </span>
+          )}
         </div>
-        <h1 className="text-xl mb-1" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}>{quiz.title}</h1>
+
+        <h1 className="text-xl font-bold text-[#1E3A8A] font-['Poppins'] mb-1">{quiz.title}</h1>
         <p className="text-gray-500 text-sm mb-5">{quiz.chapter}</p>
 
-        <div className="grid grid-cols-3 gap-4 mb-5">
+        {/* Stats grid */}
+        <div className="grid grid-cols-3 gap-3 mb-5">
           {[
-            { icon: Brain, label: "Questions", value: quiz.questionsCount },
-            { icon: Clock, label: "Time Limit", value: `${quiz.timeLimitMinutes} min` },
-            { icon: Target, label: "Total Marks", value: quiz.totalMarks },
+            { icon: Brain,  label: "Questions", value: quiz.questionsCount },
+            { icon: Clock,  label: "Time Limit", value: `${quiz.timeLimitMinutes} min` },
+            { icon: Target, label: "Max Marks",  value: quiz.totalMarks },
           ].map(s => (
             <div key={s.label} className="text-center bg-gray-50 rounded-xl p-3">
-              <s.icon size={18} className="mx-auto text-[#1E3A8A] mb-1" />
-              <div className="font-semibold text-sm" style={{ fontFamily: "Poppins, sans-serif", color: "#1E3A8A" }}>{s.value}</div>
-              <div className="text-xs text-gray-400">{s.label}</div>
+              <s.icon size={17} className="mx-auto text-[#1E3A8A] mb-1.5" />
+              <div className="font-bold text-sm text-[#1E3A8A] font-['Poppins']">{s.value}</div>
+              <div className="text-[10px] text-gray-400 mt-0.5">{s.label}</div>
             </div>
           ))}
         </div>
 
+        {/* Marking scheme card */}
+        <div className={`rounded-xl p-4 mb-5 border ${ms.hasNegativeMarking ? "bg-red-50 border-red-200" : "bg-green-50 border-green-200"}`}>
+          <p className={`text-xs font-bold mb-2 font-['Poppins'] ${ms.hasNegativeMarking ? "text-red-800" : "text-green-800"}`}>
+            {ms.label} — Marking Scheme
+          </p>
+          <div className="flex gap-4">
+            <div className="flex items-center gap-1.5">
+              <CheckCircle size={13} className="text-green-600" />
+              <span className="text-xs text-green-700 font-semibold">+{ms.correctMarks} correct</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <XCircle size={13} className="text-red-500" />
+              <span className="text-xs text-red-600 font-semibold">{ms.wrongMarks} wrong</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-gray-500">0 skipped</span>
+            </div>
+          </div>
+          {ms.hasNegativeMarking && (
+            <p className="text-[10px] text-red-600 mt-2 flex items-center gap-1">
+              <AlertTriangle size={10} /> Skip if unsure — wrong answer deducts {Math.abs(ms.wrongMarks)} mark{Math.abs(ms.wrongMarks) > 1 ? "s" : ""}
+            </p>
+          )}
+        </div>
+
+        {/* Instructions */}
         <div className="bg-blue-50 rounded-xl p-4 mb-5">
-          <p className="text-xs text-[#1E3A8A] font-semibold mb-1">Instructions</p>
+          <p className="text-xs font-semibold text-[#1E3A8A] mb-1">Instructions</p>
           <p className="text-xs text-blue-700 leading-relaxed">{quiz.instructions}</p>
         </div>
 
-        <h3 className="mb-3" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600, color: "#1E3A8A" }}>Select Quiz Mode</h3>
-        <div className="grid grid-cols-2 gap-4 mb-5">
+        {/* Mode Selection */}
+        <h3 className="font-semibold text-[#1E3A8A] font-['Poppins'] mb-3">Select Quiz Mode</h3>
+        <div className="grid grid-cols-2 gap-3 mb-5">
           {([
-            { mode: "practice", icon: BookOpen, title: "Practice Mode", desc: "Get instant feedback after each question. Best for learning.", badge: "Recommended" },
-            { mode: "exam", icon: Timer, title: "Exam Mode", desc: "Answer all questions first, then see results. Simulates real exam.", badge: "" },
-          ] as const).map(m => (
+            {
+              mode: "practice" as const, icon: BookOpen,
+              title: "Practice Mode",
+              desc: "Instant feedback after each question. Best for learning concepts.",
+              badge: "Recommended",
+            },
+            {
+              mode: "exam" as const, icon: Timer,
+              title: "Exam Mode",
+              desc: "Timed. See results only after submitting. Real exam simulation.",
+              badge: "",
+            },
+          ]).map(m => (
             <button
               key={m.mode}
               onClick={() => setSelectedMode(m.mode)}
-              className={`border-2 rounded-xl p-4 text-left transition-all ${selectedMode === m.mode ? "border-[#1E3A8A] bg-blue-50" : "border-gray-200 hover:border-gray-300"}`}
+              className={`border-2 rounded-xl p-4 text-left transition-all min-h-[120px] ${selectedMode === m.mode ? "border-[#1E3A8A] bg-blue-50" : "border-gray-200 hover:border-gray-300"}`}
             >
-              <m.icon size={22} className={`mb-2 ${selectedMode === m.mode ? "text-[#1E3A8A]" : "text-gray-500"}`} />
-              <div className="font-semibold text-sm mb-1 flex items-center gap-1.5" style={{ fontFamily: "Poppins, sans-serif", color: selectedMode === m.mode ? "#1E3A8A" : "#374151" }}>
-                {m.title}
-                {m.badge && <span className="text-xs bg-[#F97316] text-white px-1.5 py-0.5 rounded-full">{m.badge}</span>}
+              <m.icon size={20} className={`mb-2 ${selectedMode === m.mode ? "text-[#1E3A8A]" : "text-gray-400"}`} />
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <span className={`text-sm font-semibold font-['Poppins'] ${selectedMode === m.mode ? "text-[#1E3A8A]" : "text-gray-800"}`}>
+                  {m.title}
+                </span>
+                {m.badge && <span className="text-[10px] bg-[#F97316] text-white px-1.5 py-0.5 rounded-full">{m.badge}</span>}
               </div>
-              <p className="text-xs text-gray-500">{m.desc}</p>
+              <p className="text-[11px] text-gray-500 leading-relaxed">{m.desc}</p>
             </button>
           ))}
         </div>
@@ -87,26 +152,33 @@ export function QuizDetail() {
         <button
           onClick={startQuiz}
           disabled={!selectedMode}
-          className="w-full bg-[#1E3A8A] hover:bg-blue-900 disabled:bg-gray-200 disabled:text-gray-400 text-white py-3 rounded-xl transition-colors font-semibold flex items-center justify-center gap-2"
+          className="w-full bg-[#1E3A8A] hover:bg-[#1D4ED8] disabled:bg-gray-200 disabled:text-gray-400 text-white py-3.5 rounded-xl transition-colors font-semibold font-['Poppins'] flex items-center justify-center gap-2 min-h-[52px]"
         >
-          {selectedMode ? `Start ${selectedMode === "practice" ? "Practice" : "Exam"} Mode` : "Select a mode to start"} <ChevronRight size={16} />
+          {selectedMode ? `Start ${selectedMode === "practice" ? "Practice" : "Exam"} Mode` : "Select a mode to begin"}
+          <ChevronRight size={16} />
         </button>
       </div>
     </div>
   );
 }
 
-// --- Quiz Attempt Page ---
-export function QuizAttempt() {
-  const { currentAttempt, setCurrentAttempt, setView, addAttempt } = useApp();
-  const quiz = quizzes.find(q => q.id === currentAttempt?.quizId);
-  const [qIndex, setQIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, "A" | "B" | "C" | "D" | null>>(currentAttempt?.answers || {});
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [flagged, setFlagged] = useState<Set<string>>(new Set());
-  const [timeLeft, setTimeLeft] = useState((quiz?.timeLimitMinutes || 15) * 60);
-  const [submitted, setSubmitted] = useState(false);
+// ─────────────────────────────────────────────────────────────────────────────
+// Quiz Attempt Page
+// ─────────────────────────────────────────────────────────────────────────────
 
+export function QuizAttempt() {
+  const { currentAttempt, setCurrentAttempt, setView, addAttempt, currentGoal } = useApp();
+  const quiz = quizzes.find(q => q.id === currentAttempt?.quizId);
+  const [qIndex, setQIndex] = useState(currentAttempt?.currentQuestionIndex ?? 0);
+  const [answers, setAnswers] = useState<Record<string, "A" | "B" | "C" | "D" | null>>(currentAttempt?.answers ?? {});
+  const [flagged, setFlagged] = useState<string[]>(currentAttempt?.flagged ?? []);
+  const [timeLeft, setTimeLeft] = useState((quiz?.timeLimitMinutes ?? 15) * 60);
+  const [submitted, setSubmitted] = useState(false);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
+
+  const ms = quiz?.markingScheme;
+
+  // Exam mode timer
   useEffect(() => {
     if (currentAttempt?.mode !== "exam") return;
     const interval = setInterval(() => {
@@ -118,39 +190,102 @@ export function QuizAttempt() {
     return () => clearInterval(interval);
   }, [currentAttempt?.mode]);
 
+  // ── Score calculation with negative marking ──────────────────────────────
+
+  const calculateScore = (ans: typeof answers) => {
+    if (!quiz || !ms) return { totalScore: 0, correctCount: 0, wrongCount: 0, skippedCount: 0, negativeMarks: 0 };
+
+    let totalScore = 0;
+    let correctCount = 0;
+    let wrongCount = 0;
+    let skippedCount = 0;
+    let negativeMarks = 0;
+
+    quiz.questions.forEach(q => {
+      const selected = ans[q.id];
+      if (!selected || selected === null) {
+        skippedCount++;
+        // no marks for unattempted
+      } else if (selected === q.correctOption) {
+        correctCount++;
+        totalScore += ms.correctMarks;
+      } else {
+        wrongCount++;
+        const deduction = Math.abs(ms.wrongMarks);
+        totalScore += ms.wrongMarks; // wrongMarks is already negative
+        negativeMarks -= deduction;  // track total negative marks (as negative)
+      }
+    });
+
+    // Score can't go below 0
+    totalScore = Math.max(0, totalScore);
+
+    return { totalScore, correctCount, wrongCount, skippedCount, negativeMarks };
+  };
+
+  // ── Real-time score display ──────────────────────────────────────────────
+
+  const liveScore = calculateScore(answers);
+
+  // ── Submit ─────────────────────────────────────────────────────────────
+
   const handleSubmit = useCallback(() => {
-    if (submitted || !quiz || !currentAttempt) return;
+    if (submitted || !quiz || !currentAttempt || !ms) return;
     setSubmitted(true);
+    setShowSubmitModal(false);
+
+    const { totalScore, correctCount, wrongCount, skippedCount, negativeMarks } = calculateScore(answers);
+
     const attemptAnswers = quiz.questions.map(q => ({
       questionId: q.id,
-      selectedOption: answers[q.id] || null,
+      selectedOption: answers[q.id] ?? null,
       isCorrect: answers[q.id] === q.correctOption,
-      marksAwarded: answers[q.id] === q.correctOption ? q.marks : 0,
+      marksAwarded: answers[q.id] === q.correctOption
+        ? ms.correctMarks
+        : answers[q.id]
+        ? ms.wrongMarks
+        : 0,
     }));
-    const totalScore = attemptAnswers.reduce((sum, a) => sum + a.marksAwarded, 0);
+
+    const percentage = Math.round((totalScore / quiz.totalMarks) * 100);
+
+    // Simple percentile estimate based on avgScore in mock data
+    const avgPct = (quiz.analytics.avgScore / quiz.totalMarks) * 100;
+    const percentile = percentage >= avgPct
+      ? Math.round(50 + ((percentage - avgPct) / (100 - avgPct)) * 50)
+      : Math.round((percentage / avgPct) * 50);
+
     const attempt: QuizAttempt = {
       id: `att_${Date.now()}`,
       quizId: quiz.id,
       quizTitle: quiz.title,
       subject: quiz.subject,
+      goalCategory: quiz.goalCategory,
       mode: currentAttempt.mode,
       totalScore,
       maxScore: quiz.totalMarks,
-      percentage: Math.round((totalScore / quiz.totalMarks) * 100),
+      percentage,
+      percentile: Math.min(99, Math.max(1, percentile)),
+      correctCount,
+      wrongCount,
+      skippedCount,
+      negativeMarks,
       timeTakenSeconds: (quiz.timeLimitMinutes * 60) - timeLeft,
       isCompleted: true,
       submittedAt: new Date().toISOString(),
       answers: attemptAnswers,
     };
+
     addAttempt(attempt);
     setCurrentAttempt(null);
     setView("quiz-result");
-  }, [answers, quiz, currentAttempt, timeLeft, submitted]);
+  }, [answers, quiz, currentAttempt, timeLeft, submitted, ms]);
 
-  if (!quiz || !currentAttempt) return (
+  if (!quiz || !currentAttempt || !ms) return (
     <div className="text-center py-20">
+      <Brain size={36} className="mx-auto mb-3 text-gray-200" />
       <p className="text-gray-400">No active quiz.</p>
-      <button onClick={() => setView("quizzes")} className="text-[#1E3A8A] mt-3">Back to Quizzes</button>
+      <button onClick={() => setView("quizzes")} className="text-[#1E3A8A] mt-3 text-sm">Back to Quizzes</button>
     </div>
   );
 
@@ -159,16 +294,12 @@ export function QuizAttempt() {
   const hasAnswered = q.id in answers && answers[q.id] !== null;
   const selectedOpt = answers[q.id];
   const isCorrect = selectedOpt === q.correctOption;
-
-  const selectAnswer = (opt: "A" | "B" | "C" | "D") => {
-    if (isPractice && hasAnswered) return;
-    setAnswers(prev => ({ ...prev, [q.id]: opt }));
-    if (isPractice) setShowFeedback(true);
-  };
+  const isFlagged = flagged.includes(q.id);
 
   const mins = Math.floor(timeLeft / 60);
   const secs = timeLeft % 60;
   const timerWarning = timeLeft < 120;
+  const answeredCount = Object.values(answers).filter(v => v !== null && v !== undefined).length;
 
   const optionLabels = ["A", "B", "C", "D"] as const;
   const optionTexts = [q.optionA, q.optionB, q.optionC, q.optionD];
@@ -179,55 +310,90 @@ export function QuizAttempt() {
         ? "border-[#1E3A8A] bg-blue-50 text-[#1E3A8A]"
         : "border-gray-200 hover:border-gray-300 text-gray-700";
     }
-    if (!hasAnswered) return "border-gray-200 hover:border-[#1E3A8A] hover:bg-blue-50 text-gray-700";
+    if (!hasAnswered) return "border-gray-200 hover:border-[#1E3A8A] hover:bg-blue-50 text-gray-700 cursor-pointer";
     if (opt === q.correctOption) return "border-green-400 bg-green-50 text-green-700";
     if (opt === selectedOpt && !isCorrect) return "border-red-400 bg-red-50 text-red-600";
     return "border-gray-100 bg-gray-50 text-gray-400";
   };
 
+  const selectAnswer = (opt: "A" | "B" | "C" | "D") => {
+    if (isPractice && hasAnswered) return;
+    setAnswers(prev => ({ ...prev, [q.id]: opt }));
+  };
+
+  const toggleFlag = () => {
+    setFlagged(prev => prev.includes(q.id) ? prev.filter(id => id !== q.id) : [...prev, q.id]);
+  };
+
+  // Unanswered count for submit warning
+  const unansweredCount = quiz.questions.length - answeredCount;
+
   return (
     <div className="max-w-2xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <p className="text-xs text-gray-400 uppercase tracking-wide">{isPractice ? "Practice Mode" : "Exam Mode"}</p>
-          <h3 className="text-sm" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600, color: "#1E3A8A" }}>{quiz.title}</h3>
+
+      {/* ── Top Bar ── */}
+      <div className="flex items-center justify-between mb-4 gap-3">
+        <div className="min-w-0">
+          <p className="text-[10px] text-gray-400 uppercase tracking-wider">{isPractice ? "Practice Mode" : "Exam Mode"}</p>
+          <h3 className="text-sm font-semibold text-[#1E3A8A] font-['Poppins'] truncate">{quiz.title}</h3>
         </div>
-        {!isPractice && (
-          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold ${timerWarning ? "bg-red-100 text-red-600" : "bg-blue-50 text-[#1E3A8A]"}`}>
-            <Clock size={15} />
-            {mins.toString().padStart(2, "0")}:{secs.toString().padStart(2, "0")}
-          </div>
-        )}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Live score */}
+          {ms.hasNegativeMarking && (
+            <div className="text-xs px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-600 font-mono">
+              <span className="text-green-600 font-bold">+{liveScore.correctCount * ms.correctMarks}</span>
+              {liveScore.negativeMarks < 0 && <span className="text-red-500 font-bold ml-1">{liveScore.negativeMarks}</span>}
+              <span className="text-gray-400"> / {quiz.totalMarks}</span>
+            </div>
+          )}
+          {/* Timer */}
+          {!isPractice && (
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-bold font-mono ${timerWarning ? "bg-red-100 text-red-600 animate-pulse" : "bg-blue-50 text-[#1E3A8A]"}`}>
+              <Clock size={14} />
+              {mins.toString().padStart(2, "0")}:{secs.toString().padStart(2, "0")}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Progress */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-4">
+      {/* ── Progress bar ── */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs text-gray-500">Question {qIndex + 1} of {quiz.questions.length}</span>
-          <span className="text-xs text-gray-500">{Object.keys(answers).length} answered</span>
+          <span className="text-xs text-gray-500">Q {qIndex + 1} of {quiz.questions.length}</span>
+          <span className="text-xs text-gray-500">{answeredCount} answered · {unansweredCount} remaining</span>
         </div>
         <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-          <div className="h-full bg-[#1E3A8A] rounded-full transition-all" style={{ width: `${((qIndex + 1) / quiz.questions.length) * 100}%` }} />
+          <div
+            className="h-full bg-[#1E3A8A] rounded-full transition-all duration-300"
+            style={{ width: `${((qIndex + 1) / quiz.questions.length) * 100}%` }}
+          />
         </div>
       </div>
 
-      {/* Question */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-4">
-        <div className="flex items-start justify-between mb-4">
+      {/* ── Question Card ── */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-4">
+        <div className="flex items-start justify-between mb-4 gap-3">
           <div className="flex-1">
-            <span className="text-xs text-gray-400 mb-2 block">Question {qIndex + 1} · {q.marks} mark{q.marks > 1 ? "s" : ""}</span>
-            <p className="text-gray-800 leading-relaxed">{q.text}</p>
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <span className="text-xs text-gray-400">Question {qIndex + 1}</span>
+              <span className="text-xs bg-blue-50 text-[#1E3A8A] px-2 py-0.5 rounded-full font-medium">
+                +{ms.correctMarks} / {ms.wrongMarks}
+              </span>
+              {isFlagged && <span className="text-xs bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full">🚩 Flagged</span>}
+            </div>
+            <p className="text-gray-800 leading-relaxed text-[15px]">{q.text}</p>
           </div>
           <button
-            onClick={() => setFlagged(prev => { const s = new Set(prev); s.has(q.id) ? s.delete(q.id) : s.add(q.id); return s; })}
-            className={`ml-3 flex-shrink-0 ${flagged.has(q.id) ? "text-[#F97316]" : "text-gray-300 hover:text-[#F97316]"} transition-colors`}
+            onClick={toggleFlag}
+            className={`flex-shrink-0 p-2 rounded-xl transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center ${isFlagged ? "bg-orange-50 text-orange-500" : "text-gray-300 hover:text-orange-400 hover:bg-orange-50"}`}
+            aria-label={isFlagged ? "Unflag question" : "Flag for review"}
           >
             <Flag size={16} />
           </button>
         </div>
 
-        <div className="space-y-2">
+        {/* Options */}
+        <div className="space-y-2.5">
           {optionLabels.map((opt, i) => (
             <button
               key={opt}
@@ -235,174 +401,294 @@ export function QuizAttempt() {
               disabled={isPractice && hasAnswered}
               className={`w-full text-left flex items-center gap-3 p-4 border-2 rounded-xl transition-all disabled:cursor-default ${getOptionStyle(opt)}`}
             >
-              <span className={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-sm flex-shrink-0 ${selectedOpt === opt || (isPractice && hasAnswered && opt === q.correctOption) ? "border-current bg-current/10" : "border-gray-300"}`} style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600 }}>
+              <span className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm flex-shrink-0 font-bold font-['Poppins'] ${selectedOpt === opt || (isPractice && hasAnswered && opt === q.correctOption) ? "border-current" : "border-gray-300 text-gray-400"}`}>
                 {opt}
               </span>
-              <span className="text-sm">{optionTexts[i]}</span>
+              <span className="text-sm leading-snug flex-1">{optionTexts[i]}</span>
               {isPractice && hasAnswered && opt === q.correctOption && <CheckCircle size={16} className="ml-auto text-green-500 flex-shrink-0" />}
-              {isPractice && hasAnswered && opt === selectedOpt && !isCorrect && opt !== q.correctOption && <XCircle size={16} className="ml-auto text-red-500 flex-shrink-0" />}
+              {isPractice && hasAnswered && opt === selectedOpt && !isCorrect && <XCircle size={16} className="ml-auto text-red-500 flex-shrink-0" />}
             </button>
           ))}
         </div>
 
-        {/* Feedback (Practice Mode) */}
+        {/* Practice feedback */}
         {isPractice && hasAnswered && (
-          <div className={`mt-4 p-4 rounded-xl ${isCorrect ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"}`}>
+          <div className={`mt-4 p-4 rounded-xl border ${isCorrect ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}>
             <div className="flex items-center gap-2 mb-2">
-              {isCorrect ? <CheckCircle size={16} className="text-green-600" /> : <XCircle size={16} className="text-red-600" />}
-              <span className="font-semibold text-sm" style={{ fontFamily: "Poppins, sans-serif", color: isCorrect ? "#16A34A" : "#DC2626" }}>
-                {isCorrect ? "Correct!" : `Wrong! Correct answer: ${q.correctOption}`}
-              </span>
+              {isCorrect ? <CheckCircle size={15} className="text-green-600" /> : <XCircle size={15} className="text-red-600" />}
+              <div>
+                <span className={`font-semibold text-sm font-['Poppins'] ${isCorrect ? "text-green-800" : "text-red-700"}`}>
+                  {isCorrect ? `Correct! +${ms.correctMarks} mark${ms.correctMarks > 1 ? "s" : ""}` : `Wrong! ${ms.wrongMarks} mark${Math.abs(ms.wrongMarks) > 1 ? "s" : ""}`}
+                </span>
+                {!isCorrect && <span className="text-xs text-red-600 ml-1">Correct: {q.correctOption}</span>}
+              </div>
             </div>
             <p className="text-xs text-gray-600 leading-relaxed">{q.explanation}</p>
           </div>
         )}
       </div>
 
-      {/* Navigation */}
+      {/* ── Navigation ── */}
       <div className="flex items-center gap-3 mb-4">
         <button
-          onClick={() => { setQIndex(i => i - 1); setShowFeedback(false); }}
+          onClick={() => { setQIndex(i => i - 1); }}
           disabled={qIndex === 0}
-          className="flex items-center gap-1.5 px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-colors"
+          className="flex items-center gap-1.5 px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-colors min-h-[48px]"
         >
-          <ChevronLeft size={16} /> Previous
+          <ChevronLeft size={16} /> Prev
         </button>
+
         {qIndex < quiz.questions.length - 1 ? (
           <button
-            onClick={() => { setQIndex(i => i + 1); setShowFeedback(false); }}
-            className="flex-1 bg-[#1E3A8A] hover:bg-blue-900 text-white py-2.5 rounded-xl text-sm flex items-center justify-center gap-1.5 transition-colors"
+            onClick={() => { setQIndex(i => i + 1); }}
+            className="flex-1 bg-[#1E3A8A] hover:bg-[#1D4ED8] text-white py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors min-h-[48px]"
           >
             Next <ChevronRight size={16} />
           </button>
         ) : (
           <button
-            onClick={handleSubmit}
-            className="flex-1 bg-[#F97316] hover:bg-orange-600 text-white py-2.5 rounded-xl text-sm flex items-center justify-center gap-1.5 transition-colors font-semibold"
+            onClick={() => isPractice ? handleSubmit() : setShowSubmitModal(true)}
+            className="flex-1 bg-[#F97316] hover:bg-orange-600 text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-1.5 transition-colors min-h-[48px]"
           >
-            <Send size={15} /> Submit Quiz
+            <Send size={15} /> Finish Quiz
           </button>
         )}
       </div>
 
-      {/* Question Navigator */}
+      {/* ── Question Navigator ── */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-        <p className="text-xs text-gray-500 mb-3">Question Navigator</p>
-        <div className="flex flex-wrap gap-2">
+        <p className="text-xs text-gray-500 mb-3 font-medium">Question Navigator</p>
+        <div className="flex flex-wrap gap-1.5">
           {quiz.questions.map((question, i) => {
-            const answered = question.id in answers && answers[question.id];
-            const flaggedQ = flagged.has(question.id);
+            const answered = answers[question.id] != null;
+            const qFlagged = flagged.includes(question.id);
             return (
               <button
                 key={question.id}
-                onClick={() => { setQIndex(i); setShowFeedback(false); }}
-                className={`w-8 h-8 rounded-lg text-xs transition-all border ${i === qIndex ? "bg-[#1E3A8A] text-white border-[#1E3A8A]" : answered ? "bg-blue-50 text-[#1E3A8A] border-blue-200" : flaggedQ ? "bg-orange-50 text-[#F97316] border-orange-200" : "bg-gray-50 text-gray-500 border-gray-200"}`}
-                style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600 }}
+                onClick={() => setQIndex(i)}
+                className={`w-9 h-9 rounded-xl text-xs font-bold transition-all ${
+                  i === qIndex
+                    ? "bg-[#1E3A8A] text-white"
+                    : answered
+                    ? "bg-blue-100 text-[#1E3A8A] border border-blue-300"
+                    : qFlagged
+                    ? "bg-orange-50 text-orange-500 border border-orange-200"
+                    : "bg-gray-50 text-gray-400 border border-gray-200"
+                }`}
               >
                 {i + 1}
               </button>
             );
           })}
         </div>
-        <div className="flex items-center gap-4 mt-3 text-xs text-gray-400">
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-blue-50 border border-blue-200 inline-block" /> Answered</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-gray-50 border border-gray-200 inline-block" /> Not visited</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-orange-50 border border-orange-200 inline-block" /> Flagged</span>
+        <div className="flex items-center gap-3 mt-3 text-[10px] text-gray-400 flex-wrap">
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-blue-100 border border-blue-300 inline-block" /> Answered</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gray-50 border border-gray-200 inline-block" /> Not answered</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-orange-50 border border-orange-200 inline-block" /> Flagged</span>
         </div>
       </div>
 
-      {/* Submit button (visible any time in exam mode) */}
+      {/* Exam mode submit button */}
       {!isPractice && (
         <button
-          onClick={handleSubmit}
-          className="w-full mt-4 bg-[#F97316] hover:bg-orange-600 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors"
+          onClick={() => setShowSubmitModal(true)}
+          className="w-full mt-4 bg-[#F97316] hover:bg-orange-600 text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors min-h-[52px]"
         >
           <Send size={16} /> Submit All Answers
         </button>
+      )}
+
+      {/* ── Submit Confirmation Modal ── */}
+      {showSubmitModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowSubmitModal(false)} />
+          <div className="relative bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+            <h3 className="font-bold text-gray-900 font-['Poppins'] text-lg mb-1">Submit Quiz?</h3>
+            {unansweredCount > 0 ? (
+              <p className="text-sm text-amber-700 mb-4 flex items-start gap-2">
+                <AlertTriangle size={15} className="flex-shrink-0 mt-0.5 text-amber-500" />
+                You have <strong>{unansweredCount}</strong> unanswered question{unansweredCount > 1 ? "s" : ""}. Skipped questions score 0.
+              </p>
+            ) : (
+              <p className="text-sm text-gray-500 mb-4">All {quiz.questions.length} questions answered. Ready to submit?</p>
+            )}
+            {ms.hasNegativeMarking && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4 text-xs text-red-700">
+                <strong>Score so far:</strong> {liveScore.totalScore} / {quiz.totalMarks}
+                {liveScore.negativeMarks < 0 && ` (${liveScore.negativeMarks} negative deductions)`}
+              </div>
+            )}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowSubmitModal(false)}
+                className="flex-1 border border-gray-200 text-gray-700 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors"
+              >
+                Keep Going
+              </button>
+              <button
+                onClick={handleSubmit}
+                className="flex-1 bg-[#F97316] hover:bg-orange-600 text-white py-2.5 rounded-xl text-sm font-bold transition-colors"
+              >
+                Yes, Submit
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
 }
 
-// --- Quiz Result Page ---
+// ─────────────────────────────────────────────────────────────────────────────
+// Quiz Result Page  
+// ─────────────────────────────────────────────────────────────────────────────
+
 export function QuizResult() {
-  const { completedAttempts, setView, setSelectedQuizId, setCurrentAttempt } = useApp();
-  const attempt = completedAttempts[0];
+  const { completedAttempts, lastAttemptId, setView, setSelectedQuizId, setCurrentAttempt } = useApp();
+
+  // Use lastAttemptId to find the correct attempt
+  const attempt = lastAttemptId
+    ? completedAttempts.find(a => a.id === lastAttemptId) ?? completedAttempts[0]
+    : completedAttempts[0];
   const quiz = quizzes.find(q => q.id === attempt?.quizId);
 
   if (!attempt || !quiz) return (
     <div className="text-center py-20">
       <p className="text-gray-400">No result available.</p>
-      <button onClick={() => setView("quizzes")} className="text-[#1E3A8A] mt-3">Back to Quizzes</button>
+      <button onClick={() => setView("quizzes")} className="text-[#1E3A8A] mt-3 text-sm">Back to Quizzes</button>
     </div>
   );
 
   const pct = attempt.percentage;
-  const passed = pct >= 60;
+  const passed = pct >= 40; // lower threshold for competitive exams
   const mins = Math.floor(attempt.timeTakenSeconds / 60);
   const secs = attempt.timeTakenSeconds % 60;
-  const correct = attempt.answers.filter(a => a.isCorrect).length;
-  const wrong = attempt.answers.length - correct;
-  const unattempted = quiz.questions.length - attempt.answers.length;
+  const ms = quiz.markingScheme;
+
+  // Score breakdown
+  const grossScore = attempt.correctCount * ms.correctMarks;
+  const netScore = attempt.totalScore;
+
+  const emoji = pct >= 90 ? "🏆" : pct >= 75 ? "🌟" : pct >= 60 ? "👍" : pct >= 40 ? "📚" : "💪";
 
   return (
-    <div className="max-w-lg mx-auto">
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-5 text-center">
+    <div className="max-w-lg mx-auto space-y-4">
+
+      {/* ── Score Card ── */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 text-center">
         <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 ${passed ? "bg-green-100" : "bg-red-100"}`}>
           {passed ? <CheckCircle size={36} className="text-green-600" /> : <XCircle size={36} className="text-red-500" />}
         </div>
-        <h1 className="text-2xl mb-1" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 800, color: passed ? "#16A34A" : "#DC2626" }}>
-          {passed ? "Great Job!" : "Keep Practicing!"}
+
+        <div className="text-4xl mb-1">{emoji}</div>
+        <h1 className={`text-2xl font-bold font-['Poppins'] mb-1 ${passed ? "text-green-700" : "text-red-600"}`}>
+          {pct >= 90 ? "Outstanding!" : pct >= 75 ? "Excellent!" : pct >= 60 ? "Good Job!" : pct >= 40 ? "Keep Practicing!" : "Don't Give Up!"}
         </h1>
         <p className="text-gray-500 text-sm mb-5">{quiz.title}</p>
 
-        <div className="relative w-32 h-32 mx-auto mb-5">
-          <svg className="w-32 h-32 -rotate-90">
-            <circle cx="64" cy="64" r="56" fill="none" stroke="#F1F5F9" strokeWidth="8" />
-            <circle cx="64" cy="64" r="56" fill="none" stroke={passed ? "#16A34A" : "#DC2626"} strokeWidth="8"
-              strokeDasharray={`${(pct / 100) * 351.86} 351.86`} strokeLinecap="round" />
+        {/* Circular score gauge */}
+        <div className="relative w-36 h-36 mx-auto mb-5">
+          <svg className="w-36 h-36 -rotate-90">
+            <circle cx="72" cy="72" r="62" fill="none" stroke="#F1F5F9" strokeWidth="10" />
+            <circle
+              cx="72" cy="72" r="62" fill="none"
+              stroke={pct >= 60 ? "#16A34A" : pct >= 40 ? "#F59E0B" : "#DC2626"}
+              strokeWidth="10"
+              strokeDasharray={`${(pct / 100) * 389.56} 389.56`}
+              strokeLinecap="round"
+              className="transition-all duration-1000"
+            />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-3xl" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 800, color: passed ? "#16A34A" : "#DC2626" }}>{pct}%</span>
+            <span className={`text-3xl font-bold font-['Poppins'] ${pct >= 60 ? "text-green-700" : pct >= 40 ? "text-amber-600" : "text-red-600"}`}>
+              {pct}%
+            </span>
             <span className="text-xs text-gray-400">{attempt.totalScore}/{attempt.maxScore}</span>
           </div>
         </div>
 
+        {/* Stats grid */}
         <div className="grid grid-cols-3 gap-3 mb-5">
           {[
-            { label: "Correct", value: correct, color: "text-green-600 bg-green-50" },
-            { label: "Wrong", value: wrong, color: "text-red-500 bg-red-50" },
-            { label: "Skipped", value: unattempted, color: "text-gray-500 bg-gray-50" },
+            { label: "Correct",  value: attempt.correctCount,  color: "text-green-600 bg-green-50" },
+            { label: "Wrong",    value: attempt.wrongCount,    color: "text-red-500   bg-red-50" },
+            { label: "Skipped",  value: attempt.skippedCount,  color: "text-gray-500  bg-gray-50" },
           ].map(s => (
             <div key={s.label} className={`rounded-xl p-3 ${s.color}`}>
-              <div className="text-xl" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700 }}>{s.value}</div>
-              <div className="text-xs">{s.label}</div>
+              <div className="text-2xl font-bold font-['Poppins']">{s.value}</div>
+              <div className="text-xs mt-0.5">{s.label}</div>
             </div>
           ))}
         </div>
 
-        <div className="flex items-center justify-center gap-2 text-sm text-gray-500 mb-6 bg-gray-50 rounded-xl p-3">
-          <Clock size={15} />
-          Time taken: <strong>{mins}m {secs}s</strong>
-          &nbsp;·&nbsp;
-          Mode: <strong className="capitalize">{attempt.mode}</strong>
+        {/* Score breakdown (negative marking) */}
+        {ms.hasNegativeMarking && (
+          <div className="bg-gray-50 rounded-xl p-4 mb-4 text-left text-sm">
+            <p className="font-semibold text-gray-800 font-['Poppins'] mb-2 flex items-center gap-2">
+              <Zap size={14} className="text-amber-500" /> Score Breakdown
+            </p>
+            <div className="space-y-1 text-xs">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Correct × +{ms.correctMarks}</span>
+                <span className="font-semibold text-green-600">+{grossScore}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Wrong × {ms.wrongMarks}</span>
+                <span className="font-semibold text-red-500">{attempt.negativeMarks}</span>
+              </div>
+              <div className="border-t border-gray-200 pt-1 flex justify-between">
+                <span className="font-semibold text-gray-700">Net Score</span>
+                <span className="font-bold text-[#1E3A8A]">{netScore} / {quiz.totalMarks}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Percentile */}
+        {attempt.percentile && (
+          <div className="bg-violet-50 border border-violet-100 rounded-xl p-3 mb-5 flex items-center gap-3">
+            <TrendingUp size={18} className="text-violet-600 flex-shrink-0" />
+            <div className="text-left">
+              <p className="text-sm font-bold text-violet-800 font-['Poppins']">Percentile: {attempt.percentile}th</p>
+              <p className="text-xs text-violet-600">You scored better than {attempt.percentile}% of students</p>
+            </div>
+          </div>
+        )}
+
+        {/* Meta */}
+        <div className="flex items-center justify-center gap-3 text-sm text-gray-400 mb-6 bg-gray-50 rounded-xl p-3">
+          <Clock size={14} />
+          <span>{mins}m {secs}s</span>
+          <span>·</span>
+          <span className="capitalize">{attempt.mode} mode</span>
         </div>
 
+        {/* Actions */}
         <div className="flex flex-col gap-3">
-          <button onClick={() => setView("quiz-review")} className="w-full bg-[#1E3A8A] hover:bg-blue-900 text-white py-3 rounded-xl transition-colors font-semibold">
+          <button
+            onClick={() => setView("quiz-review")}
+            className="w-full bg-[#1E3A8A] hover:bg-[#1D4ED8] text-white py-3 rounded-xl font-semibold font-['Poppins'] transition-colors"
+          >
             Review Answers
           </button>
           <button
             onClick={() => {
               setSelectedQuizId(quiz.id);
-              setCurrentAttempt({ quizId: quiz.id, mode: attempt.mode, answers: {}, startedAt: new Date() });
+              setCurrentAttempt({
+                quizId: quiz.id,
+                mode: attempt.mode,
+                answers: {},
+                flagged: [],
+                currentQuestionIndex: 0,
+                startedAt: new Date().toISOString(),
+              });
               setView("quiz-attempt");
             }}
             className="w-full border border-[#1E3A8A] text-[#1E3A8A] hover:bg-blue-50 py-3 rounded-xl transition-colors"
           >
             Reattempt Quiz
           </button>
-          <button onClick={() => setView("quizzes")} className="text-gray-400 hover:text-gray-600 text-sm">
+          <button onClick={() => setView("quizzes")} className="text-gray-400 hover:text-gray-600 text-sm py-2">
             Back to Quizzes
           </button>
         </div>
@@ -411,68 +697,110 @@ export function QuizResult() {
   );
 }
 
-// --- Quiz Review Page ---
+// ─────────────────────────────────────────────────────────────────────────────
+// Quiz Review Page
+// ─────────────────────────────────────────────────────────────────────────────
+
 export function QuizReview() {
-  const { completedAttempts, setView } = useApp();
-  const attempt = completedAttempts[0];
+  const { completedAttempts, lastAttemptId, setView } = useApp();
+
+  const attempt = lastAttemptId
+    ? completedAttempts.find(a => a.id === lastAttemptId) ?? completedAttempts[0]
+    : completedAttempts[0];
   const quiz = quizzes.find(q => q.id === attempt?.quizId);
 
   if (!attempt || !quiz) return (
     <div className="text-center py-20">
       <p className="text-gray-400">No review available.</p>
-      <button onClick={() => setView("quizzes")} className="text-[#1E3A8A] mt-3">Back</button>
+      <button onClick={() => setView("quizzes")} className="text-[#1E3A8A] mt-3 text-sm">Back</button>
     </div>
   );
 
+  const ms = quiz.markingScheme;
+
   return (
     <div className="max-w-2xl mx-auto">
-      <button onClick={() => setView("quiz-result")} className="flex items-center gap-2 text-gray-500 hover:text-[#1E3A8A] mb-4 text-sm">
+      <button onClick={() => setView("quiz-result")} className="flex items-center gap-2 text-gray-500 hover:text-[#1E3A8A] mb-4 text-sm min-h-[44px]">
         <ArrowLeft size={16} /> Back to Result
       </button>
-      <h2 className="text-xl mb-5" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}>Review Answers</h2>
+      <h2 className="text-xl font-bold text-[#1E3A8A] font-['Poppins'] mb-5">Answer Review</h2>
 
       <div className="space-y-4">
         {quiz.questions.map((q, i) => {
           const ans = attempt.answers.find(a => a.questionId === q.id);
-          const selected = ans?.selectedOption || null;
+          const selected = ans?.selectedOption ?? null;
           const correct = q.correctOption;
           const isRight = selected === correct;
           const skipped = !selected;
           const optionTexts = [q.optionA, q.optionB, q.optionC, q.optionD];
           const optLabels = ["A", "B", "C", "D"] as const;
 
+          const marksAwarded = ans?.marksAwarded ?? 0;
+
           return (
-            <div key={q.id} className={`bg-white rounded-2xl border shadow-sm p-5 ${isRight ? "border-green-200" : skipped ? "border-gray-200" : "border-red-200"}`}>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs text-gray-400">Q{i + 1}</span>
+            <div
+              key={q.id}
+              className={`bg-white rounded-2xl border shadow-sm p-5 ${
+                isRight ? "border-green-200" : skipped ? "border-gray-200" : "border-red-200"
+              }`}
+            >
+              {/* Question header */}
+              <div className="flex items-center gap-2 mb-3 flex-wrap">
+                <span className="text-xs text-gray-400 font-mono">Q{i + 1}</span>
                 {skipped ? (
-                  <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Skipped</span>
+                  <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Skipped · 0 marks</span>
                 ) : isRight ? (
-                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full flex items-center gap-1"><CheckCircle size={10} /> Correct</span>
+                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <CheckCircle size={10} /> Correct · +{ms.correctMarks}
+                  </span>
                 ) : (
-                  <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full flex items-center gap-1"><XCircle size={10} /> Wrong</span>
+                  <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <XCircle size={10} /> Wrong · {ms.wrongMarks}
+                  </span>
                 )}
               </div>
-              <p className="text-gray-800 text-sm mb-3">{q.text}</p>
+
+              <p className="text-gray-800 text-sm mb-3 leading-relaxed">{q.text}</p>
+
+              {/* Options */}
               <div className="space-y-1.5 mb-3">
                 {optLabels.map((opt, j) => (
                   <div
                     key={opt}
-                    className={`flex items-center gap-2 p-2.5 rounded-lg text-sm ${opt === correct ? "bg-green-50 border border-green-200 text-green-700" : opt === selected && !isRight ? "bg-red-50 border border-red-200 text-red-600" : "bg-gray-50 text-gray-500"}`}
+                    className={`flex items-center gap-2 p-2.5 rounded-xl text-sm ${
+                      opt === correct
+                        ? "bg-green-50 border border-green-200 text-green-700"
+                        : opt === selected && !isRight
+                        ? "bg-red-50 border border-red-200 text-red-600"
+                        : "bg-gray-50 text-gray-500"
+                    }`}
                   >
-                    <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0 border" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600, borderColor: "currentColor" }}>{opt}</span>
-                    <span>{optionTexts[j]}</span>
-                    {opt === correct && <CheckCircle size={13} className="ml-auto text-green-500" />}
-                    {opt === selected && !isRight && <XCircle size={13} className="ml-auto text-red-500" />}
+                    <span className="w-5 h-5 rounded-full flex items-center justify-center text-[11px] flex-shrink-0 border font-bold font-['Poppins']" style={{ borderColor: "currentColor" }}>
+                      {opt}
+                    </span>
+                    <span className="flex-1">{optionTexts[j]}</span>
+                    {opt === correct && <CheckCircle size={13} className="ml-auto text-green-500 flex-shrink-0" />}
+                    {opt === selected && !isRight && <XCircle size={13} className="ml-auto text-red-500 flex-shrink-0" />}
                   </div>
                 ))}
               </div>
-              <div className="bg-blue-50 rounded-lg p-3 text-xs text-blue-700">
-                <span className="font-semibold">Explanation: </span>{q.explanation}
+
+              {/* Explanation */}
+              <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 text-xs text-blue-700 leading-relaxed">
+                <span className="font-semibold text-[#1E3A8A]">Explanation: </span>{q.explanation}
               </div>
             </div>
           );
         })}
+      </div>
+
+      <div className="py-6 flex justify-center">
+        <button
+          onClick={() => setView("quiz-result")}
+          className="bg-[#1E3A8A] text-white px-6 py-3 rounded-xl font-semibold font-['Poppins'] text-sm"
+        >
+          Back to Result
+        </button>
       </div>
     </div>
   );

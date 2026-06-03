@@ -9,7 +9,7 @@ export function AdminPapers() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Paper | null>(null);
   const [formData, setFormData] = useState({
-    title: "", standard: "10" as "10" | "12", subjectId: "", year: 2024, type: "board" as any, medium: "english" as any, marks: 80, durationMinutes: 180, status: "draft" as any,
+    title: "", goalCategory: "board-10" as string, subjectId: "", year: 2024, type: "board" as any, medium: "english" as any, marks: 80, durationMinutes: 180, status: "draft" as any,
   });
   const [saved, setSaved] = useState(false);
 
@@ -43,7 +43,7 @@ export function AdminPapers() {
   const handleEdit = (paper: Paper) => {
     setEditing(paper);
     setFormData({
-      title: paper.title, standard: paper.standard, subjectId: paper.subjectId,
+      title: paper.title, goalCategory: paper.goalCategory ?? "board-10", subjectId: paper.subjectId,
       year: paper.year, type: paper.type, medium: paper.medium,
       marks: paper.marks, durationMinutes: paper.durationMinutes, status: paper.status,
     });
@@ -58,13 +58,13 @@ export function AdminPapers() {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
         <div>
           <h2 className="text-xl" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}>Question Papers</h2>
           <p className="text-gray-500 text-sm">{paperList.length} papers total</p>
         </div>
         <button
-          onClick={() => { setEditing(null); setFormData({ title: "", standard: "10", subjectId: "", year: 2024, type: "board", medium: "english", marks: 80, durationMinutes: 180, status: "draft" }); setShowForm(true); }}
+          onClick={() => { setEditing(null); setFormData({ title: "", goalCategory: "board-10", subjectId: "", year: 2024, type: "board", medium: "english", marks: 80, durationMinutes: 180, status: "draft" }); setShowForm(true); }}
           className="bg-[#1E3A8A] hover:bg-blue-900 text-white px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors"
         >
           <Plus size={16} /> Upload Paper
@@ -91,7 +91,7 @@ export function AdminPapers() {
               />
             </div>
             {[
-              { label: "Standard", key: "standard", type: "select", opts: [{ value: "10", label: "10th (SSC)" }, { value: "12", label: "12th (HSC)" }] },
+              { label: "Exam Goal", key: "goalCategory", type: "select", opts: [{ value: "board-10", label: "SSC (10th)" }, { value: "board-12", label: "HSC (12th)" }, { value: "neet", label: "NEET UG" }, { value: "jee-mains", label: "JEE Mains" }, { value: "mht-cet-pcb", label: "MHT-CET PCB" }] },
               { label: "Year", key: "year", type: "select", opts: [2024, 2023, 2022, 2021, 2020].map(y => ({ value: y, label: y.toString() })) },
               { label: "Paper Type", key: "type", type: "select", opts: [{ value: "board", label: "Board Exam" }, { value: "model", label: "Model Paper" }, { value: "practice", label: "Practice Set" }] },
               { label: "Medium", key: "medium", type: "select", opts: [{ value: "english", label: "English" }, { value: "semi-english", label: "Semi-English" }, { value: "marathi", label: "Marathi" }] },
@@ -126,7 +126,7 @@ export function AdminPapers() {
                 className="w-full border border-gray-200 rounded-xl py-2.5 px-3 text-sm focus:outline-none focus:border-[#1E3A8A] bg-gray-50"
               >
                 <option value="">Select Subject</option>
-                {subjects.filter(s => s.standard === formData.standard).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                {subjects.filter(s => s.goalCategory === formData.goalCategory).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
             <div>

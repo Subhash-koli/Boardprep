@@ -1,7 +1,7 @@
 import { AppProvider, useApp } from "./components/context/AppContext";
 import { LandingPage } from "./components/LandingPage";
 import { LoginPage, RegisterPage, VerifyOTPPage, ForgotPasswordPage, ResetPasswordPage } from "./components/AuthPages";
-import { OnboardingFlow } from "./components/OnboardingFlow";
+import OnboardingFlow from "./components/OnboardingFlow";
 import { StudentLayout } from "./components/student/StudentLayout";
 import { Dashboard } from "./components/student/Dashboard";
 import { PapersList } from "./components/student/PapersList";

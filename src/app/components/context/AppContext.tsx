@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
-import type { Standard, Medium, QuizAttempt, Quiz, Question } from "../data/mockData";
+import type { Medium, QuizAttempt, Goal, GoalCategory } from "../data/mockData";
+import { GOAL_METADATA } from "../data/mockData";
+
+// ── View state machine ────────────────────────────────────────────────────────
 
 export type View =
   | "landing" | "login" | "register" | "verify-otp" | "forgot-password" | "reset-password"
@@ -10,30 +13,53 @@ export type View =
   | "admin-quizzes" | "admin-quiz-create" | "admin-quiz-edit" | "admin-quiz-preview"
   | "admin-users" | "admin-user-detail" | "admin-subjects" | "admin-announcements" | "admin-analytics";
 
+// ── User ─────────────────────────────────────────────────────────────────────
+
 export interface User {
   id: string;
   name: string;
   email: string;
-  standard: Standard;
+  phone?: string;
+  goals: Goal[];
+  currentGoalId: string;
   medium: Medium;
-  subjects: string[];
   streak: number;
   isAdmin: boolean;
   avatar?: string;
 }
 
-interface Bookmark {
+// ── Active Attempt ────────────────────────────────────────────────────────────
+
+export interface ActiveAttempt {
+  quizId: string;
+  mode: "practice" | "exam";
+  answers: Record<string, "A" | "B" | "C" | "D" | null>;
+  flagged: string[];           // question IDs flagged for review (array for serialization)
+  currentQuestionIndex: number;
+  startedAt: string;           // ISO string for serialization
+  timeRemainingSeconds?: number;
+}
+
+// ── Bookmark ──────────────────────────────────────────────────────────────────
+
+export interface Bookmark {
   id: string;
   type: "paper" | "quiz";
   refId: string;
   createdAt: string;
 }
 
+// ── Context type ──────────────────────────────────────────────────────────────
+
 interface AppContextType {
   view: View;
   setView: (v: View) => void;
   user: User | null;
   setUser: (u: User | null) => void;
+  currentGoal: Goal | null;
+  setCurrentGoal: (goal: Goal) => void;
+  addGoal: (goal: Goal) => void;
+  removeGoal: (goalId: string) => void;
   bookmarks: Bookmark[];
   toggleBookmark: (type: "paper" | "quiz", refId: string) => void;
   isBookmarked: (type: "paper" | "quiz", refId: string) => boolean;
@@ -51,31 +77,114 @@ interface AppContextType {
   setAuthEmail: (e: string) => void;
 }
 
-export interface ActiveAttempt {
-  quizId: string;
-  mode: "practice" | "exam";
-  answers: Record<string, "A" | "B" | "C" | "D" | null>;
-  startedAt: Date;
-}
+// ── Seed goals for demo ───────────────────────────────────────────────────────
+
+const seedGoal1: Goal = {
+  id: "goal-demo-1",
+  category: "board-12" as GoalCategory,
+  label: "HSC Class 12 Board (English)",
+  shortLabel: "HSC 12th",
+  icon: "",
+  color: GOAL_METADATA["board-12"].color,
+  bgColor: GOAL_METADATA["board-12"].bgColor,
+  textColor: GOAL_METADATA["board-12"].textColor,
+  standard: "12",
+  stream: "pcb",
+  medium: "english",
+  examDate: "2027-03-05",
+  subjects: ["s9", "s10", "s11", "s14"],
+};
+
+const seedGoal2: Goal = {
+  id: "goal-demo-2",
+  category: "neet" as GoalCategory,
+  label: "NEET UG 2027",
+  shortLabel: "NEET 2027",
+  icon: "",
+  color: GOAL_METADATA["neet"].color,
+  bgColor: GOAL_METADATA["neet"].bgColor,
+  textColor: GOAL_METADATA["neet"].textColor,
+  targetYear: 2027,
+  examDate: "2027-05-03",
+  subjects: ["sn1", "sn2", "sn3", "sn4"],
+};
+
+// ── Context ───────────────────────────────────────────────────────────────────
 
 const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [view, setView] = useState<View>("landing");
   const [user, setUser] = useState<User | null>(null);
+
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([
-    { id: "bm1", type: "paper", refId: "p1", createdAt: "2025-01-05" },
-    { id: "bm2", type: "quiz", refId: "qz1", createdAt: "2025-01-06" },
+    { id: "bm1", type: "paper", refId: "p1",   createdAt: "2025-01-05" },
+    { id: "bm2", type: "quiz",  refId: "qz1",  createdAt: "2025-01-06" },
+    { id: "bm3", type: "paper", refId: "pn1",  createdAt: "2025-01-07" },
+    { id: "bm4", type: "quiz",  refId: "qzn1", createdAt: "2025-01-08" },
   ]);
+
   const [selectedPaperId, setSelectedPaperId] = useState<string | null>(null);
-  const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null);
-  const [currentAttempt, setCurrentAttempt] = useState<ActiveAttempt | null>(null);
+  const [selectedQuizId, setSelectedQuizId]   = useState<string | null>(null);
+  const [currentAttempt, setCurrentAttempt]   = useState<ActiveAttempt | null>(null);
+  const [lastAttemptId, setLastAttemptId]     = useState<string | null>(null);
+  const [authEmail, setAuthEmail]             = useState("");
+
   const [completedAttempts, setCompletedAttempts] = useState<QuizAttempt[]>([
-    { id: "att1", quizId: "qz2", quizTitle: "Mathematics - Trigonometry Basics", subject: "Mathematics", mode: "practice", totalScore: 8, maxScore: 10, percentage: 80, timeTakenSeconds: 420, isCompleted: true, submittedAt: "2025-01-08T10:30:00", answers: [] },
-    { id: "att2", quizId: "qz7", quizTitle: "Mathematics - Quadratic Equations", subject: "Mathematics", mode: "exam", totalScore: 7, maxScore: 10, percentage: 70, timeTakenSeconds: 540, isCompleted: true, submittedAt: "2025-01-09T14:15:00", answers: [] },
+    {
+      id: "att1", quizId: "qz2", quizTitle: "Mathematics — Trigonometry Basics",
+      subject: "Mathematics", goalCategory: "board-10",
+      mode: "practice", totalScore: 8, maxScore: 10, percentage: 80,
+      percentile: 82, correctCount: 8, wrongCount: 0, skippedCount: 2, negativeMarks: 0,
+      timeTakenSeconds: 420, isCompleted: true, submittedAt: "2025-01-08T10:30:00", answers: [],
+    },
+    {
+      id: "att2", quizId: "qz7", quizTitle: "Mathematics — Quadratic Equations",
+      subject: "Mathematics", goalCategory: "board-10",
+      mode: "exam", totalScore: 7, maxScore: 10, percentage: 70,
+      percentile: 68, correctCount: 7, wrongCount: 0, skippedCount: 3, negativeMarks: 0,
+      timeTakenSeconds: 540, isCompleted: true, submittedAt: "2025-01-09T14:15:00", answers: [],
+    },
+    {
+      id: "att3", quizId: "qzn1", quizTitle: "NEET Physics — Laws of Motion",
+      subject: "Physics", goalCategory: "neet",
+      mode: "exam", totalScore: 20, maxScore: 32, percentage: 62.5,
+      percentile: 71, correctCount: 6, wrongCount: 2, skippedCount: 0, negativeMarks: -2,
+      timeTakenSeconds: 1620, isCompleted: true, submittedAt: "2025-01-10T09:00:00", answers: [],
+    },
   ]);
-  const [lastAttemptId, setLastAttemptId] = useState<string | null>(null);
-  const [authEmail, setAuthEmail] = useState("");
+
+  // ── Derived current goal ─────────────────────────────────────────────────
+
+  const currentGoal: Goal | null = user
+    ? (user.goals?.find(g => g.id === user.currentGoalId) ?? user.goals?.[0] ?? null)
+    : null;
+
+  // ── Goal actions ─────────────────────────────────────────────────────────
+
+  const setCurrentGoal = (goal: Goal) => {
+    setUser(prev => prev ? { ...prev, currentGoalId: goal.id } : prev);
+  };
+
+  const addGoal = (goal: Goal) => {
+    setUser(prev => {
+      if (!prev) return prev;
+      if (prev.goals.find(g => g.id === goal.id)) return prev;
+      return { ...prev, goals: [...prev.goals, goal], currentGoalId: goal.id };
+    });
+  };
+
+  const removeGoal = (goalId: string) => {
+    setUser(prev => {
+      if (!prev) return prev;
+      const remaining = prev.goals.filter(g => g.id !== goalId);
+      if (remaining.length === 0) return prev;
+      const newCurrentId = prev.currentGoalId === goalId ? remaining[0].id : prev.currentGoalId;
+      return { ...prev, goals: remaining, currentGoalId: newCurrentId };
+    });
+  };
+
+  // ── Bookmarks ────────────────────────────────────────────────────────────
 
   const toggleBookmark = (type: "paper" | "quiz", refId: string) => {
     setBookmarks(prev => {
@@ -88,6 +197,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const isBookmarked = (type: "paper" | "quiz", refId: string) =>
     bookmarks.some(b => b.type === type && b.refId === refId);
 
+  // ── Attempts ─────────────────────────────────────────────────────────────
+
   const addAttempt = (a: QuizAttempt) => {
     setCompletedAttempts(prev => [a, ...prev]);
     setLastAttemptId(a.id);
@@ -95,10 +206,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <AppContext.Provider value={{
-      view, setView, user, setUser, bookmarks, toggleBookmark, isBookmarked,
-      selectedPaperId, setSelectedPaperId, selectedQuizId, setSelectedQuizId,
-      currentAttempt, setCurrentAttempt, completedAttempts, addAttempt,
-      lastAttemptId, setLastAttemptId, authEmail, setAuthEmail,
+      view, setView,
+      user, setUser,
+      currentGoal, setCurrentGoal, addGoal, removeGoal,
+      bookmarks, toggleBookmark, isBookmarked,
+      selectedPaperId, setSelectedPaperId,
+      selectedQuizId, setSelectedQuizId,
+      currentAttempt, setCurrentAttempt,
+      completedAttempts, addAttempt,
+      lastAttemptId, setLastAttemptId,
+      authEmail, setAuthEmail,
     }}>
       {children}
     </AppContext.Provider>
@@ -110,3 +227,6 @@ export function useApp() {
   if (!ctx) throw new Error("useApp must be used inside AppProvider");
   return ctx;
 }
+
+// ── Exported seed goals (used by OnboardingFlow + AuthPages) ─────────────────
+export { seedGoal1, seedGoal2 };

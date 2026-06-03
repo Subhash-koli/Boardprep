@@ -1,7 +1,7 @@
 import { ArrowLeft, Download, Bookmark, BookmarkCheck, Eye, Clock, Award, Calendar, FileText, ZoomIn, ZoomOut } from "lucide-react";
 import { useState } from "react";
 import { useApp } from "../context/AppContext";
-import { papers } from "../data/mockData";
+import { papers, PAPER_TYPE_CONFIG } from "../data/mockData";
 
 export function PaperDetail() {
   const { selectedPaperId, setView, toggleBookmark, isBookmarked } = useApp();
@@ -17,11 +17,7 @@ export function PaperDetail() {
   );
 
   const bookmarked = isBookmarked("paper", paper.id);
-  const typeColors: Record<string, string> = {
-    board: "bg-blue-100 text-blue-700",
-    model: "bg-purple-100 text-purple-700",
-    practice: "bg-green-100 text-green-700",
-  };
+  const typeCfg = PAPER_TYPE_CONFIG[paper.type] ?? PAPER_TYPE_CONFIG["practice"];
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -34,10 +30,18 @@ export function PaperDetail() {
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div className="flex-1">
             <div className="flex flex-wrap gap-2 mb-3">
-              <span className={`text-xs px-2.5 py-1 rounded-full capitalize ${typeColors[paper.type]}`}>{paper.type} Paper</span>
+              <span
+                className="text-xs px-2.5 py-1 rounded-full font-medium border"
+                style={{ background: typeCfg.bg, color: typeCfg.text, borderColor: typeCfg.border }}
+              >
+                {typeCfg.label}
+              </span>
               <span className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">{paper.year}</span>
-              <span className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full capitalize">{paper.medium}</span>
-              <span className="text-xs bg-blue-50 text-[#1E3A8A] px-2.5 py-1 rounded-full">{paper.standard}th Standard</span>
+              {paper.medium && <span className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full capitalize">{paper.medium}</span>}
+              {paper.standard && <span className="text-xs bg-blue-50 text-[#1E3A8A] px-2.5 py-1 rounded-full">Class {paper.standard}</span>}
+              {paper.session && <span className="text-xs bg-violet-50 text-violet-700 px-2.5 py-1 rounded-full capitalize">{paper.session}</span>}
+              {paper.shift && <span className="text-xs bg-orange-50 text-orange-700 px-2.5 py-1 rounded-full capitalize">{paper.shift.replace("-", " ")}</span>}
+              {paper.paperNumber && <span className="text-xs bg-green-50 text-green-700 px-2.5 py-1 rounded-full capitalize">{paper.paperNumber.replace("-", " ")}</span>}
             </div>
             <h1 className="text-xl mb-2 leading-snug" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}>{paper.title}</h1>
             <p className="text-gray-500 text-sm">{paper.subject}</p>
@@ -152,20 +156,28 @@ export function PaperDetail() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mt-5">
         <h3 className="mb-3 text-sm" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600, color: "#1E3A8A" }}>Related Papers</h3>
         <div className="space-y-2">
-          {papers.filter(p => p.subjectId === paper.subjectId && p.id !== paper.id && p.status === "published").slice(0, 3).map(rp => (
-            <button
-              key={rp.id}
-              onClick={() => { }}
-              className="w-full text-left flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors"
-            >
-              <FileText size={15} className="text-gray-400 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-700 truncate">{rp.title}</p>
-                <p className="text-xs text-gray-400">{rp.year} · {rp.marks} marks</p>
-              </div>
-              <span className={`text-xs px-2 py-0.5 rounded-full ${rp.type === "board" ? "bg-blue-100 text-blue-600" : rp.type === "model" ? "bg-purple-100 text-purple-600" : "bg-green-100 text-green-600"}`}>{rp.type}</span>
-            </button>
-          ))}
+          {papers.filter(p => (p.goalCategory === paper.goalCategory) && p.id !== paper.id && p.status === "published").slice(0, 3).map(rp => {
+            const rpCfg = PAPER_TYPE_CONFIG[rp.type] ?? PAPER_TYPE_CONFIG["practice"];
+            return (
+              <button
+                key={rp.id}
+                onClick={() => { setSelectedPaperId(rp.id); }}
+                className="w-full text-left flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors"
+              >
+                <FileText size={15} className="text-gray-400 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-gray-700 truncate">{rp.title}</p>
+                  <p className="text-xs text-gray-400">{rp.year} · {rp.marks} marks</p>
+                </div>
+                <span
+                  className="text-xs px-2 py-0.5 rounded-full font-medium border flex-shrink-0"
+                  style={{ background: rpCfg.bg, color: rpCfg.text, borderColor: rpCfg.border }}
+                >
+                  {rpCfg.label}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

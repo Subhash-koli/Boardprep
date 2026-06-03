@@ -6,9 +6,9 @@ const LogoImage = new URL("../../../imports/logo.png", import.meta.url).href;
 
 export function AdminLogin() {
   const { setView, setUser } = useApp();
-  const [email, setEmail] = useState("admin@mahaboard.in");
+  const [email, setEmail] = useState("admin@ParikshaCrack.in");
   const [password, setPassword] = useState("admin123");
-  const [adminKey, setAdminKey] = useState("MAHA_ADMIN_2026");
+  const [adminKey, setAdminKey] = useState("PARIKSHA_ADMIN_2026");
   const [showPwd, setShowPwd] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,8 +19,8 @@ export function AdminLogin() {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      if (adminKey !== "MAHA_ADMIN_2026") { setError("Invalid admin key."); return; }
-      setUser({ id: "admin_1", name: "Admin", email, standard: "12", medium: "english", subjects: [], streak: 0, isAdmin: true });
+      if (adminKey !== "PARIKSHA_ADMIN_2026") { setError("Invalid admin key."); return; }
+      setUser({ id: "admin_1", name: "Admin", email, goals: [], currentGoalId: "", medium: "english", streak: 0, isAdmin: true });
       setView("admin-dashboard");
     }, 800);
   };
@@ -29,9 +29,9 @@ export function AdminLogin() {
     <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
         <div className="flex items-center gap-2 mb-6">
-          <img src={LogoImage} alt="MahaBoard Prep Logo" className="w-12 h-12 object-contain" />
+          <img src={LogoImage} alt="ParikshaCrack Logo" className="w-12 h-12 object-contain" />
           <div>
-            <h1 className="text-xl sm:text-2xl" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}>MahaBoard Prep</h1>
+            <h1 className="text-xl sm:text-2xl" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}>ParikshaCrack</h1>
             <p className="text-gray-400 text-xs sm:text-sm">Admin Panel</p>
           </div>
         </div>
@@ -74,7 +74,7 @@ export function AdminLogin() {
         </div>
 
         <div className="mt-4 p-3 bg-blue-50 rounded-xl text-xs text-blue-600">
-          <strong>Demo credentials:</strong> admin@mahaboard.in / admin123 / Key: MAHA_ADMIN_2026
+          <strong>Demo credentials:</strong> admin@ParikshaCrack.in / admin123 / Key: PARIKSHA_ADMIN_2026
         </div>
       </div>
     </div>
