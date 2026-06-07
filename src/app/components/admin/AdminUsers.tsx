@@ -23,7 +23,7 @@ export function AdminUsers() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto space-y-6">
       {/* Student Detail Modal */}
       {selectedStudent && (
         <div className="fixed inset-0 z-[60] bg-black/40 flex items-end sm:items-center justify-center sm:p-4">
@@ -99,7 +99,7 @@ export function AdminUsers() {
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h2 className="text-xl" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}>Students</h2>
           <p className="text-gray-500 text-sm">{studentList.length} registered students</p>

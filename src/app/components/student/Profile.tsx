@@ -40,8 +40,14 @@ export function Profile() {
     : null;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-5">
-      <h2 className="text-xl font-bold text-[#1E3A8A] font-['Poppins']">Profile & Settings</h2>
+    <div className="max-w-5xl mx-auto space-y-5">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-bold text-[#1E3A8A] font-['Poppins']">Profile & Settings</h2>
+          <p className="text-gray-500 text-sm">Manage your personal information and exam goals</p>
+        </div>
+      </div>
 
       {/* ── Profile Card ── */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">

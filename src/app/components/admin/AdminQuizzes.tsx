@@ -79,8 +79,8 @@ export function AdminQuizzes() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+    <div className="max-w-5xl mx-auto space-y-6">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h2 className="text-xl" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}>MCQ Quizzes</h2>
           <p className="text-gray-500 text-sm">{quizList.length} quizzes total</p>

@@ -103,8 +103,8 @@ export function AdminSubjects() {
   const colors = ["#1E3A8A", "#7C3AED", "#059669", "#DC2626", "#D97706", "#0284C7", "#DB2777", "#65A30D"];
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+    <div className="max-w-5xl mx-auto space-y-6">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h2 className="text-xl" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}>Subjects & Chapters</h2>
           <p className="text-gray-500 text-sm">{subjectList.length} subjects · {chapterList.length} chapters</p>

@@ -93,9 +93,9 @@ export function AdminAnnouncements() {
   });
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h2 className="text-xl font-bold text-[#1E3A8A] font-['Poppins']">Announcements</h2>
           <p className="text-gray-500 text-sm">{list.length} total · {list.filter(a => a.isActive).length} active</p>
