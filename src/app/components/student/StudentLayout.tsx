@@ -45,7 +45,7 @@ function GoalSwitcher() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all duration-150 max-w-[200px] min-h-[36px]"
+        className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all duration-150 max-w-[95px] min-[360px]:max-w-[120px] sm:max-w-[200px] min-h-[36px]"
         aria-label="Switch exam goal"
         aria-expanded={open}
       >
@@ -271,7 +271,7 @@ export function StudentLayout({ children }: { children: ReactNode }) {
       </aside>
 
       {/* ── Main Content Area ── */}
-      <div className="flex-1 lg:ml-60 flex flex-col min-h-screen">
+      <div className="flex-1 lg:ml-60 flex flex-col min-h-screen min-w-0 overflow-x-hidden">
 
         {/* ── Top Header ── */}
         <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3 sticky top-0 z-20 shadow-sm h-14">

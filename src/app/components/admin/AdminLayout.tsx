@@ -94,7 +94,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       )}
 
       {/* Main */}
-      <div className="flex-1 lg:ml-60 flex flex-col min-h-screen">
+      <div className="flex-1 lg:ml-60 flex flex-col min-h-screen min-w-0 overflow-x-hidden">
         <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3 sticky top-0 z-20 shadow-sm">
           <button className="lg:hidden text-gray-500" onClick={() => setMobileOpen(true)}>
             <Menu size={22} />
