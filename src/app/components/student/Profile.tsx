@@ -44,10 +44,10 @@ export function Profile() {
       <h2 className="text-xl font-bold text-[#1E3A8A] font-['Poppins']">Profile & Settings</h2>
 
       {/* ── Profile Card ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
         {/* Avatar + name */}
         <div className="flex items-center gap-4 mb-6">
-          <div className="relative">
+          <div className="relative flex-shrink-0">
             <div className="w-16 h-16 bg-[#1E3A8A] rounded-2xl flex items-center justify-center text-white text-2xl font-bold font-['Poppins']">
               {name?.[0] ?? "S"}
             </div>
@@ -132,7 +132,7 @@ export function Profile() {
       </div>
 
       {/* ── Goal Manager ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-[#1E3A8A] font-['Poppins']">My Exam Goals</h3>
           <button
@@ -207,7 +207,7 @@ export function Profile() {
       </div>
 
       {/* ── Stats for current goal ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
         <h3 className="font-semibold text-[#1E3A8A] font-['Poppins'] mb-4 flex items-center gap-2">
           <Target size={16} /> Performance — {currentGoal?.shortLabel ?? "All Goals"}
         </h3>
@@ -218,7 +218,7 @@ export function Profile() {
             { icon: FileText, label: "Best Score",    value: bestScore > 0 ? `${bestScore}%` : "—", bg: "bg-green-50", text: "text-green-600" },
             { icon: Flame,    label: "Day Streak",    value: user?.streak ?? 0,     bg: "bg-orange-50", text: "text-orange-600" },
           ].map(s => (
-            <div key={s.label} className="text-center bg-gray-50 rounded-xl p-4">
+            <div key={s.label} className="text-center bg-gray-50 rounded-xl p-3 sm:p-4">
               <div className={`w-10 h-10 rounded-xl ${s.bg} flex items-center justify-center mx-auto mb-2`}>
                 <s.icon size={18} className={s.text} />
               </div>
@@ -239,7 +239,7 @@ export function Profile() {
 
       {/* ── Recent Attempts ── */}
       {goalAttempts.length > 0 && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-[#1E3A8A] font-['Poppins']">Recent Attempts</h3>
             <span className="text-xs text-gray-400">{currentGoal?.shortLabel}</span>
@@ -274,7 +274,7 @@ export function Profile() {
       )}
 
       {/* ── Account ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
         <h3 className="font-semibold text-red-600 font-['Poppins'] mb-4">Account</h3>
         <button
           onClick={logout}

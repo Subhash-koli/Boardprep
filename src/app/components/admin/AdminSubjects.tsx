@@ -280,10 +280,10 @@ export function AdminSubjects() {
                     <div className="space-y-1.5">
                       {subChapters.map(ch => (
                         <div key={ch.id} className="flex items-center justify-between py-2 px-3 rounded-xl hover:bg-gray-50 transition-colors">
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 min-w-0 flex-1 mr-2">
                             <span className="w-6 h-6 rounded-lg bg-gray-100 text-xs text-gray-500 flex items-center justify-center flex-shrink-0">{ch.chapterNumber}</span>
                             <span className="text-sm text-gray-700 truncate min-w-0">{ch.name}</span>
-                            <span className="text-xs text-gray-400">{ch.totalQuestions} Qs</span>
+                            <span className="text-xs text-gray-400 flex-shrink-0">{ch.totalQuestions} Qs</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <button onClick={() => openEditChapter(ch)} className="p-1 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"><Edit2 size={12} /></button>

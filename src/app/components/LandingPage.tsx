@@ -34,7 +34,7 @@ const plans = [
   {
     name: "Starter",
     price: "Free",
-    period: "forever",
+    period: "",
     desc: "Perfect to explore the platform",
     color: "border-gray-200",
     badge: null as string | null,
@@ -382,9 +382,9 @@ export function LandingPage() {
             {plans.map(plan => (
               <div
                 key={plan.name}
-                className={`relative rounded-2xl border-2 flex flex-col transition-transform hover:-translate-y-1 ${
+                className={`relative rounded-2xl border-2 flex flex-col transition-all duration-300 hover:-translate-y-1 ${
                   plan.popular
-                    ? "bg-gradient-to-b from-[#1E3A8A] to-[#1e4da8] text-white border-transparent shadow-[0_20px_60px_rgba(30,58,138,0.35)] scale-[1.03]"
+                    ? "bg-gradient-to-b from-[#1E3A8A] to-[#1e4da8] text-white border-[#3B82F6] shadow-[0_20px_60px_rgba(30,58,138,0.4)] ring-2 ring-[#3B82F6]/40"
                     : "bg-white text-gray-800 shadow-sm hover:shadow-lg " + plan.color
                 }`}
               >
@@ -448,7 +448,7 @@ export function LandingPage() {
       <section className="py-10 sm:py-16 px-3 sm:px-4 bg-gradient-to-r from-[#1E3A8A] to-blue-700">
         <div className="max-w-2xl mx-auto text-center text-white">
           <h2 className="text-xl sm:text-2xl md:text-3xl mb-3 sm:mb-4 px-2" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700 }}>
-            Start Preparing Today — It's Free!
+            Start Preparing Today — Try Starter Free!
           </h2>
           <p className="text-blue-200 mb-6 sm:mb-8 text-sm sm:text-base px-2">
             Join 5,200+ students preparing smarter for NEET, JEE, Board exams and more.
@@ -460,7 +460,7 @@ export function LandingPage() {
             Create Free Account
           </button>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mt-6 text-blue-200 text-xs sm:text-sm">
-            {["No credit card needed", "Free forever", "All exams covered"].map(i => (
+            {["No credit card needed", "Starter plan available", "All exams covered"].map(i => (
               <div key={i} className="flex items-center justify-center gap-1.5"><CheckCircle size={14} className="sm:w-[16px] sm:h-[16px]" /> {i}</div>
             ))}
           </div>

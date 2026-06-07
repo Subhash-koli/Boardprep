@@ -127,9 +127,9 @@ export function AdminAnnouncements() {
 
       {/* Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center sm:p-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowForm(false)} />
-          <div className="relative bg-white rounded-t-3xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[92vh] sm:max-h-[90vh] overflow-y-auto">
+          <div className="relative bg-white rounded-t-3xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[92vh] sm:max-h-[90vh] overflow-y-auto animate-slide-up">
             <div className="flex justify-center pt-3 pb-1 sm:hidden">
               <div className="w-10 h-1 bg-gray-200 rounded-full" />
             </div>
@@ -249,48 +249,50 @@ export function AdminAnnouncements() {
               key={ann.id}
               className={`bg-white rounded-2xl border shadow-sm p-5 transition-opacity ${!ann.isActive ? "opacity-60" : ""} ${isUrgent ? "border-red-200" : "border-gray-100"}`}
             >
-              <div className="flex items-start gap-3">
-                <div className={`w-9 h-9 rounded-xl ${cfg.bg} flex items-center justify-center flex-shrink-0 mt-0.5`}>
-                  <Megaphone size={16} className={cfg.text} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <h4 className="text-gray-800 text-sm font-semibold font-['Poppins']">{ann.title}</h4>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium border ${cfg.bg} ${cfg.text} ${cfg.border}`}>
-                      {cfg.label}
-                    </span>
-                    {!ann.isActive && (
-                      <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Inactive</span>
-                    )}
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
+                <div className="flex items-start gap-3 flex-1 min-w-0">
+                  <div className={`w-9 h-9 rounded-xl ${cfg.bg} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                    <Megaphone size={16} className={cfg.text} />
                   </div>
-
-                  {/* Target goals */}
-                  <div className="flex flex-wrap gap-1 mb-2">
-                    {ann.targetGoals.slice(0, 4).map(g => {
-                      const meta = g !== "all" ? GOAL_METADATA[g] : null;
-                      return (
-                        <span key={g} className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">
-                          {meta?.icon} {goalLabel(g)}
-                        </span>
-                      );
-                    })}
-                    {ann.targetGoals.length > 4 && (
-                      <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">
-                        +{ann.targetGoals.length - 4} more
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <h4 className="text-gray-800 text-sm font-semibold font-['Poppins']">{ann.title}</h4>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium border ${cfg.bg} ${cfg.text} ${cfg.border}`}>
+                        {cfg.label}
                       </span>
-                    )}
-                  </div>
+                      {!ann.isActive && (
+                        <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Inactive</span>
+                      )}
+                    </div>
 
-                  <p className="text-xs text-gray-600 leading-relaxed line-clamp-2 mb-2">{ann.body}</p>
-                  <div className="flex items-center gap-3 text-[10px] text-gray-400">
-                    <span>Created: {ann.createdAt}</span>
-                    <span>·</span>
-                    <span>Expires: {ann.expiresAt}</span>
+                    {/* Target goals */}
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {ann.targetGoals.slice(0, 4).map(g => {
+                        const meta = g !== "all" ? GOAL_METADATA[g] : null;
+                        return (
+                          <span key={g} className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">
+                            {meta?.icon} {goalLabel(g)}
+                          </span>
+                        );
+                      })}
+                      {ann.targetGoals.length > 4 && (
+                        <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">
+                          +{ann.targetGoals.length - 4} more
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="text-xs text-gray-600 leading-relaxed line-clamp-2 mb-2">{ann.body}</p>
+                    <div className="flex items-center gap-3 text-[10px] text-gray-400">
+                      <span>Created: {ann.createdAt}</span>
+                      <span>·</span>
+                      <span>Expires: {ann.expiresAt}</span>
+                    </div>
                   </div>
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-1 flex-shrink-0">
+                <div className="flex items-center gap-1 self-end sm:self-start sm:mt-0.5 pl-12 sm:pl-0 flex-shrink-0">
                   <button
                     onClick={() => toggleActive(ann.id)}
                     className={`p-1.5 rounded-lg transition-colors text-xs ${ann.isActive ? "text-green-600 bg-green-50 hover:bg-green-100" : "text-gray-400 hover:bg-gray-50"}`}
