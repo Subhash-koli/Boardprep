@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   GraduationCap, School, Trophy, ChevronRight, X, RotateCcw, Check,
   Landmark, BookText, Globe, Building2, Pencil,

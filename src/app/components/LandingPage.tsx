@@ -1,20 +1,20 @@
 import {
-  BookOpen, Brain, BarChart3, Users, ChevronRight, Star, Target, CheckCircle, Zap, Trophy,
+  BookOpen, Brain, BarChart3, Users, ChevronRight, Star, CheckCircle, Zap, Trophy,
   FlaskConical, Stethoscope, Atom, GraduationCap, School, BookMarked, Calculator, Microscope,
-  Gift, Heart, Search, Eye, Download, X, Clock, Award, SlidersHorizontal, ChevronDown,
-  LayoutGrid, List, RotateCcw, Sparkles, CornerDownLeft, ArrowDownCircle,
-  Languages, Globe, Pencil, Check, TrendingUp, Lightbulb, Info,
+  Gift, Heart, Search, Eye, Download, X, Clock, Award,
+  LayoutGrid, List, RotateCcw, Sparkles, ArrowDownCircle,
+  Languages, Pencil, Check, TrendingUp, Lightbulb,
   type LucideIcon
 } from "lucide-react";
 
 
 import { useApp } from "./context/AppContext";
 import { useState, useEffect } from "react";
-import { HierarchicalFilter, EMPTY_FILTER, resolveGoalCategory, filterBreadcrumb } from "./student/HierarchicalFilter";
+import { HierarchicalFilter, EMPTY_FILTER, resolveGoalCategory } from "./student/HierarchicalFilter";
 import type { HierarchicalFilterState } from "./student/HierarchicalFilter";
 import { SubjectIcon } from "./shared/GoalIcons";
 import { papers, quizzes, subjects, PAPER_TYPE_CONFIG, DIFFICULTY_CONFIG } from "./data/mockData";
-import type { PaperType, Medium, Difficulty } from "./data/mockData";
+import type { PaperType } from "./data/mockData";
 
 
 const BGImage      = new URL("../../imports/BG.jpg",         import.meta.url).href;
@@ -586,7 +586,6 @@ function LandingContentExplorer({
   const handleScrollToResults = () => {
     // Find the first actual result card, not just the header
     const firstCard = document.querySelector("[data-result-card]") as HTMLElement | null;
-    const resultsContainer = document.getElementById("results-cards-container");
     
     if (firstCard) {
       // Scroll the first card into view with some offset
@@ -1153,7 +1152,7 @@ function LandingContentExplorer({
                       <p className="text-xs text-gray-500 mb-3">{p.subject}</p>
                       <div className="flex items-center gap-3 text-xs text-gray-400 bg-gray-50/80 p-2 rounded-xl border border-gray-100">
                         <span><Award size={12} className="inline mr-1" /> {p.marks} Marks</span>
-                        <span><Clock size={12} className="inline mr-1" /> {p.timeLimitMinutes}m</span>
+                        <span><Clock size={12} className="inline mr-1" /> {p.durationMinutes}m</span>
                         <span className="text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-md text-[10px]">
                           <Download size={11} className="inline mr-0.5" /> {p.analytics.downloads.toLocaleString()}
                         </span>
@@ -1274,7 +1273,7 @@ function LandingContentExplorer({
               </div>
               <div className="flex justify-between">
                 <span>Duration:</span>
-                <span className="font-bold text-gray-800">{previewPaper.timeLimitMinutes} Minutes</span>
+                <span className="font-bold text-gray-800">{previewPaper.durationMinutes} Minutes</span>
               </div>
               <div className="flex justify-between">
                 <span>Medium:</span>

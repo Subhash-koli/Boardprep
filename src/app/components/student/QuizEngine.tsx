@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   ArrowLeft, Clock, CheckCircle, XCircle, ChevronLeft, ChevronRight,
-  Flag, Send, Brain, Target, Timer, BookOpen, Zap, TrendingUp, AlertTriangle, Lightbulb
+  Flag, Send, Brain, Target, Timer, BookOpen, Zap, TrendingUp, AlertTriangle, Lightbulb,
+  Pause, Play, Plus, Grid, Bookmark, BookmarkCheck
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { quizzes } from "../data/mockData";
@@ -167,20 +168,23 @@ export function QuizDetail() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function QuizAttempt() {
-  const { currentAttempt, setCurrentAttempt, setView, addAttempt, currentGoal } = useApp();
+  const { currentAttempt, setCurrentAttempt, setView, addAttempt } = useApp();
   const quiz = quizzes.find(q => q.id === currentAttempt?.quizId);
   const [qIndex, setQIndex] = useState(currentAttempt?.currentQuestionIndex ?? 0);
   const [answers, setAnswers] = useState<Record<string, "A" | "B" | "C" | "D" | null>>(currentAttempt?.answers ?? {});
   const [flagged, setFlagged] = useState<string[]>(currentAttempt?.flagged ?? []);
+  const [bookmarkedQuestions, setBookmarkedQuestions] = useState<string[]>([]);
+  const [isPaused, setIsPaused] = useState(false);
+  const [showQuestionPalette, setShowQuestionPalette] = useState(false);
   const [timeLeft, setTimeLeft] = useState((quiz?.timeLimitMinutes ?? 15) * 60);
   const [submitted, setSubmitted] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
 
   const ms = quiz?.markingScheme;
 
-  // Exam mode timer
+  // Exam mode timer (pauses when isPaused === true)
   useEffect(() => {
-    if (currentAttempt?.mode !== "exam") return;
+    if (currentAttempt?.mode !== "exam" || isPaused || submitted) return;
     const interval = setInterval(() => {
       setTimeLeft(t => {
         if (t <= 1) { clearInterval(interval); handleSubmit(); return 0; }
@@ -188,7 +192,7 @@ export function QuizAttempt() {
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [currentAttempt?.mode]);
+  }, [currentAttempt?.mode, isPaused, submitted]);
 
   // ── Score calculation with negative marking ──────────────────────────────
 
@@ -295,6 +299,7 @@ export function QuizAttempt() {
   const selectedOpt = answers[q.id];
   const isCorrect = selectedOpt === q.correctOption;
   const isFlagged = flagged.includes(q.id);
+  const isBookmarkedQuestion = bookmarkedQuestions.includes(q.id);
 
   const mins = Math.floor(timeLeft / 60);
   const secs = timeLeft % 60;
@@ -325,19 +330,35 @@ export function QuizAttempt() {
     setFlagged(prev => prev.includes(q.id) ? prev.filter(id => id !== q.id) : [...prev, q.id]);
   };
 
+  const toggleQuestionBookmark = () => {
+    setBookmarkedQuestions(prev => prev.includes(q.id) ? prev.filter(id => id !== q.id) : [...prev, q.id]);
+  };
+
   // Unanswered count for submit warning
   const unansweredCount = quiz.questions.length - answeredCount;
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto relative">
 
-      {/* ── Top Bar ── */}
+      {/* ── Top Bar Controls ── */}
       <div className="flex items-center justify-between mb-4 gap-3">
         <div className="min-w-0">
           <p className="text-[10px] text-gray-400 uppercase tracking-wider">{isPractice ? "Practice Mode" : "Exam Mode"}</p>
           <h3 className="text-sm font-semibold text-[#1E3A8A] font-['Poppins'] truncate">{quiz.title}</h3>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Question Grid Jumper Toggle Button */}
+          <button
+            onClick={() => setShowQuestionPalette(p => !p)}
+            className={`p-2 rounded-xl border transition-colors flex items-center gap-1.5 text-xs font-semibold ${
+              showQuestionPalette ? "bg-blue-100 border-blue-300 text-[#1E3A8A]" : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+            }`}
+            title="Toggle Question Palette"
+          >
+            <Grid size={15} />
+            <span className="hidden sm:inline">Palette</span>
+          </button>
+
           {/* Live score */}
           {ms.hasNegativeMarking && (
             <div className="text-xs px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-600 font-mono">
@@ -346,15 +367,74 @@ export function QuizAttempt() {
               <span className="text-gray-400"> / {quiz.totalMarks}</span>
             </div>
           )}
-          {/* Timer */}
+
+          {/* Timer Controls */}
           {!isPractice && (
-            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-bold font-mono ${timerWarning ? "bg-red-100 text-red-600 animate-pulse" : "bg-blue-50 text-[#1E3A8A]"}`}>
-              <Clock size={14} />
-              {mins.toString().padStart(2, "0")}:{secs.toString().padStart(2, "0")}
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setIsPaused(p => !p)}
+                className="p-1.5 rounded-xl border border-blue-200 bg-blue-50 text-[#1E3A8A] hover:bg-blue-100 transition-colors"
+                title={isPaused ? "Resume Timer" : "Pause Timer"}
+              >
+                {isPaused ? <Play size={14} /> : <Pause size={14} />}
+              </button>
+
+              <button
+                onClick={() => setTimeLeft(t => t + 300)}
+                className="px-2 py-1 rounded-xl border border-blue-200 bg-blue-50 text-[#1E3A8A] hover:bg-blue-100 text-xs font-bold transition-colors flex items-center gap-0.5"
+                title="Add +5 Minutes Extra Time"
+              >
+                <Plus size={12} />5m
+              </button>
+
+              <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-sm font-bold font-mono ${timerWarning ? "bg-red-100 text-red-600 animate-pulse" : "bg-blue-50 text-[#1E3A8A]"}`}>
+                <Clock size={14} />
+                {mins.toString().padStart(2, "0")}:{secs.toString().padStart(2, "0")}
+              </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* ── Question Palette Drawer (Collapsible) ── */}
+      {showQuestionPalette && (
+        <div className="rounded-2xl p-4 mb-4 bg-white/95 backdrop-blur-md border border-blue-100 shadow-md animate-apple-unveil">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-gray-500">Question Palette</span>
+            <div className="flex items-center gap-3 text-[11px] text-gray-500">
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#1E3A8A] inline-block" /> Answered</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-gray-200 inline-block" /> Unanswered</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-orange-400 inline-block" /> Flagged</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
+            {quiz.questions.map((qn, idx) => {
+              const ansed = qn.id in answers && answers[qn.id] !== null;
+              const isF = flagged.includes(qn.id);
+              const isB = bookmarkedQuestions.includes(qn.id);
+              const isCur = idx === qIndex;
+
+              return (
+                <button
+                  key={qn.id}
+                  onClick={() => { setQIndex(idx); setShowQuestionPalette(false); }}
+                  className={`h-9 rounded-xl text-xs font-bold flex items-center justify-center relative transition-all ${
+                    isCur ? "ring-2 ring-blue-600 ring-offset-1" : ""
+                  } ${
+                    isF ? "bg-orange-100 text-orange-700 border border-orange-300" :
+                    isB ? "bg-amber-100 text-amber-800 border border-amber-300" :
+                    ansed ? "bg-[#1E3A8A] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  {idx + 1}
+                  {isF && <Flag size={8} className="absolute top-1 right-1 text-orange-600" />}
+                  {isB && <Bookmark size={8} className="absolute bottom-1 right-1 text-amber-600" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* ── Progress bar ── */}
       <div className="rounded-2xl p-4 mb-4" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
@@ -370,8 +450,24 @@ export function QuizAttempt() {
         </div>
       </div>
 
-      {/* ── Question Card ── */}
-      <div className="rounded-2xl p-5 mb-4" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
+      {/* ── Question Card (with Blur Overlay if Paused) ── */}
+      <div className="rounded-2xl p-5 mb-4 relative overflow-hidden" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
+        
+        {/* Paused Screen Blur Overlay */}
+        {isPaused && (
+          <div className="absolute inset-0 bg-white/80 backdrop-blur-md z-30 flex flex-col items-center justify-center text-center p-6 animate-apple-unveil">
+            <Pause size={36} className="text-[#1E3A8A] mb-2 animate-bounce" />
+            <h4 className="font-bold text-[#1E3A8A] text-lg mb-1 font-['Poppins']">Quiz Paused</h4>
+            <p className="text-xs text-gray-500 mb-4 max-w-xs">Your exam timer is frozen. Click Resume below to return to your questions.</p>
+            <button
+              onClick={() => setIsPaused(false)}
+              className="bg-[#1E3A8A] hover:bg-blue-900 text-white px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 shadow-md transition-colors"
+            >
+              <Play size={14} /> Resume Quiz
+            </button>
+          </div>
+        )}
+
         <div className="flex items-start justify-between mb-4 gap-3">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -380,16 +476,28 @@ export function QuizAttempt() {
                 +{ms.correctMarks} / {ms.wrongMarks}
               </span>
               {isFlagged && <span className="text-xs bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full flex items-center gap-1"><Flag size={11} /> Flagged</span>}
+              {isBookmarkedQuestion && <span className="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full flex items-center gap-1"><Bookmark size={11} /> Saved</span>}
             </div>
             <p className="text-gray-800 leading-relaxed text-[15px]">{q.text}</p>
           </div>
-          <button
-            onClick={toggleFlag}
-            className={`flex-shrink-0 p-2 rounded-xl transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center ${isFlagged ? "bg-orange-50 text-orange-500" : "text-gray-300 hover:text-orange-400 hover:bg-orange-50"}`}
-            aria-label={isFlagged ? "Unflag question" : "Flag for review"}
-          >
-            <Flag size={16} />
-          </button>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <button
+              onClick={toggleQuestionBookmark}
+              className={`p-2 rounded-xl transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center ${isBookmarkedQuestion ? "bg-amber-50 text-amber-600" : "text-gray-300 hover:text-amber-500 hover:bg-amber-50"}`}
+              aria-label="Bookmark question"
+              title="Bookmark for review"
+            >
+              {isBookmarkedQuestion ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
+            </button>
+            <button
+              onClick={toggleFlag}
+              className={`p-2 rounded-xl transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center ${isFlagged ? "bg-orange-50 text-orange-500" : "text-gray-300 hover:text-orange-400 hover:bg-orange-50"}`}
+              aria-label={isFlagged ? "Unflag question" : "Flag for review"}
+              title="Flag question"
+            >
+              <Flag size={16} />
+            </button>
+          </div>
         </div>
 
         {/* Options */}
@@ -759,11 +867,11 @@ export function QuizReview() {
                   <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Skipped · 0 marks</span>
                 ) : isRight ? (
                   <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full flex items-center gap-1">
-                    <CheckCircle size={10} /> Correct · +{ms.correctMarks}
+                    <CheckCircle size={10} /> Correct · +{marksAwarded}
                   </span>
                 ) : (
                   <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full flex items-center gap-1">
-                    <XCircle size={10} /> Wrong · {ms.wrongMarks}
+                    <XCircle size={10} /> Wrong · {marksAwarded}
                   </span>
                 )}
               </div>

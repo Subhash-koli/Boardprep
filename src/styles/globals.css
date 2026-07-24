@@ -368,14 +368,14 @@ html.dark .bg-white {
 }
 
 html.dark .bg-gray-50,
-html.dark .bg-[#F8FAFC] {
+html.dark [class*="bg-[#F8FAFC]"] {
   background-color: #1E293B !important;
   color: #CBD5E1 !important;
 }
 
 html.dark .text-gray-900,
 html.dark .text-gray-800,
-html.dark .text-[#1E3A8A] {
+html.dark [class*="text-[#1E3A8A]"] {
   color: #F1F5F9 !important;
 }
 
@@ -384,4 +384,48 @@ html.dark .text-gray-500 {
   color: #94A3B8 !important;
 }
 
+/* ── Clean Print / PDF Export Styling System ───────────────────── */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    font-size: 12pt !important;
+  }
 
+  /* Hide navigation, headers, footers, buttons, and sidebars */
+  header, nav, footer, sidebar,
+  .no-print, button, .border-t, .shadow-2xl, .backdrop-blur-md {
+    box-shadow: none !important;
+  }
+
+  /* Hide everything except printable container when printing paper preview */
+  body > div > *:not(#printable-paper-view-root) {
+    display: none !important;
+  }
+
+  #printable-paper-view {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: #FFFFFF !important;
+    color: #000000 !important;
+  }
+
+  #printable-paper-view * {
+    color: #000000 !important;
+    border-color: #CBD5E1 !important;
+  }
+
+  /* Force page break behavior for sections */
+  .print-page-break {
+    page-break-before: always !important;
+  }
+
+  .print-avoid-break {
+    page-break-inside: avoid !important;
+  }
+}

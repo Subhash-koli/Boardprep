@@ -1,10 +1,10 @@
-import { ArrowLeft, Download, Bookmark, BookmarkCheck, Eye, Clock, Award, Calendar, FileText, ZoomIn, ZoomOut, Zap } from "lucide-react";
+import { ArrowLeft, Download, Bookmark, BookmarkCheck, Eye, Clock, Award, Calendar, FileText, ZoomIn, ZoomOut, Zap, Printer } from "lucide-react";
 import { useState } from "react";
 import { useApp } from "../context/AppContext";
 import { papers, PAPER_TYPE_CONFIG } from "../data/mockData";
 
 export function PaperDetail() {
-  const { selectedPaperId, setView, toggleBookmark, isBookmarked } = useApp();
+  const { selectedPaperId, setSelectedPaperId, setView, toggleBookmark, isBookmarked } = useApp();
   const [viewing, setViewing] = useState(false);
   const [zoom, setZoom] = useState(100);
 
@@ -19,14 +19,21 @@ export function PaperDetail() {
   const bookmarked = isBookmarked("paper", paper.id);
   const typeCfg = PAPER_TYPE_CONFIG[paper.type] ?? PAPER_TYPE_CONFIG["practice"];
 
+  const handlePrint = () => {
+    setViewing(true);
+    setTimeout(() => {
+      window.print();
+    }, 200);
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
       {/* Back */}
-      <button onClick={() => setView("papers")} className="flex items-center gap-2 text-gray-500 hover:text-[#1E3A8A] mb-4 transition-colors text-sm">
+      <button onClick={() => setView("papers")} className="flex items-center gap-2 text-gray-500 hover:text-[#1E3A8A] mb-4 transition-colors text-sm no-print">
         <ArrowLeft size={16} /> Back to Papers
       </button>
 
-      <div className="rounded-2xl p-6 mb-5" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
+      <div className="rounded-2xl p-6 mb-5 no-print" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div className="flex-1">
             <div className="flex flex-wrap gap-2 mb-3">
@@ -84,6 +91,12 @@ export function PaperDetail() {
             <Eye size={16} /> {viewing ? "Close Viewer" : "View PDF Online"}
           </button>
           <button
+            onClick={handlePrint}
+            className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl text-sm flex items-center justify-center gap-2 transition-colors min-h-[44px]"
+          >
+            <Printer size={16} /> Print / Save as PDF
+          </button>
+          <button
             onClick={() => {
               const content = `PARIKSHACRACK QUESTION PAPER\nTitle: ${paper.title}\nSubject: ${paper.subject}\nYear: ${paper.year}\nMarks: ${paper.marks}\nDuration: ${paper.durationMinutes} mins\n\n--- GENERAL INSTRUCTIONS ---\n1. All questions are compulsory.\n2. Write question numbers clearly.\n3. Calculators are not allowed.\n\nDownloaded from ParikshaCrack v2.0 Platform (https://parikshacrack.in)`;
               const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
@@ -97,16 +110,17 @@ export function PaperDetail() {
             }}
             className="flex-1 bg-[#F97316] hover:bg-orange-600 text-white py-3 rounded-xl text-sm flex items-center justify-center gap-2 transition-colors min-h-[44px]"
           >
-            <Download size={16} /> Download PDF
+            <Download size={16} /> Download Text
           </button>
         </div>
       </div>
 
 
+
       {/* PDF Viewer */}
       {viewing && (
         <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 no-print">
             <h3 className="text-sm" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600, color: "#1E3A8A" }}>PDF Viewer</h3>
             <div className="flex items-center gap-2">
               <button
@@ -126,7 +140,7 @@ export function PaperDetail() {
           </div>
 
           {/* Mock PDF Viewer */}
-          <div className="bg-gray-100 rounded-xl p-4 min-h-96 flex flex-col items-center justify-center" style={{ transform: `scale(${zoom / 100})`, transformOrigin: "top center" }}>
+          <div id="printable-paper-view" className="bg-gray-100 rounded-xl p-4 min-h-96 flex flex-col items-center justify-center" style={{ transform: `scale(${zoom / 100})`, transformOrigin: "top center" }}>
             <div className="bg-white shadow-md rounded-lg w-full max-w-2xl p-8">
               <div className="text-center mb-8 border-b border-gray-200 pb-6">
                 <div className="text-sm text-gray-500 mb-1">Maharashtra State Board of Secondary & Higher Secondary Education</div>
