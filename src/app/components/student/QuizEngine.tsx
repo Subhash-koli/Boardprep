@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   ArrowLeft, Clock, CheckCircle, XCircle, ChevronLeft, ChevronRight,
-  Flag, Send, Brain, Target, Timer, BookOpen, Zap, TrendingUp, AlertTriangle
+  Flag, Send, Brain, Target, Timer, BookOpen, Zap, TrendingUp, AlertTriangle, Lightbulb
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { quizzes } from "../data/mockData";
@@ -52,7 +52,7 @@ export function QuizDetail() {
         <ArrowLeft size={16} /> Back to Quizzes
       </button>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-5">
+      <div className="rounded-2xl p-6 mb-5" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
         {/* Badges */}
         <div className="flex flex-wrap gap-2 mb-3">
           <span className={`text-xs px-2.5 py-1 rounded-full capitalize font-medium ${diffColors[quiz.difficulty] ?? diffColors.medium}`}>
@@ -357,7 +357,7 @@ export function QuizAttempt() {
       </div>
 
       {/* ── Progress bar ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-4">
+      <div className="rounded-2xl p-4 mb-4" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs text-gray-500">Q {qIndex + 1} of {quiz.questions.length}</span>
           <span className="text-xs text-gray-500">{answeredCount} answered · {unansweredCount} remaining</span>
@@ -371,7 +371,7 @@ export function QuizAttempt() {
       </div>
 
       {/* ── Question Card ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-4">
+      <div className="rounded-2xl p-5 mb-4" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
         <div className="flex items-start justify-between mb-4 gap-3">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -379,7 +379,7 @@ export function QuizAttempt() {
               <span className="text-xs bg-blue-50 text-[#1E3A8A] px-2 py-0.5 rounded-full font-medium">
                 +{ms.correctMarks} / {ms.wrongMarks}
               </span>
-              {isFlagged && <span className="text-xs bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full">🚩 Flagged</span>}
+              {isFlagged && <span className="text-xs bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full flex items-center gap-1"><Flag size={11} /> Flagged</span>}
             </div>
             <p className="text-gray-800 leading-relaxed text-[15px]">{q.text}</p>
           </div>
@@ -456,7 +456,7 @@ export function QuizAttempt() {
       </div>
 
       {/* ── Question Navigator ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+      <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
         <p className="text-xs text-gray-500 mb-3 font-medium">Question Navigator</p>
         <div className="flex flex-wrap gap-1.5">
           {quiz.questions.map((question, i) => {
@@ -502,7 +502,7 @@ export function QuizAttempt() {
       {showSubmitModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50" onClick={() => setShowSubmitModal(false)} />
-          <div className="relative bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+          <div className="relative rounded-2xl p-6 max-w-sm w-full" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
             <h3 className="font-bold text-gray-900 font-['Poppins'] text-lg mb-1">Submit Quiz?</h3>
             {unansweredCount > 0 ? (
               <p className="text-sm text-amber-700 mb-4 flex items-start gap-2">
@@ -575,12 +575,20 @@ export function QuizResult() {
     <div className="max-w-lg mx-auto space-y-4">
 
       {/* ── Score Card ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 text-center">
+      <div className="rounded-2xl p-6 text-center" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
         <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 ${passed ? "bg-green-100" : "bg-red-100"}`}>
           {passed ? <CheckCircle size={36} className="text-green-600" /> : <XCircle size={36} className="text-red-500" />}
         </div>
 
+        {/* Celebratory confetti animation banner */}
+        {pct >= 80 && (
+          <div className="mb-4 bg-gradient-to-r from-amber-500 via-orange-500 to-[#1E3A8A] text-white py-2.5 px-4 rounded-xl text-xs font-bold shadow-lg animate-bounce flex items-center justify-center gap-2">
+            <span>🎉</span> <span>MASTERCLASS PERFORMANCE! You scored {pct}%!</span> <span>🎉</span>
+          </div>
+        )}
+
         <div className="text-4xl mb-1">{emoji}</div>
+
         <h1 className={`text-2xl font-bold font-['Poppins'] mb-1 ${passed ? "text-green-700" : "text-red-600"}`}>
           {pct >= 90 ? "Outstanding!" : pct >= 75 ? "Excellent!" : pct >= 60 ? "Good Job!" : pct >= 40 ? "Keep Practicing!" : "Don't Give Up!"}
         </h1>
@@ -785,14 +793,24 @@ export function QuizReview() {
                 ))}
               </div>
 
-              {/* Explanation */}
-              <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 text-xs text-blue-700 leading-relaxed">
-                <span className="font-semibold text-[#1E3A8A]">Explanation: </span>{q.explanation}
+              {/* Explanation & ParikshaAI Doubt Assistant */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-3.5 text-xs text-blue-800 leading-relaxed space-y-2">
+                <div className="flex items-center justify-between font-semibold text-[#1E3A8A] text-xs">
+                  <span className="flex items-center gap-1.5 font-['Poppins']">
+                    <Brain size={14} className="text-[#1E3A8A]" /> ParikshaAI Tutor Explanation
+                  </span>
+                  <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">English & Marathi Step-by-Step</span>
+                </div>
+                <p className="text-gray-700 leading-relaxed">{q.explanation}</p>
+                <div className="pt-1.5 border-t border-blue-100/80 text-[11px] text-gray-500 italic">
+                  <Lightbulb size={13} className="inline text-amber-500 mr-1" /> <span className="font-semibold text-gray-700">Exam Tip:</span> Standard Maharashtra board questions test formula application directly. Verify units before final calculation.
+                </div>
               </div>
             </div>
           );
         })}
       </div>
+
 
       <div className="py-6 flex justify-center">
         <button

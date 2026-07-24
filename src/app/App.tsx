@@ -1,6 +1,6 @@
 import { AppProvider, useApp } from "./components/context/AppContext";
 import { LandingPage } from "./components/LandingPage";
-import { LoginPage, RegisterPage, VerifyOTPPage, ForgotPasswordPage, ResetPasswordPage } from "./components/AuthPages";
+import { LoginModal, LoginPage, AdminLoginShim, RegisterPage, VerifyOTPPage, ForgotPasswordPage, ResetPasswordPage } from "./components/AuthPages";
 import OnboardingFlow from "./components/OnboardingFlow";
 import { StudentLayout } from "./components/student/StudentLayout";
 import { Dashboard } from "./components/student/Dashboard";
@@ -10,7 +10,6 @@ import { QuizList } from "./components/student/QuizList";
 import { QuizDetail, QuizAttempt, QuizResult, QuizReview } from "./components/student/QuizEngine";
 import { Bookmarks } from "./components/student/Bookmarks";
 import { Profile } from "./components/student/Profile";
-import { AdminLogin } from "./components/admin/AdminLogin";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import { AdminDashboard } from "./components/admin/AdminDashboard";
 import { AdminPapers } from "./components/admin/AdminPapers";
@@ -34,28 +33,28 @@ const STUDENT_VIEWS = [
 function AppContent() {
   const { view } = useApp();
 
-  // Public pages (no layout wrapper)
-  if (view === "landing") return <LandingPage />;
-  if (view === "login") return <LoginPage />;
-  if (view === "register") return <RegisterPage />;
-  if (view === "verify-otp") return <VerifyOTPPage />;
+  // Public / auth pages
+  if (view === "landing")         return <LandingPage />;
+  if (view === "login")           return <LoginPage />;        // opens modal on landing (student tab)
+  if (view === "admin-login")     return <AdminLoginShim />;   // opens modal on landing (admin tab)
+  if (view === "register")        return <RegisterPage />;
+  if (view === "verify-otp")      return <VerifyOTPPage />;
   if (view === "forgot-password") return <ForgotPasswordPage />;
-  if (view === "reset-password") return <ResetPasswordPage />;
-  if (view === "onboarding") return <OnboardingFlow />;
-  if (view === "admin-login") return <AdminLogin />;
+  if (view === "reset-password")  return <ResetPasswordPage />;
+  if (view === "onboarding")      return <OnboardingFlow />;
 
-  // Admin panel
+  // Admin portal
   if (ADMIN_VIEWS.includes(view)) {
     return (
       <AdminLayout>
-        {view === "admin-dashboard" && <AdminDashboard />}
-        {view === "admin-papers" && <AdminPapers />}
-        {(view === "admin-paper-upload") && <AdminPapers />}
+        {view === "admin-dashboard"  && <AdminDashboard />}
+        {view === "admin-papers"     && <AdminPapers />}
+        {view === "admin-paper-upload" && <AdminPapers />}
         {(view === "admin-quizzes" || view === "admin-quiz-create" || view === "admin-quiz-edit" || view === "admin-quiz-preview") && <AdminQuizzes />}
-        {(view === "admin-users" || view === "admin-user-detail") && <AdminUsers />}
+        {(view === "admin-users"    || view === "admin-user-detail") && <AdminUsers />}
         {view === "admin-announcements" && <AdminAnnouncements />}
-        {view === "admin-subjects" && <AdminSubjects />}
-        {view === "admin-analytics" && <AdminAnalytics />}
+        {view === "admin-subjects"   && <AdminSubjects />}
+        {view === "admin-analytics"  && <AdminAnalytics />}
       </AdminLayout>
     );
   }
@@ -64,27 +63,30 @@ function AppContent() {
   if (STUDENT_VIEWS.includes(view)) {
     return (
       <StudentLayout>
-        {view === "dashboard" && <Dashboard />}
-        {view === "papers" && <PapersList />}
+        {view === "dashboard"    && <Dashboard />}
+        {view === "papers"       && <PapersList />}
         {view === "paper-detail" && <PaperDetail />}
-        {view === "quizzes" && <QuizList />}
-        {view === "quiz-detail" && <QuizDetail />}
+        {view === "quizzes"      && <QuizList />}
+        {view === "quiz-detail"  && <QuizDetail />}
         {view === "quiz-attempt" && <QuizAttempt />}
-        {view === "quiz-result" && <QuizResult />}
-        {view === "quiz-review" && <QuizReview />}
-        {view === "bookmarks" && <Bookmarks />}
-        {view === "profile" && <Profile />}
+        {view === "quiz-result"  && <QuizResult />}
+        {view === "quiz-review"  && <QuizReview />}
+        {view === "bookmarks"    && <Bookmarks />}
+        {view === "profile"      && <Profile />}
       </StudentLayout>
     );
   }
 
-  // Fallback
+
   return <LandingPage />;
 }
+
 
 export default function App() {
   return (
     <AppProvider>
+      {/* Global Login Modal — renders on top of any page, handles both Student & Admin */}
+      <LoginModal />
       <AppContent />
     </AppProvider>
   );

@@ -75,7 +75,14 @@ interface AppContextType {
   setLastAttemptId: (id: string | null) => void;
   authEmail: string;
   setAuthEmail: (e: string) => void;
+  showLoginModal: boolean;
+  setShowLoginModal: (v: boolean) => void;
+  loginModalTab: "student" | "admin";
+  setLoginModalTab: (t: "student" | "admin") => void;
+  darkMode: boolean;
+  toggleDarkMode: () => void;
 }
+
 
 // ── Seed goals for demo ───────────────────────────────────────────────────────
 
@@ -154,7 +161,76 @@ export function AppProvider({ children }: { children: ReactNode }) {
     },
   ]);
 
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginModalTab, setLoginModalTab] = useState<"student" | "admin">("student");
+
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("parikshacrack_darkmode") === "true";
+  });
+
+  React.useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    localStorage.setItem("parikshacrack_darkmode", String(darkMode));
+  }, [darkMode]);
+
+  const toggleDarkMode = () => setDarkMode(prev => !prev);
+
+  // ── URL Hash Navigation Sync ─────────────────────────────────────────────
+
+
+  const handleSetView = (v: View) => {
+    setView(v);
+    if (typeof window !== "undefined") {
+      window.location.hash = v;
+    }
+  };
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const initialHash = window.location.hash.replace("#", "") as View;
+    if (initialHash) {
+      setView(initialHash);
+    }
+
+    const onHashChange = () => {
+      const h = window.location.hash.replace("#", "") as View;
+      if (h) setView(h);
+    };
+
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
+
+  // ── LocalStorage Persistence ─────────────────────────────────────────────
+
+  React.useEffect(() => {
+    try {
+      const savedUser = localStorage.getItem("parikshacrack_user");
+      const savedBookmarks = localStorage.getItem("parikshacrack_bookmarks");
+      if (savedUser) setUser(JSON.parse(savedUser));
+      if (savedBookmarks) setBookmarks(JSON.parse(savedBookmarks));
+    } catch (err) {
+      console.warn("Could not parse saved storage context", err);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    try {
+      if (user) localStorage.setItem("parikshacrack_user", JSON.stringify(user));
+      localStorage.setItem("parikshacrack_bookmarks", JSON.stringify(bookmarks));
+    } catch (err) {
+      console.warn("Could not save context to storage", err);
+    }
+  }, [user, bookmarks]);
+
   // ── Derived current goal ─────────────────────────────────────────────────
+
 
   const currentGoal: Goal | null = user
     ? (user.goals?.find(g => g.id === user.currentGoalId) ?? user.goals?.[0] ?? null)
@@ -206,9 +282,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <AppContext.Provider value={{
-      view, setView,
+      view, setView: handleSetView,
       user, setUser,
       currentGoal, setCurrentGoal, addGoal, removeGoal,
+
       bookmarks, toggleBookmark, isBookmarked,
       selectedPaperId, setSelectedPaperId,
       selectedQuizId, setSelectedQuizId,
@@ -216,9 +293,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       completedAttempts, addAttempt,
       lastAttemptId, setLastAttemptId,
       authEmail, setAuthEmail,
+      showLoginModal, setShowLoginModal,
+      loginModalTab, setLoginModalTab,
+      darkMode, toggleDarkMode,
     }}>
       {children}
     </AppContext.Provider>
+
   );
 }
 

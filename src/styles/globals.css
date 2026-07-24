@@ -1,0 +1,387 @@
+/* ─────────────────────────────────────────────────────────────────
+   ParikshaCrack — Texture System
+   Design philosophy: Apple cleanliness · Stripe gradients · 
+   Linear grain · Vercel depth · Framer polish
+   ───────────────────────────────────────────────────────────────── */
+
+/* ── SVG Noise Data URIs ────────────────────────────────────────── */
+
+/*  Film Grain (Blue Sections) — 4% opacity noise
+    Base frequency 0.65 | 3 octaves | fractalNoise | desaturated   */
+:root {
+  --grain-blue-url: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+
+  /*  Paper Grain (White Sections) — 1.5% opacity noise
+      Higher frequency, 4 octaves, finer grain                       */
+  --grain-paper-url: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.015'/%3E%3C/svg%3E");
+}
+
+/* ── Blue Sections: Film Grain + Gradient ───────────────────────── */
+
+.texture-blue-hero {
+  position: relative;
+  background-color: #0F172A;
+  background-image:
+    var(--grain-blue-url),
+    linear-gradient(135deg, #05143F 0%, #0F2B6B 40%, #1E40AF 80%, #2563EB 100%);
+  background-size: 300px 300px, 100% 100%;
+  background-repeat: repeat, no-repeat;
+  isolation: isolate;
+}
+
+/* Soft Radial Glow — layered behind hero content */
+.texture-blue-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 30%, rgba(59, 130, 246, 0.22) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 80% 70%, rgba(99, 102, 241, 0.12) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* CTA section — same system, slightly lighter */
+.texture-blue-cta {
+  position: relative;
+  background-color: #0F172A;
+  background-image:
+    var(--grain-blue-url),
+    linear-gradient(135deg, #1E3A8A 0%, #1E40AF 50%, #2563EB 100%);
+  background-size: 300px 300px, 100% 100%;
+  background-repeat: repeat, no-repeat;
+  isolation: isolate;
+}
+
+.texture-blue-cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(96, 165, 250, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Footer — deep navy with grain */
+.texture-navy-footer {
+  position: relative;
+  background-color: #0A1628;
+  background-image:
+    var(--grain-blue-url),
+    linear-gradient(180deg, #0F172A 0%, #0A1628 100%);
+  background-size: 300px 300px, 100% 100%;
+  background-repeat: repeat, no-repeat;
+  isolation: isolate;
+}
+
+/* ── White / Off-White Sections: Paper Grain ────────────────────── */
+
+/* Standard off-white paper sections */
+.texture-paper {
+  background-color: #F5F6FA;
+  background-image: var(--grain-paper-url);
+  background-size: 200px 200px;
+  background-repeat: repeat;
+}
+
+/* Slightly tinted light blue for variety */
+.texture-paper-blue {
+  background-color: #F0F3FF;
+  background-image: var(--grain-paper-url);
+  background-size: 200px 200px;
+  background-repeat: repeat;
+}
+
+/* Pure white with barely-there grain */
+.texture-paper-white {
+  background-color: #FFFFFF;
+  background-image: var(--grain-paper-url);
+  background-size: 200px 200px;
+  background-repeat: repeat;
+}
+
+/* ── Glassmorphism Cards ─────────────────────────────────────────── */
+
+/* On dark backgrounds (hero, CTA) */
+.glass-card-dark {
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.glass-card-dark:hover {
+  background: rgba(255, 255, 255, 0.11);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* On light backgrounds */
+.glass-card-light {
+  background: rgba(245, 246, 250, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(226, 230, 239, 0.9);
+  box-shadow:
+    0 2px 12px rgba(30, 58, 138, 0.06),
+    0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.glass-card-light:hover {
+  box-shadow:
+    0 8px 28px rgba(30, 58, 138, 0.1),
+    0 2px 6px rgba(0, 0, 0, 0.06);
+  border-color: rgba(30, 58, 138, 0.12);
+}
+
+/* ── z-index for content on top of ::before glow layers ─────────── */
+.texture-blue-hero > *,
+.texture-blue-cta > *,
+.texture-navy-footer > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Utility: inner content wrapper always above pseudo-element ─── */
+.above-grain {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Subtle section divider ─────────────────────────────────────── */
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(30, 58, 138, 0.12), transparent);
+}
+
+/* ── Stat card pulse animation (hero) ───────────────────────────── */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Free plan card shimmer ─────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+.free-card-shine::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.06) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 4s ease-in-out infinite;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* ── Standardized Glassmorphism Surface Token ───────────────────── */
+.glass-card-surface {
+  background: rgba(248, 249, 252, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 230, 239, 0.95);
+  box-shadow: 0 4px 20px -2px rgba(30, 58, 138, 0.07);
+  border-radius: 1rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card-surface:hover {
+  box-shadow: 0 8px 30px -4px rgba(30, 58, 138, 0.14);
+  border-color: rgba(30, 58, 138, 0.15);
+}
+
+/* ── Page View Transition Keyframes ───────────────────────────── */
+@keyframes viewFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-view-fade {
+  animation: viewFadeIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ── Accessibility Touch Targets ──────────────────────────────── */
+.touch-target-min {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* ── Motion & Animation System ────────────────────────────────── */
+@keyframes slideUpStagger {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes springDropDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  70% {
+    transform: translateY(2px) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-stagger-card {
+  animation: slideUpStagger 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-spring-dropdown {
+  animation: springDropDown 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(3deg);
+  }
+}
+
+@keyframes popSpring {
+  0% {
+    transform: scale(0.92);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes modalZoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-float-slow {
+  animation: floatSlow 6s ease-in-out infinite;
+}
+
+.animate-pop-spring {
+  animation: popSpring 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.animate-modal-zoom {
+  animation: modalZoomIn 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes appleUnveil {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-apple-unveil {
+  animation: appleUnveil 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+
+
+.motion-card-hover {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.motion-card-hover:hover {
+  transform: translateY(-5px) scale(1.01);
+  box-shadow: 0 14px 32px -4px rgba(30, 58, 138, 0.16);
+  border-color: rgba(37, 99, 235, 0.3);
+}
+
+
+/* ── Midnight OLED Dark Mode Overrides ────────────────────────────── */
+html.dark {
+  color-scheme: dark;
+  background-color: #0B1120;
+  color: #F1F5F9;
+}
+
+html.dark .texture-paper,
+html.dark .texture-paper-blue,
+html.dark .texture-paper-white {
+  background-color: #0B1120 !important;
+  background-image: none !important;
+}
+
+html.dark .glass-card-surface,
+html.dark .glass-card-light {
+  background: rgba(15, 23, 42, 0.85) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #F8FAFC !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+html.dark input,
+html.dark select {
+  background-color: #1E293B !important;
+  color: #F8FAFC !important;
+  border-color: #334155 !important;
+}
+
+html.dark .bg-white {
+  background-color: #0F172A !important;
+  color: #F8FAFC !important;
+}
+
+html.dark .bg-gray-50,
+html.dark .bg-[#F8FAFC] {
+  background-color: #1E293B !important;
+  color: #CBD5E1 !important;
+}
+
+html.dark .text-gray-900,
+html.dark .text-gray-800,
+html.dark .text-[#1E3A8A] {
+  color: #F1F5F9 !important;
+}
+
+html.dark .text-gray-600,
+html.dark .text-gray-500 {
+  color: #94A3B8 !important;
+}
+
+

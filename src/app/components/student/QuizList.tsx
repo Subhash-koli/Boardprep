@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Search, SlidersHorizontal, Brain, Clock, Target, ChevronRight, Bookmark, BookmarkCheck, X, Zap } from "lucide-react";
-import { GoalIcon } from "../shared/GoalIcons";
 import { useApp } from "../context/AppContext";
 import { quizzes, subjects, DIFFICULTY_CONFIG } from "../data/mockData";
-import type { Difficulty, GoalCategory } from "../data/mockData";
+import type { Difficulty } from "../data/mockData";
+import { HierarchicalFilter, EMPTY_FILTER, resolveGoalCategory, filterBreadcrumb } from "./HierarchicalFilter";
+import type { HierarchicalFilterState } from "./HierarchicalFilter";
+import { SubjectIcon } from "../shared/GoalIcons";
 
 // ── Filter Sheet (Mobile) ─────────────────────────────────────────────────────
 function FilterSheet({
@@ -49,11 +51,12 @@ function FilterSheet({
                   onClick={() => onSubjectChange(filterSubject === s.id ? "" : s.id)}
                   className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 cursor-pointer select-none ${filterSubject === s.id ? "bg-gradient-to-r from-[#1E3A8A] to-[#2563EB] text-white border-transparent shadow-[0_4px_14px_rgba(30,58,138,0.35)] scale-105" : "bg-white text-gray-600 border-gray-200 hover:border-[#1E3A8A] hover:text-[#1E3A8A] hover:shadow-md hover:scale-105 active:scale-95"}`}
                 >
-                  {s.icon} {s.name}
+                  <SubjectIcon name={s.name} size={13} className="inline mr-1 -mt-0.5" /> {s.name}
                 </button>
               ))}
             </div>
           </div>
+
 
           {/* Difficulty */}
           <div>
@@ -101,18 +104,25 @@ function MarkingSchemePill({ correct, wrong }: { correct: number; wrong: number 
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export function QuizList() {
-  const { currentGoal, setView, setSelectedQuizId, toggleBookmark, isBookmarked, completedAttempts } = useApp();
+  const { setView, setSelectedQuizId, toggleBookmark, isBookmarked, completedAttempts } = useApp();
   const [search, setSearch]         = useState("");
+  const [hierFilter, setHierFilter] = useState<HierarchicalFilterState>(EMPTY_FILTER);
   const [filterSubject, setFilterSubject] = useState("");
-  const [filterDiff, setFilterDiff] = useState<Difficulty | "">("") ;
+  const [filterDiff, setFilterDiff] = useState<Difficulty | "">("");
   const [showFilters, setShowFilters] = useState(false);
 
-  const cat = currentGoal?.category as GoalCategory | undefined;
+  const cat    = resolveGoalCategory(hierFilter) || undefined;
+  const stream = hierFilter.stream || undefined;
 
-  const availableSubjects = subjects.filter(s => s.goalCategory === cat);
+  const availableSubjects = subjects.filter(s => {
+    if (cat && s.goalCategory !== cat) return false;
+    if (stream && s.stream && s.stream !== stream) return false;
+    return true;
+  });
 
   const filtered = quizzes.filter(q => {
-    if (q.goalCategory !== cat) return false;
+    if (cat && q.goalCategory !== cat) return false;
+    if (stream && q.stream && q.stream !== stream) return false;
     if (q.status !== "published") return false;
     if (search && !q.title.toLowerCase().includes(search.toLowerCase()) && !q.subject.toLowerCase().includes(search.toLowerCase())) return false;
     if (filterSubject && q.subjectId !== filterSubject) return false;
@@ -122,11 +132,11 @@ export function QuizList() {
 
   const activeFilterCount = [filterSubject, filterDiff].filter(Boolean).length;
 
-  const clearFilters = () => { setFilterSubject(""); setFilterDiff(""); };
+  const clearFilters = () => { setHierFilter(EMPTY_FILTER); setFilterSubject(""); setFilterDiff(""); };
 
-  // Map quizId → best attempt percentage for this user
+  // Map quizId → best attempt percentage
   const bestScoreMap: Record<string, number> = {};
-  completedAttempts.filter(a => a.goalCategory === cat).forEach(a => {
+  completedAttempts.filter(a => !cat || a.goalCategory === cat).forEach(a => {
     if (!bestScoreMap[a.quizId] || a.percentage > bestScoreMap[a.quizId]) {
       bestScoreMap[a.quizId] = a.percentage;
     }
@@ -138,13 +148,20 @@ export function QuizList() {
       {/* ── Header ── */}
       <div>
         <h2 className="text-lg font-bold text-[#1E3A8A] font-['Poppins'] flex items-center gap-2">
-          {currentGoal && <GoalIcon category={currentGoal.category} size={18} className="text-[#1E3A8A]" />}
+          <Brain size={18} className="text-[#1E3A8A]" />
           MCQ Quizzes
         </h2>
         <p className="text-gray-500 text-sm mt-0.5">
-          {currentGoal?.label} · <span className="font-medium text-gray-700">{filtered.length}</span> quizzes
+          <span className="font-medium text-gray-600">{filterBreadcrumb(hierFilter)}</span>
+          {" "}&middot; <span className="font-medium text-gray-700">{filtered.length}</span> quizzes
         </p>
       </div>
+
+      {/* ── Hierarchical Filter ── */}
+      <HierarchicalFilter
+        value={hierFilter}
+        onChange={next => { setHierFilter(next); setFilterSubject(""); setFilterDiff(""); }}
+      />
 
       {/* ── Negative Marking Banner (NEET/JEE) ── */}
       {(cat === "neet" || cat === "jee-mains" || cat === "jee-advanced") && (
@@ -237,7 +254,7 @@ export function QuizList() {
             return (
               <div
                 key={quiz.id}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 p-5 flex flex-col"
+                className="rounded-2xl hover:-translate-y-0.5 transition-all duration-200 p-5 flex flex-col" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}
               >
                 {/* Top row: badges + bookmark */}
                 <div className="flex items-start justify-between mb-3">

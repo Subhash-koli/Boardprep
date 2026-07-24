@@ -62,6 +62,30 @@ export const MARKING_SCHEMES: Record<string, MarkingScheme> = {
   CET_PCM:       { id: "cet-pcm",    label: "+1 / 0 (CET PCM)",         correctMarks: 1,  wrongMarks: 0,  unattemptedMarks: 0, hasNegativeMarking: false },
 };
 
+/** Evaluates quiz score safely accounting for positive/negative marking rules */
+export function evaluateQuizScore(
+  correctCount: number,
+  wrongCount: number,
+  unattemptedCount: number,
+  scheme: MarkingScheme
+) {
+  const penaltyPerWrong = Math.abs(scheme.wrongMarks);
+  const positiveScore = correctCount * scheme.correctMarks;
+  const negativePenalty = scheme.hasNegativeMarking ? wrongCount * penaltyPerWrong : 0;
+  const totalScore = Math.max(0, positiveScore - negativePenalty);
+  const maxPossible = (correctCount + wrongCount + unattemptedCount) * scheme.correctMarks;
+  const percentage = maxPossible > 0 ? Math.round((totalScore / maxPossible) * 100) : 0;
+
+  return {
+    positiveScore,
+    negativePenalty,
+    totalScore,
+    maxPossible,
+    percentage,
+  };
+}
+
+
 // ── Goal ─────────────────────────────────────────────────────────────────────
 
 export interface Goal {

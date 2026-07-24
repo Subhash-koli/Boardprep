@@ -22,10 +22,13 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   const logout = () => { setUser(null); setView("landing"); };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex">
+    <div className="min-h-screen texture-paper flex">
       {/* Sidebar */}
-      <aside className="hidden lg:flex flex-col w-60 bg-slate-900 fixed h-full z-30">
-        <div className="p-5 border-b border-slate-700">
+      <aside className="hidden lg:flex flex-col w-60 bg-slate-900 fixed inset-y-0 left-0 h-screen z-30 overflow-hidden">
+
+        {/* Film grain overlay */}
+        <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E\")", backgroundSize: "300px 300px", mixBlendMode: "overlay", zIndex: 0 }} />
+        <div className="p-5 border-b border-slate-700 relative z-10">
           <div className="flex items-center gap-2">
             <img src={LogoImage} alt="ParikshaCrack Logo" className="w-10 h-10 object-contain" />
             <div>
@@ -34,7 +37,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
         </div>
-        <nav className="flex-1 py-4 px-2">
+        <nav className="flex-1 py-4 px-2 relative z-10">
           {navItems.map(item => (
             <button
               key={item.view}
@@ -46,7 +49,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
             </button>
           ))}
         </nav>
-        <div className="p-4 border-t border-slate-700">
+        <div className="p-4 border-t border-slate-700 relative z-10">
           <div className="flex items-center gap-2 mb-3 px-1">
             <div className="w-7 h-7 bg-[#F97316] rounded-full flex items-center justify-center text-white text-xs font-bold">A</div>
             <div>
@@ -64,15 +67,18 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       {mobileOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute left-0 top-0 bottom-0 w-64 bg-slate-900 flex flex-col">
-            <div className="p-4 border-b border-slate-700 flex items-center justify-between">
+          <aside className="absolute left-0 top-0 bottom-0 w-64 bg-slate-900 flex flex-col overflow-hidden">
+
+            {/* Film grain overlay */}
+            <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E\")", backgroundSize: "300px 300px", mixBlendMode: "overlay", zIndex: 0 }} />
+            <div className="p-4 border-b border-slate-700 flex items-center justify-between relative z-10">
               <div className="flex items-center gap-2">
                 <img src={LogoImage} alt="ParikshaCrack Logo" className="w-9 h-9 object-contain" />
                 <span className="text-white font-bold text-base" style={{ fontFamily: "Poppins, sans-serif" }}>Admin Panel</span>
               </div>
               <button onClick={() => setMobileOpen(false)} className="text-slate-300"><X size={18} /></button>
             </div>
-            <nav className="flex-1 py-3 px-2">
+            <nav className="flex-1 py-3 px-2 relative z-10">
               {navItems.map(item => (
                 <button
                   key={item.view}
@@ -84,7 +90,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                 </button>
               ))}
             </nav>
-            <div className="p-4 border-t border-slate-700">
+            <div className="p-4 border-t border-slate-700 relative z-10">
               <button onClick={logout} className="flex items-center gap-2 text-slate-400 text-sm">
                 <LogOut size={14} /> Logout
               </button>
@@ -95,7 +101,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
 
       {/* Main */}
       <div className="flex-1 lg:ml-60 flex flex-col min-h-screen min-w-0 overflow-x-hidden">
-        <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3 sticky top-0 z-20 shadow-sm">
+        <header className="px-4 py-3 flex items-center gap-3 sticky top-0 z-20" style={{ backgroundColor: "rgba(255,255,255,0.88)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", borderBottom: "1px solid rgba(30,58,138,0.08)", boxShadow: "0 1px 16px rgba(30,58,138,0.07)" }}>
           <button className="lg:hidden text-gray-500" onClick={() => setMobileOpen(true)}>
             <Menu size={22} />
           </button>
@@ -107,13 +113,14 @@ export function AdminLayout({ children }: { children: ReactNode }) {
             </span>
           </div>
         </header>
-        <main className="flex-1 p-4 sm:p-6 pb-20 lg:pb-6">
+        <main className="flex-1 p-4 sm:p-6 pb-20 lg:pb-6 animate-view-fade">
           {children}
         </main>
+
         
         {/* Mobile Bottom Navigation */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50"
-          style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50"
+          style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)", backgroundColor: "rgba(255,255,255,0.92)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", borderTop: "1px solid rgba(30,58,138,0.08)", boxShadow: "0 -1px 16px rgba(30,58,138,0.07)" }}>
           <nav className="flex items-stretch overflow-x-auto scrollbar-none px-1" style={{ minHeight: "60px" }}>
             {navItems.map(item => (
               <button

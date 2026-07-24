@@ -1,4 +1,4 @@
-import { ArrowLeft, Download, Bookmark, BookmarkCheck, Eye, Clock, Award, Calendar, FileText, ZoomIn, ZoomOut } from "lucide-react";
+import { ArrowLeft, Download, Bookmark, BookmarkCheck, Eye, Clock, Award, Calendar, FileText, ZoomIn, ZoomOut, Zap } from "lucide-react";
 import { useState } from "react";
 import { useApp } from "../context/AppContext";
 import { papers, PAPER_TYPE_CONFIG } from "../data/mockData";
@@ -26,7 +26,7 @@ export function PaperDetail() {
         <ArrowLeft size={16} /> Back to Papers
       </button>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-5">
+      <div className="rounded-2xl p-6 mb-5" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div className="flex-1">
             <div className="flex flex-wrap gap-2 mb-3">
@@ -42,7 +42,11 @@ export function PaperDetail() {
               {paper.session && <span className="text-xs bg-violet-50 text-violet-700 px-2.5 py-1 rounded-full capitalize">{paper.session}</span>}
               {paper.shift && <span className="text-xs bg-orange-50 text-orange-700 px-2.5 py-1 rounded-full capitalize">{paper.shift.replace("-", " ")}</span>}
               {paper.paperNumber && <span className="text-xs bg-green-50 text-green-700 px-2.5 py-1 rounded-full capitalize">{paper.paperNumber.replace("-", " ")}</span>}
+              <span className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-full font-bold flex items-center gap-1">
+                <Zap size={12} className="inline mr-0.5" /> Offline Sync Ready
+              </span>
             </div>
+
             <h1 className="text-xl mb-2 leading-snug" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}>{paper.title}</h1>
             <p className="text-gray-500 text-sm">{paper.subject}</p>
           </div>
@@ -75,19 +79,33 @@ export function PaperDetail() {
         <div className="flex flex-col sm:flex-row gap-3 mt-6">
           <button
             onClick={() => setViewing(!viewing)}
-            className="flex-1 bg-[#1E3A8A] hover:bg-blue-900 text-white py-3 rounded-xl text-sm flex items-center justify-center gap-2 transition-colors"
+            className="flex-1 bg-[#1E3A8A] hover:bg-blue-900 text-white py-3 rounded-xl text-sm flex items-center justify-center gap-2 transition-colors min-h-[44px]"
           >
             <Eye size={16} /> {viewing ? "Close Viewer" : "View PDF Online"}
           </button>
-          <button className="flex-1 bg-[#F97316] hover:bg-orange-600 text-white py-3 rounded-xl text-sm flex items-center justify-center gap-2 transition-colors">
+          <button
+            onClick={() => {
+              const content = `PARIKSHACRACK QUESTION PAPER\nTitle: ${paper.title}\nSubject: ${paper.subject}\nYear: ${paper.year}\nMarks: ${paper.marks}\nDuration: ${paper.durationMinutes} mins\n\n--- GENERAL INSTRUCTIONS ---\n1. All questions are compulsory.\n2. Write question numbers clearly.\n3. Calculators are not allowed.\n\nDownloaded from ParikshaCrack v2.0 Platform (https://parikshacrack.in)`;
+              const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement("a");
+              link.href = url;
+              link.download = `${paper.title.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_parikshacrack.txt`;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            }}
+            className="flex-1 bg-[#F97316] hover:bg-orange-600 text-white py-3 rounded-xl text-sm flex items-center justify-center gap-2 transition-colors min-h-[44px]"
+          >
             <Download size={16} /> Download PDF
           </button>
         </div>
       </div>
 
+
       {/* PDF Viewer */}
       {viewing && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600, color: "#1E3A8A" }}>PDF Viewer</h3>
             <div className="flex items-center gap-2">
@@ -153,7 +171,7 @@ export function PaperDetail() {
       )}
 
       {/* Related Papers */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mt-5">
+      <div className="rounded-2xl p-5 mt-5">
         <h3 className="mb-3 text-sm" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600, color: "#1E3A8A" }}>Related Papers</h3>
         <div className="space-y-2">
           {papers.filter(p => (p.goalCategory === paper.goalCategory) && p.id !== paper.id && p.status === "published").slice(0, 3).map(rp => {

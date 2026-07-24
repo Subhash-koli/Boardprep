@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Bookmark, BookOpen, Brain, Trash2, Eye, ChevronRight, FileText, SlidersHorizontal } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { papers, quizzes, PAPER_TYPE_CONFIG, DIFFICULTY_CONFIG } from "../data/mockData";
@@ -28,7 +28,7 @@ export function Bookmarks() {
     return (
       <div className="max-w-2xl mx-auto">
         <h2 className="text-xl font-bold text-[#1E3A8A] font-['Poppins'] mb-6">Bookmarks</h2>
-        <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
+        <div className="text-center py-20 rounded-2xl" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
           <Bookmark size={48} className="mx-auto mb-4 text-gray-200" />
           <p className="text-gray-600 font-semibold font-['Poppins'] mb-1">No bookmarks yet</p>
           <p className="text-gray-400 text-sm mb-6">Save papers and quizzes for quick access later</p>
@@ -107,7 +107,7 @@ export function Bookmarks() {
               return (
                 <div
                   key={bookmark.id}
-                  className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-start gap-3 hover:shadow-md transition-shadow"
+                  className="rounded-2xl p-4 flex items-start gap-3 transition-all duration-200" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}
                 >
                   <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <BookOpen size={17} className="text-blue-600" />
@@ -169,7 +169,7 @@ export function Bookmarks() {
               return (
                 <div
                   key={bookmark.id}
-                  className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-start gap-3 hover:shadow-md transition-shadow"
+                  className="rounded-2xl p-4 flex items-start gap-3 transition-all duration-200" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}
                 >
                   <div className="w-10 h-10 bg-violet-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <Brain size={17} className="text-violet-600" />
@@ -218,7 +218,7 @@ export function Bookmarks() {
 
       {/* Empty state for tab with no content */}
       {tab === "papers" && papersCount === 0 && (
-        <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
+        <div className="text-center py-12 rounded-2xl" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
           <FileText size={36} className="mx-auto mb-3 text-gray-200" />
           <p className="text-gray-500 font-medium text-sm">No paper bookmarks yet</p>
           <button onClick={() => setView("papers")} className="mt-3 text-[#1E3A8A] text-sm hover:underline">
@@ -227,7 +227,7 @@ export function Bookmarks() {
         </div>
       )}
       {tab === "quizzes" && quizzesCount === 0 && (
-        <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
+        <div className="text-center py-12 rounded-2xl" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
           <Brain size={36} className="mx-auto mb-3 text-gray-200" />
           <p className="text-gray-500 font-medium text-sm">No quiz bookmarks yet</p>
           <button onClick={() => setView("quizzes")} className="mt-3 text-[#1E3A8A] text-sm hover:underline">

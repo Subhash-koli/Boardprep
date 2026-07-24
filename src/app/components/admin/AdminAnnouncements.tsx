@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿﻿import { useState } from "react";
 import { Plus, Edit2, Trash2, X, CheckCircle, Megaphone, Pin, Target } from "lucide-react";
 import { GoalIcon } from "../shared/GoalIcons";
 import { announcements as initialAnnouncements } from "../data/mockData";
@@ -247,7 +247,7 @@ export function AdminAnnouncements() {
           return (
             <div
               key={ann.id}
-              className={`bg-white rounded-2xl border shadow-sm p-5 transition-opacity ${!ann.isActive ? "opacity-60" : ""} ${isUrgent ? "border-red-200" : "border-gray-100"}`}
+              className={`rounded-2xl p-5 transition-opacity ${!ann.isActive ? "opacity-60" : ""} ${isUrgent ? "border-red-200" : "border-gray-100"}`}
             >
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
                 <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -313,7 +313,7 @@ export function AdminAnnouncements() {
         })}
 
         {sorted.length === 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
+          <div className="rounded-2xl p-12 text-center" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
             <Megaphone size={36} className="mx-auto text-gray-200 mb-3" />
             <p className="text-gray-400 text-sm">No announcements found.</p>
           </div>

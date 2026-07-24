@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿﻿import { useState } from "react";
 import { Plus, Search, Edit2, Trash2, Eye, X, CheckCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { quizzes as initialQuizzes, subjects } from "../data/mockData";
 import type { Quiz, Question } from "../data/mockData";
@@ -100,7 +100,7 @@ export function AdminQuizzes() {
 
       {/* Form */}
       {showForm && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-5">
+        <div className="rounded-2xl p-6 mb-5" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
           <div className="flex items-center justify-between mb-4">
             <h3 style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600, color: "#1E3A8A" }}>{editing ? "Edit Quiz" : "Create New Quiz"}</h3>
             <button onClick={() => setShowForm(false)}><X size={18} className="text-gray-400" /></button>
@@ -221,7 +221,7 @@ export function AdminQuizzes() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>

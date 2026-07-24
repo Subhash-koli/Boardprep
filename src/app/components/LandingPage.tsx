@@ -1,6 +1,21 @@
-import { BookOpen, Brain, BarChart3, Users, ChevronRight, Star, Target, CheckCircle, Zap, Trophy, FlaskConical, Stethoscope, Atom, GraduationCap, School, BookMarked, Calculator, Microscope, Crown, Lock, type LucideIcon } from "lucide-react";
+import {
+  BookOpen, Brain, BarChart3, Users, ChevronRight, Star, Target, CheckCircle, Zap, Trophy,
+  FlaskConical, Stethoscope, Atom, GraduationCap, School, BookMarked, Calculator, Microscope,
+  Gift, Heart, Search, Eye, Download, X, Clock, Award, SlidersHorizontal, ChevronDown,
+  LayoutGrid, List, RotateCcw, Sparkles, CornerDownLeft, ArrowDownCircle,
+  Languages, Globe, Pencil, Check, TrendingUp, Lightbulb, Info,
+  type LucideIcon
+} from "lucide-react";
+
+
 import { useApp } from "./context/AppContext";
 import { useState, useEffect } from "react";
+import { HierarchicalFilter, EMPTY_FILTER, resolveGoalCategory, filterBreadcrumb } from "./student/HierarchicalFilter";
+import type { HierarchicalFilterState } from "./student/HierarchicalFilter";
+import { SubjectIcon } from "./shared/GoalIcons";
+import { papers, quizzes, subjects, PAPER_TYPE_CONFIG, DIFFICULTY_CONFIG } from "./data/mockData";
+import type { PaperType, Medium, Difficulty } from "./data/mockData";
+
 
 const BGImage      = new URL("../../imports/BG.jpg",         import.meta.url).href;
 const DIGIImage    = new URL("../../imports/DIGI.jpg",       import.meta.url).href;
@@ -10,97 +25,40 @@ const STUDYImage   = new URL("../../imports/STUDY.jpg",      import.meta.url).hr
 const LogoImage    = new URL("../../imports/logo.png",       import.meta.url).href;
 
 const features = [
-  { icon: BookOpen,      title: "PYQ Papers", desc: "NEET, JEE, HSC & SSC past papers organised by year, subject, and paper type — downloadable & viewable online.", color: "bg-blue-100 text-blue-700" },
-  { icon: Brain,         title: "Smart Quiz Engine", desc: "Real exam-pattern MCQs with live negative marking (+4/−1 for NEET/JEE, +1/0 for boards). Practice or Exam mode.", color: "bg-purple-100 text-purple-700" },
-  { icon: BarChart3,     title: "Analytics & Percentile", desc: "Track score trends, subject weak-spots, negative-mark patterns, and your percentile vs peers.", color: "bg-green-100 text-green-700" },
-  { icon: Zap,           title: "Goal-Based Learning", desc: "Switch between exam goals (NEET, JEE, Board) — each goal has its own content, timeline, and analytics.", color: "bg-orange-100 text-orange-700" },
+  { icon: BookOpen,  title: "PYQ Papers",             desc: "NEET, JEE, HSC & SSC past papers organised by year, subject, and paper type — downloadable & viewable online.", color: "bg-blue-100 text-blue-700" },
+  { icon: Brain,     title: "Smart Quiz Engine",       desc: "Real exam-pattern MCQs with live negative marking (+4/−1 for NEET/JEE, +1/0 for boards). Practice or Exam mode.", color: "bg-purple-100 text-purple-700" },
+  { icon: BarChart3, title: "Analytics & Percentile",  desc: "Track score trends, subject weak-spots, negative-mark patterns, and your percentile vs peers.", color: "bg-green-100 text-green-700" },
+  { icon: Zap,       title: "Smart Filtering",         desc: "Browse by School · College · Competitive. Narrow by grade, stream, year, subject — search-engine style discovery.", color: "bg-orange-100 text-orange-700" },
 ];
 
 const stats = [
   { value: "5,200+", label: "Students" },
-  { value: "412+",   label: "Papers" },
-  { value: "286+",   label: "Quizzes" },
+  { value: "412+",   label: "Papers"   },
+  { value: "286+",   label: "Quizzes"  },
   { value: "84K+",   label: "Attempts" },
 ];
 
 const examGoals: { icon: LucideIcon; label: string; iconColor: string; bg: string; text: string; border: string; tags: string[]; comingSoon?: boolean }[] = [
-  { icon: School,        label: "SSC Class 10", iconColor: "text-orange-600", bg: "bg-orange-50", text: "text-orange-700", border: "border-orange-200", tags: ["Mathematics", "Science", "English", "Marathi", "History"] },
-  { icon: GraduationCap, label: "HSC Class 12", iconColor: "text-blue-600",   bg: "bg-blue-50",   text: "text-blue-700",   border: "border-blue-200",   tags: ["Physics", "Chemistry", "Maths", "Biology", "Economics"] },
-  { icon: Atom,          label: "JEE Mains",    iconColor: "text-violet-600", bg: "bg-violet-50", text: "text-violet-700", border: "border-violet-200", tags: ["Physics", "Chemistry", "Mathematics"],                    comingSoon: true },
-  { icon: Stethoscope,   label: "NEET UG",      iconColor: "text-green-600",  bg: "bg-green-50",  text: "text-green-700",  border: "border-green-200",  tags: ["Physics", "Chemistry", "Botany", "Zoology"],            comingSoon: true },
+  { icon: School,        label: "SSC Class 10", iconColor: "text-orange-600", bg: "bg-orange-50",  text: "text-orange-700", border: "border-orange-200", tags: ["Mathematics", "Science", "English", "Marathi", "History"] },
+  { icon: GraduationCap, label: "HSC Class 12", iconColor: "text-blue-600",   bg: "bg-blue-50",    text: "text-blue-700",   border: "border-blue-200",   tags: ["Physics", "Chemistry", "Maths", "Biology", "Economics"] },
+  { icon: Atom,          label: "JEE Mains",    iconColor: "text-violet-600", bg: "bg-violet-50",  text: "text-violet-700", border: "border-violet-200", tags: ["Physics", "Chemistry", "Mathematics"],               comingSoon: true },
+  { icon: Stethoscope,   label: "NEET UG",      iconColor: "text-green-600",  bg: "bg-green-50",   text: "text-green-700",  border: "border-green-200",  tags: ["Physics", "Chemistry", "Botany", "Zoology"],        comingSoon: true },
 ];
 
-const plans = [
-  {
-    name: "Starter",
-    price: "Free",
-    period: "",
-    desc: "Perfect to explore the platform",
-    color: "border-gray-200",
-    badge: null as string | null,
-    badgeBg: "",
-    btnClass: "border-2 border-[#1E3A8A] text-[#1E3A8A] hover:bg-[#1E3A8A] hover:text-white",
-    popular: false,
-    features: [
-      { label: "5 Past Year Papers / month",      included: true },
-      { label: "3 MCQ Quizzes / month",           included: true },
-      { label: "Test Series",                     included: false },
-      { label: "Negative Marking Engine",          included: false },
-      { label: "Basic Analytics",                 included: true },
-      { label: "Bookmarks",                       included: false },
-      { label: "SSC Class 10 Content only",       included: true },
-      { label: "PDF Downloads",                   included: false },
-      { label: "Email Support",                   included: false },
-    ],
-  },
-  {
-    name: "Scholar",
-    price: "₹99",
-    period: "/ month",
-    desc: "Great for board exam students",
-    color: "border-orange-300",
-    badge: null as string | null,
-    badgeBg: "",
-    btnClass: "bg-[#F97316] hover:bg-orange-600 text-white shadow-[0_4px_14px_rgba(249,115,22,0.4)]",
-    popular: false,
-    features: [
-      { label: "All Past Year Papers",            included: true },
-      { label: "20 MCQ Quizzes / month",          included: true },
-      { label: "Test Series",                     included: false },
-      { label: "Negative Marking Engine",         included: true },
-      { label: "Advanced Analytics",              included: true },
-      { label: "Bookmarks",                       included: true },
-      { label: "SSC + HSC Content",               included: true },
-      { label: "PDF Downloads",                   included: true },
-      { label: "Email Support",                   included: true },
-    ],
-  },
-  {
-    name: "Champion",
-    price: "₹199",
-    period: "/ month",
-    desc: "For serious NEET & JEE aspirants",
-    color: "border-transparent",
-    badge: "Most Popular" as string | null,
-    badgeBg: "bg-[#F97316]",
-    btnClass: "bg-white text-[#1E3A8A] hover:bg-blue-50 font-bold shadow-[0_4px_14px_rgba(255,255,255,0.3)]",
-    popular: true,
-    features: [
-      { label: "All Past Year Papers",               included: true },
-      { label: "Unlimited MCQ Quizzes",              included: true },
-      { label: "Full Test Series",                   included: true },
-      { label: "Negative Marking Engine",            included: true },
-      { label: "Full Analytics + Percentile",        included: true },
-      { label: "Bookmarks",                          included: true },
-      { label: "All Exams — NEET, JEE, SSC, HSC",   included: true },
-      { label: "PDF Downloads",                      included: true },
-      { label: "Priority Support",                   included: true },
-    ],
-  },
+const freeFeatures = [
+  "All Past Year Papers — NEET, JEE, HSC & SSC",
+  "Unlimited MCQ Quizzes",
+  "Full Test Series",
+  "Negative Marking Engine (+4/−1 & +1/0)",
+  "Full Analytics & Percentile Tracking",
+  "Bookmarks & Study Planner",
+  "All Exams Covered — Switch Anytime",
+  "PDF Downloads",
+  "Priority Support",
 ];
 
 export function LandingPage() {
-  const { setView } = useApp();
+  const { setView, setShowLoginModal, setLoginModalTab } = useApp();
   const images = [BGImage, DIGIImage, STDImage, STUPREPImage, STUDYImage];
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -113,15 +71,25 @@ export function LandingPage() {
   }, [images.length]);
 
   return (
-    <div className="min-h-screen bg-[#F0F2F8D7]">
-      {/* Navbar */}
-      <nav className="bg-white text-gray-800 px-2 sm:px-8 py-2 sm:py-3 flex items-center justify-between sticky top-0 z-50 shadow-md">
+    <div className="min-h-screen" style={{ backgroundColor: "#FAFBFD" }}>
+
+      {/* ── Navbar ────────────────────────────────────────────────────── */}
+      <nav
+        className="px-2 sm:px-8 py-2 sm:py-3 flex items-center justify-between sticky top-0 z-50"
+        style={{
+          backgroundColor: "rgba(255,255,255,0.88)",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
+          borderBottom: "1px solid rgba(30,58,138,0.08)",
+          boxShadow: "0 1px 16px rgba(30,58,138,0.07)",
+        }}
+      >
         {/* Brand */}
         <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
           <img src={LogoImage} alt="ParikshaCrack Logo" className="w-9 h-9 sm:w-14 sm:h-14 object-contain flex-shrink-0" />
           <span
             className="font-bold text-sm sm:text-xl truncate min-[360px]:block hidden"
-            style={{ fontFamily: "Poppins, sans-serif", color: "#1C3A5C" }}
+            style={{ fontFamily: "Poppins, sans-serif", color: "#1E3A8A" }}
           >
             ParikshaCrack
           </span>
@@ -129,14 +97,18 @@ export function LandingPage() {
         {/* Actions */}
         <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
           <button
-            onClick={() => setView("login")}
-            className="px-2.5 sm:px-4 py-1.5 text-xs sm:text-sm text-[#1C3A5C] border border-[#1C3A5C] rounded-lg hover:bg-[#1C3A5C] hover:text-white transition-colors font-medium whitespace-nowrap"
+            onClick={() => setShowLoginModal(true)}
+            className="px-2.5 sm:px-4 py-1.5 text-xs sm:text-sm border rounded-lg font-medium whitespace-nowrap transition-all duration-150 hover:scale-105"
+            style={{ color: "#1E3A8A", borderColor: "#1E3A8A" }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#1E3A8A"; (e.currentTarget as HTMLButtonElement).style.color = "#fff"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = ""; (e.currentTarget as HTMLButtonElement).style.color = "#1E3A8A"; }}
           >
             Login
           </button>
           <button
             onClick={() => setView("register")}
-            className="px-2.5 sm:px-4 py-1.5 text-xs sm:text-sm bg-[#F97316] text-white rounded-lg hover:bg-orange-600 transition-colors font-semibold whitespace-nowrap"
+            className="px-2.5 sm:px-4 py-1.5 text-xs sm:text-sm text-white rounded-lg font-semibold whitespace-nowrap transition-all duration-150 hover:scale-105 active:scale-95"
+            style={{ backgroundColor: "#FF7A00", boxShadow: "0 2px 10px rgba(255,122,0,0.35)" }}
           >
             <span className="hidden min-[400px]:inline">Register Free</span>
             <span className="inline min-[400px]:hidden">Register</span>
@@ -144,77 +116,115 @@ export function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero */}
+      {/* ── Hero — Library Image + Blue Gradient + Film Grain + Radial Glow ── */}
+      {/*
+          Stack (bottom → top):
+          1. Library photo (background-image on section)
+          2. Dark blue gradient overlay (absolute div)
+          3. Fine film grain noise (::before via texture-blue-hero on overlay)
+          4. Soft radial glow (::after or second pseudo on overlay)
+          5. Content (z-10)
+      */}
       <section
-        className="text-white py-12 sm:py-24 px-3 sm:px-4 bg-cover bg-center bg-no-repeat relative overflow-hidden min-h-[550px] sm:min-h-[700px] flex items-center"
+        className="text-white py-12 sm:py-24 px-3 sm:px-4 relative overflow-hidden min-h-[550px] sm:min-h-[700px] flex items-center bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: `url(${images[currentImageIndex]})`,
-          backgroundAttachment: 'fixed',
-          transition: 'background-image 1s ease-in-out'
+          backgroundAttachment: "fixed",
+          transition: "background-image 1s ease-in-out",
         }}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-[#05143F]/85 via-blue-800/85 to-blue-900/85" />
+        {/* Layer 1: dark gradient */}
+        <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(5,20,63,0.92) 0%, rgba(15,43,107,0.88) 45%, rgba(30,64,175,0.85) 100%)" }} />
 
-        {/* Carousel indicators */}
+        {/* Layer 2: film grain noise (SVG inline, seamless tile) */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E\")",
+            backgroundSize: "300px 300px",
+            backgroundRepeat: "repeat",
+            mixBlendMode: "overlay",
+          }}
+        />
+
+        {/* Layer 3: soft radial blue glow */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: "radial-gradient(ellipse 90% 60% at 50% 30%, rgba(59,130,246,0.25) 0%, transparent 70%), radial-gradient(ellipse 50% 40% at 80% 75%, rgba(99,102,241,0.14) 0%, transparent 60%)",
+          }}
+        />
+
+        {/* Carousel dot indicators */}
         <div className="absolute top-4 sm:top-6 right-4 sm:right-6 flex gap-1.5 sm:gap-2 z-20">
           {images.map((_, idx) => (
             <button
               key={idx}
               onClick={() => setCurrentImageIndex(idx)}
-              className={`w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full transition-all ${idx === currentImageIndex ? 'bg-[#F97316] w-6 sm:w-8' : 'bg-white/40 hover:bg-white/60'}`}
+              className={`h-2 sm:h-2.5 rounded-full transition-all duration-300 ${idx === currentImageIndex ? "w-6 sm:w-8" : "w-2 sm:w-2.5 bg-white/40 hover:bg-white/60"}`}
+              style={idx === currentImageIndex ? { backgroundColor: "#FF7A00" } : {}}
               aria-label={`Go to slide ${idx + 1}`}
             />
           ))}
         </div>
 
+        {/* Hero content */}
         <div className="max-w-5xl mx-auto text-center relative z-10 w-full px-2">
-          {/* Exam goal pills */}
+          {/* Exam pills */}
           <div className="flex flex-wrap gap-2 justify-center mb-5 sm:mb-6">
             {[
-              { icon: School,       label: "SSC" },
-              { icon: GraduationCap,label: "HSC" },
-              { icon: Atom,        label: "JEE" },
-              { icon: Stethoscope, label: "NEET" },
-              { icon: FlaskConical,label: "MHT-CET" },
+              { icon: School,       label: "SSC"     },
+              { icon: GraduationCap,label: "HSC"     },
+              { icon: Atom,         label: "JEE"     },
+              { icon: Stethoscope,  label: "NEET"    },
+              { icon: FlaskConical, label: "MHT-CET" },
             ].map(({ icon: Icon, label }) => (
-              <span key={label} className="bg-white/10 border border-white/20 rounded-full px-3 py-1 text-xs sm:text-sm font-medium text-white/90 flex items-center gap-1.5">
+              <button
+                key={label}
+                onClick={() => {
+                  const el = document.getElementById("content-explorer-section");
+                  el?.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs sm:text-sm font-medium text-white/90 hover:bg-white/20 transition-all cursor-pointer"
+                style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)", backdropFilter: "blur(8px)" }}
+              >
                 <Icon size={13} />
                 {label}
-              </span>
+              </button>
             ))}
           </div>
 
+
           <h1
-            className="text-2xl sm:text-4xl md:text-5xl mb-4 sm:mb-6 leading-tight"
+            className="text-2xl sm:text-4xl md:text-5xl mb-3 sm:mb-4 leading-tight"
             style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700 }}
           >
-            <span style={{ color: "#F97316" }}>Crack Any Exam</span> with Smart Preparation
+            <span style={{ color: "#FF7A00" }}>Find Past Papers & Quizzes</span> Instantly
           </h1>
-          <p className="text-blue-100 text-sm sm:text-base md:text-lg mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed px-2">
-            NEET · JEE Mains · JEE Advanced · MHT-CET · HSC · SSC — one platform for all. Real negative marking, PYQs, chapter quizzes, and exam-specific analytics.
+
+          <p className="text-blue-100 text-xs sm:text-base mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed px-2">
+            Select your exam level below to explore official past papers, solution keys & chapter quizzes with zero login friction.
           </p>
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center px-2">
-            <button
-              onClick={() => setView("register")}
-              className="bg-[#F97316] hover:bg-orange-600 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg sm:rounded-xl transition-colors flex items-center justify-center gap-2 font-semibold text-sm sm:text-base"
-            >
-              Start Preparing Free <ChevronRight size={16} className="hidden sm:block" />
-            </button>
-            <button
-              onClick={() => setView("login")}
-              className="bg-white/10 hover:bg-white/20 border border-white/30 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg sm:rounded-xl transition-colors text-sm sm:text-base"
-            >
-              Login to Dashboard
-            </button>
+
+          {/* ── SEARCH-FIRST CONTENT EXPLORER (Above the Fold) ──────── */}
+          <div className="mb-8 text-left text-gray-800">
+            <LandingContentExplorer onRequireAuth={() => setShowLoginModal(true)} />
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mt-8 sm:mt-12 md:mt-14 max-w-3xl mx-auto">
+          {/* Stats — glass cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mt-6 sm:mt-10 max-w-3xl mx-auto">
             {stats.map((s, idx) => (
               <div
                 key={s.label}
-                className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 text-center hover:bg-white/15 transition-all transform hover:scale-105"
-                style={{ animation: `slideUp 0.6s ease-out ${idx * 0.1}s both` }}
+                className="rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 text-center transition-all duration-200 hover:scale-105"
+                style={{
+                  background: "rgba(255,255,255,0.09)",
+                  backdropFilter: "blur(12px)",
+                  WebkitBackdropFilter: "blur(12px)",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  boxShadow: "0 4px 16px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.08)",
+                  animation: `slideUp 0.6s ease-out ${idx * 0.1}s both`,
+                }}
               >
                 <div className="text-lg sm:text-2xl md:text-3xl font-bold text-white mb-1 sm:mb-2" style={{ fontFamily: "Poppins, sans-serif" }}>{s.value}</div>
                 <div className="text-blue-200 text-xs sm:text-sm">{s.label}</div>
@@ -222,20 +232,29 @@ export function LandingPage() {
             ))}
           </div>
 
-          {/* Decorative */}
-          <div className="absolute left-2 sm:left-12 top-1/4 z-0 opacity-10 sm:opacity-20">
-            <BookOpen size={60} className="text-white sm:w-[80px] sm:h-[80px] animate-pulse" />
+          {/* Decorative floating icons */}
+          <div className="absolute left-2 sm:left-12 top-1/4 z-0 opacity-10 sm:opacity-20 pointer-events-none">
+            <BookOpen size={60} className="text-white sm:w-[80px] sm:h-[80px] animate-float-slow" />
           </div>
-          <div className="absolute right-2 sm:right-12 bottom-1/4 z-0 opacity-10 sm:opacity-20">
-            <Brain size={60} className="text-white sm:w-[80px] sm:h-[80px] animate-pulse" />
+          <div className="absolute right-2 sm:right-12 bottom-1/4 z-0 opacity-10 sm:opacity-20 pointer-events-none">
+            <Brain size={60} className="text-white sm:w-[80px] sm:h-[80px] animate-float-slow" style={{ animationDelay: "-3s" }} />
           </div>
         </div>
+
       </section>
 
-      {/* Features */}
-      <section className="py-12 sm:py-16 px-3 sm:px-4 bg-[#F8FAFC]">
+      {/* ── SECTION DIVIDER ─────────────────────────────────────────── */}
+      <div className="section-divider" />
+
+
+
+      {/* ── Features — Off-White + Paper Grain ───────────────────────── */}
+      <section className="texture-paper py-12 sm:py-16 px-3 sm:px-4">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-center text-xl sm:text-2xl md:text-3xl mb-2 sm:mb-3" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}>
+          <h2
+            className="text-center text-xl sm:text-2xl md:text-3xl mb-2 sm:mb-3"
+            style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}
+          >
             Everything You Need to Score High
           </h2>
           <p className="text-center text-gray-500 text-sm sm:text-base mb-8 sm:mb-10">
@@ -243,7 +262,10 @@ export function LandingPage() {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             {features.map(f => (
-              <div key={f.title} className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div
+                key={f.title}
+                className="glass-card-light rounded-xl sm:rounded-2xl p-4 sm:p-6 transition-all duration-200"
+              >
                 <div className={`w-10 sm:w-12 h-10 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center ${f.color} mb-3 sm:mb-4`}>
                   <f.icon size={20} className="sm:w-[22px] sm:h-[22px]" />
                 </div>
@@ -255,16 +277,24 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Exam Goals Section */}
-      <section className="py-10 sm:py-14 px-3 sm:px-4 bg-white">
+      <div className="section-divider" />
+
+      {/* ── Exam Goals — White + Paper Grain ─────────────────────────── */}
+      <section className="texture-paper-white py-10 sm:py-14 px-3 sm:px-4">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-center text-xl sm:text-2xl md:text-3xl mb-3" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}>
+          <h2
+            className="text-center text-xl sm:text-2xl md:text-3xl mb-3"
+            style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}
+          >
             Supported Exam Goals
           </h2>
-          <p className="text-center text-gray-500 text-sm mb-8 sm:mb-10">Choose your goal during onboarding — switch anytime</p>
+          <p className="text-center text-gray-500 text-sm mb-8 sm:mb-10">Browse School · College · Competitive — choose your path and discover content</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             {examGoals.map(g => (
-              <div key={g.label} className={`${g.bg} border ${g.border} rounded-xl sm:rounded-2xl p-4 sm:p-6 relative overflow-hidden`}>
+              <div
+                key={g.label}
+                className={`${g.bg} border ${g.border} rounded-xl sm:rounded-2xl p-4 sm:p-6 relative overflow-hidden transition-all duration-200 hover:shadow-md`}
+              >
                 {g.comingSoon && (
                   <div className="absolute top-3 right-3 z-10">
                     <span className="inline-flex items-center gap-1 bg-amber-400 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
@@ -277,9 +307,7 @@ export function LandingPage() {
                   <div className={`w-9 h-9 rounded-xl bg-white/60 border ${g.border} flex items-center justify-center flex-shrink-0`}>
                     <g.icon size={18} className={g.comingSoon ? "opacity-60 " + g.iconColor : g.iconColor} />
                   </div>
-                  <div className="flex-1">
-                    <div className={`${g.text} text-sm font-bold ${g.comingSoon ? "opacity-70" : ""}`} style={{ fontFamily: "Poppins, sans-serif" }}>{g.label}</div>
-                  </div>
+                  <div className={`${g.text} text-sm font-bold ${g.comingSoon ? "opacity-70" : ""}`} style={{ fontFamily: "Poppins, sans-serif" }}>{g.label}</div>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {g.tags.map(t => (
@@ -289,14 +317,14 @@ export function LandingPage() {
               </div>
             ))}
           </div>
-          {/* Extra goal pills */}
+          {/* Extra exam pills */}
           <div className="flex flex-wrap gap-2 justify-center mt-5">
             {[
-              { icon: BookOpen,    label: "Class 9 & 8" },
-              { icon: BookMarked,  label: "Class 11" },
-              { icon: Microscope,  label: "MHT-CET PCB" },
-              { icon: Calculator,  label: "MHT-CET PCM" },
-              { icon: Trophy,      label: "JEE Advanced",  comingSoon: true },
+              { icon: BookOpen,   label: "Class 9 & 8"   },
+              { icon: BookMarked, label: "Class 11"       },
+              { icon: Microscope, label: "MHT-CET PCB"   },
+              { icon: Calculator, label: "MHT-CET PCM"   },
+              { icon: Trophy,     label: "JEE Advanced", comingSoon: true },
             ].map(g => (
               <span key={g.label} className="bg-gray-100 text-gray-600 text-xs px-3 py-1.5 rounded-full border border-gray-200 flex items-center gap-1.5">
                 <g.icon size={12} />
@@ -308,23 +336,31 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="py-12 sm:py-16 px-3 sm:px-4 bg-[#F8FAFC]">
+      <div className="section-divider" />
+
+      {/* ── How It Works — Off-White + Paper Grain ───────────────────── */}
+      <section className="texture-paper py-12 sm:py-16 px-3 sm:px-4">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-center text-xl sm:text-2xl md:text-3xl mb-8 sm:mb-12" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}>
+          <h2
+            className="text-center text-xl sm:text-2xl md:text-3xl mb-8 sm:mb-12"
+            style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}
+          >
             How It Works
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
             {[
-              { icon: Users,   step: "1", title: "Choose Your Goal",    desc: "Register free, pick your exam (NEET/JEE/Board), class, stream, and subjects in under 2 minutes" },
-              { icon: Brain,   step: "2", title: "Practice Daily",      desc: "Attempt quizzes with real marking schemes, browse PYQs, and track wrong answers" },
-              { icon: Trophy,  step: "3", title: "See Your Percentile", desc: "Every quiz shows your score, negative marks, and estimated percentile vs all test-takers" },
+              { icon: Users,  step: "1", title: "Choose Your Path",    desc: "Register free, pick School / College / Competitive, select your exam, stream, and subjects in under 2 minutes" },
+              { icon: Brain,  step: "2", title: "Practice Daily",      desc: "Attempt quizzes with real marking schemes, browse PYQs, and track wrong answers" },
+              { icon: Trophy, step: "3", title: "See Your Percentile", desc: "Every quiz shows your score, negative marks, and estimated percentile vs all test-takers" },
             ].map(item => (
               <div key={item.step} className="text-center">
-                <div className="w-12 sm:w-14 h-12 sm:h-14 bg-[#1E3A8A] rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <div
+                  className="w-12 sm:w-14 h-12 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4"
+                  style={{ backgroundColor: "#1E3A8A", boxShadow: "0 4px 16px rgba(30,58,138,0.25)" }}
+                >
                   <item.icon size={20} className="text-white sm:w-[24px] sm:h-[24px]" />
                 </div>
-                <div className="text-[#F97316] text-xs sm:text-sm mb-2" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600 }}>Step {item.step}</div>
+                <div className="text-xs sm:text-sm mb-2" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600, color: "#FF7A00" }}>Step {item.step}</div>
                 <h3 className="mb-2 text-sm sm:text-base" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600, color: "#1E3A8A" }}>{item.title}</h3>
                 <p className="text-gray-500 text-xs sm:text-sm px-1">{item.desc}</p>
               </div>
@@ -333,21 +369,29 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-10 sm:py-14 px-3 sm:px-4 bg-white">
+      <div className="section-divider" />
+
+      {/* ── Testimonials — White + Paper Grain ───────────────────────── */}
+      <section className="texture-paper-white py-10 sm:py-14 px-3 sm:px-4">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-center text-xl sm:text-2xl md:text-3xl mb-8 sm:mb-10" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}>
+          <h2
+            className="text-center text-xl sm:text-2xl md:text-3xl mb-8 sm:mb-10"
+            style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}
+          >
             What Students Say
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             {[
-              { name: "Priya S.", goal: "NEET 2027",  score: "89%", quote: "The +4/−1 quiz engine is exactly like the real NEET. I finally understand where I lose marks — wrong guesses!" },
-              { name: "Rohan P.", goal: "SSC Class 10", quote: "Marathi medium papers and quizzes are perfectly organised. My prelims score jumped 12 marks.", score: "81%" },
-              { name: "Sneha K.", goal: "JEE Mains",  quote: "Switching between Board and JEE goals is seamless. Each goal has its own content — no mixing up.", score: "94%" },
+              { name: "Priya S.", goal: "NEET 2027",    score: "89%", quote: "The +4/−1 quiz engine is exactly like the real NEET. I finally understand where I lose marks — wrong guesses!" },
+              { name: "Rohan P.", goal: "SSC Class 10", score: "81%", quote: "Marathi medium papers and quizzes are perfectly organised. My prelims score jumped 12 marks." },
+              { name: "Sneha K.", goal: "JEE Mains",    score: "94%", quote: "Switching between Board and JEE content is seamless. Each level has its own curated content." },
             ].map(t => (
-              <div key={t.name} className="bg-[#F8FAFC] rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-100">
+              <div
+                key={t.name}
+                className="glass-card-light rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-100"
+              >
                 <div className="flex gap-0.5 mb-3">
-                  {[1,2,3,4,5].map(i => <Star key={i} size={12} className="text-[#F97316] fill-[#F97316] sm:w-[14px] sm:h-[14px]" />)}
+                  {[1,2,3,4,5].map(i => <Star key={i} size={12} className="text-[#FF7A00] fill-[#FF7A00] sm:w-[14px] sm:h-[14px]" />)}
                 </div>
                 <p className="text-gray-600 text-xs sm:text-sm italic mb-4">"{t.quote}"</p>
                 <div className="flex items-center justify-between gap-2">
@@ -363,120 +407,901 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ── Pricing ── */}
-      <section className="py-14 sm:py-20 px-3 sm:px-4 bg-[#F0F4FF]">
-        <div className="max-w-5xl mx-auto">
+      <div className="section-divider" />
+
+      {/* ── 100% Free — Light Blue (#F4F8FF) + Paper Grain ───────────── */}
+      <section className="texture-paper-blue py-14 sm:py-20 px-3 sm:px-4">
+        <div className="max-w-3xl mx-auto">
           <div className="text-center mb-10 sm:mb-14">
-            <div className="inline-flex items-center gap-2 bg-orange-100 text-orange-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-4">
-              <Crown size={13} /> Choose Your Plan
+            <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-4">
+              <Gift size={13} /> 100% Free — No Catch
             </div>
             <h2 className="text-2xl sm:text-3xl md:text-4xl mb-3" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}>
-              Simple, Transparent Pricing
+              Everything You Need. Completely Free.
             </h2>
             <p className="text-gray-500 text-sm sm:text-base max-w-xl mx-auto">
-              Start free, upgrade when you're ready. No hidden fees. Cancel anytime.
+              No subscriptions. No hidden fees. No paywalls. Every student deserves quality exam preparation.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-stretch">
-            {plans.map(plan => (
-              <div
-                key={plan.name}
-                className={`relative rounded-2xl border-2 flex flex-col transition-all duration-300 hover:-translate-y-1 ${
-                  plan.popular
-                    ? "bg-gradient-to-b from-[#1E3A8A] to-[#1e4da8] text-white border-[#3B82F6] shadow-[0_20px_60px_rgba(30,58,138,0.4)] ring-2 ring-[#3B82F6]/40"
-                    : "bg-white text-gray-800 shadow-sm hover:shadow-lg " + plan.color
-                }`}
-              >
-                {/* Popular badge */}
-                {plan.badge && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                    <span className={`${plan.badgeBg} text-white text-[11px] font-bold px-4 py-1 rounded-full shadow-md tracking-wide`}>
-                      {plan.badge}
-                    </span>
-                  </div>
-                )}
+          {/* Free plan card — blue gradient + film grain + shimmer */}
+          <div
+            className="relative rounded-2xl border-2 overflow-hidden free-card-shine"
+            style={{
+              borderColor: "#3B82F6",
+              background: "linear-gradient(135deg, #0F172A 0%, #1E3A8A 50%, #1E40AF 100%)",
+              boxShadow: "0 20px 60px rgba(30,58,138,0.35), 0 0 0 2px rgba(59,130,246,0.2)",
+            }}
+          >
+            {/* Film grain over the card */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E\")",
+                backgroundSize: "300px 300px",
+                mixBlendMode: "overlay",
+              }}
+            />
+            {/* Radial glow */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{ background: "radial-gradient(ellipse 80% 60% at 50% 20%, rgba(96,165,250,0.2) 0%, transparent 70%)" }}
+            />
 
-                <div className="p-6 sm:p-7 flex flex-col flex-1">
-                  {/* Header */}
-                  <div className="mb-5">
-                    <div className={`text-xs font-semibold uppercase tracking-widest mb-1 ${plan.popular ? "text-blue-200" : "text-gray-400"}`}>
-                      {plan.name}
-                    </div>
-                    <div className="flex items-end gap-1 mb-1">
-                      <span className="text-3xl sm:text-4xl" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 800 }}>
-                        {plan.price}
-                      </span>
-                      <span className={`text-sm mb-1 ${plan.popular ? "text-blue-200" : "text-gray-400"}`}>{plan.period}</span>
-                    </div>
-                    <p className={`text-xs ${plan.popular ? "text-blue-200" : "text-gray-500"}`}>{plan.desc}</p>
-                  </div>
+            {/* FREE FOREVER badge */}
+            <div className="absolute -top-0 left-1/2 -translate-x-1/2">
+              <span className="bg-green-500 text-white text-[11px] font-bold px-5 py-1.5 rounded-b-xl shadow-md tracking-wide">
+                FREE FOREVER
+              </span>
+            </div>
 
-                  {/* Features */}
-                  <ul className="space-y-2.5 mb-7 flex-1">
-                    {plan.features.map(f => (
-                      <li key={f.label} className={`flex items-start gap-2.5 text-sm ${!f.included ? (plan.popular ? "opacity-40" : "opacity-40") : ""}`}>
-                        {f.included
-                          ? <CheckCircle size={16} className={`flex-shrink-0 mt-0.5 ${plan.popular ? "text-green-300" : "text-green-500"}`} />
-                          : <Lock size={14} className={`flex-shrink-0 mt-0.5 ${plan.popular ? "text-blue-300" : "text-gray-300"}`} />
-                        }
-                        <span className={plan.popular ? "text-blue-50" : "text-gray-600"}>{f.label}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  {/* CTA */}
-                  <button
-                    onClick={() => setView("register")}
-                    className={`w-full py-3 rounded-xl text-sm font-bold transition-all duration-200 hover:scale-105 active:scale-95 ${plan.btnClass}`}
-                  >
-                    {plan.price === "Free" ? "Get Started Free" : `Get ${plan.name}`}
-                  </button>
+            <div className="p-6 sm:p-8 pt-10 sm:pt-12 relative z-10">
+              <div className="text-center mb-6">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <Heart size={20} className="text-red-400" />
+                  <span className="text-3xl sm:text-5xl" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 800, color: "white" }}>
+                    Free
+                  </span>
                 </div>
+                <p className="text-blue-200 text-sm sm:text-base">Full access to every feature — no limits, no upgrades needed</p>
               </div>
-            ))}
-          </div>
 
-          {/* Bottom note */}
-          <p className="text-center text-xs text-gray-400 mt-8">
-            All plans include a <span className="font-semibold text-gray-600">7-day free trial</span> of Scholar features. No credit card required for Starter.
-          </p>
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
+                {freeFeatures.map(f => (
+                  <li key={f} className="flex items-start gap-2.5 text-sm">
+                    <CheckCircle size={16} className="flex-shrink-0 mt-0.5 text-green-300" />
+                    <span className="text-blue-50">{f}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="text-center">
+                <button
+                  onClick={() => setView("register")}
+                  className="px-10 py-3.5 rounded-xl text-sm font-bold transition-all duration-200 hover:scale-105 active:scale-95"
+                  style={{
+                    backgroundColor: "white",
+                    color: "#1E3A8A",
+                    boxShadow: "0 4px 20px rgba(255,255,255,0.25)",
+                  }}
+                >
+                  Get Started — It's Free
+                </button>
+                <p className="text-blue-300 text-xs mt-4">No credit card required. No account limits. Just sign up and start learning.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-10 sm:py-16 px-3 sm:px-4 bg-gradient-to-r from-[#1E3A8A] to-blue-700">
-        <div className="max-w-2xl mx-auto text-center text-white">
+      {/* ── CTA — Blue Gradient + Film Grain + Radial Glow ───────────── */}
+      <section className="texture-blue-cta py-10 sm:py-16 px-3 sm:px-4 relative">
+        <div className="max-w-2xl mx-auto text-center text-white above-grain">
           <h2 className="text-xl sm:text-2xl md:text-3xl mb-3 sm:mb-4 px-2" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700 }}>
-            Start Preparing Today — Try Starter Free!
+            Start Preparing Today — 100% Free!
           </h2>
           <p className="text-blue-200 mb-6 sm:mb-8 text-sm sm:text-base px-2">
             Join 5,200+ students preparing smarter for NEET, JEE, Board exams and more.
           </p>
           <button
             onClick={() => setView("register")}
-            className="bg-[#F97316] hover:bg-orange-600 text-white px-8 sm:px-10 py-2.5 sm:py-3 rounded-lg sm:rounded-xl transition-colors font-semibold text-sm sm:text-base"
+            className="text-white px-8 sm:px-10 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base transition-all duration-150 hover:scale-105 active:scale-95"
+            style={{ backgroundColor: "#FF7A00", boxShadow: "0 4px 20px rgba(255,122,0,0.4)" }}
           >
             Create Free Account
           </button>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mt-6 text-blue-200 text-xs sm:text-sm">
-            {["No credit card needed", "Starter plan available", "All exams covered"].map(i => (
-              <div key={i} className="flex items-center justify-center gap-1.5"><CheckCircle size={14} className="sm:w-[16px] sm:h-[16px]" /> {i}</div>
+            {["No credit card needed", "100% free forever", "All exams covered"].map(i => (
+              <div key={i} className="flex items-center justify-center gap-1.5">
+                <CheckCircle size={14} className="sm:w-[16px] sm:h-[16px]" /> {i}
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-[#1E3A8A] text-blue-200 py-6 sm:py-8 px-3 sm:px-4 text-center text-xs sm:text-sm">
-        <div className="flex items-center justify-center gap-2 mb-2 sm:mb-3">
-          <img src={LogoImage} alt="ParikshaCrack Logo" className="w-6 h-6 object-contain flex-shrink-0" />
-          <span className="text-white font-semibold text-sm sm:text-base" style={{ fontFamily: "Poppins, sans-serif" }}>ParikshaCrack</span>
+      {/* ── Footer — Deep Navy + Film Grain ──────────────────────────── */}
+      <footer className="texture-navy-footer text-blue-200 py-6 sm:py-8 px-3 sm:px-4 text-center text-xs sm:text-sm">
+        <div className="above-grain">
+          <div className="flex items-center justify-center gap-2 mb-2 sm:mb-3">
+            <img src={LogoImage} alt="ParikshaCrack Logo" className="w-6 h-6 object-contain flex-shrink-0" />
+            <span className="text-white font-semibold text-sm sm:text-base" style={{ fontFamily: "Poppins, sans-serif" }}>ParikshaCrack</span>
+          </div>
+          <p className="px-2">India's multi-exam prep platform · NEET · JEE · MHT-CET · HSC · SSC</p>
+          <p className="mt-2 text-blue-400">© 2026 ParikshaCrack. All rights reserved.</p>
+          <button
+            onClick={() => { setLoginModalTab("admin"); setShowLoginModal(true); }}
+            className="mt-3 text-xs text-blue-500 hover:text-blue-300 transition-colors"
+          >
+            Admin Panel
+          </button>
         </div>
-        <p className="px-2">India's multi-exam prep platform · NEET · JEE · MHT-CET · HSC · SSC</p>
-        <p className="mt-2 text-blue-400">© 2026 ParikshaCrack. All rights reserved.</p>
-        <button onClick={() => setView("admin-login")} className="mt-3 text-xs text-blue-500 hover:text-blue-300">Admin Panel</button>
       </footer>
+
+      {/* ── Mobile Floating Search Dock ── */}
+      <div className="lg:hidden fixed bottom-5 right-4 z-40">
+        <button
+          onClick={() => {
+            const el = document.getElementById("content-explorer-section");
+            el?.scrollIntoView({ behavior: "smooth" });
+          }}
+          className="bg-gradient-to-r from-[#1E3A8A] to-[#2563EB] text-white text-xs font-bold px-4 py-3 rounded-full shadow-2xl flex items-center gap-2 border border-white/20 active:scale-95 transition-transform"
+        >
+          <Search size={14} /> Browse 400+ Papers
+        </button>
+      </div>
     </div>
   );
 }
+
+
+// ── Search-First Content Explorer Sub-component ─────────────────────────────
+
+function LandingContentExplorer({
+  onRequireAuth,
+}: {
+  onRequireAuth: (promptMsg: string) => void;
+}) {
+  const [hierFilter, setHierFilter] = useState<HierarchicalFilterState>(EMPTY_FILTER);
+  const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState<"papers" | "quizzes">("papers");
+  const [filterSubject, setFilterSubject] = useState("");
+  const [filterType, setFilterType] = useState("");
+  const [filterMedium, setFilterMedium] = useState("");
+  const [filterYear, setFilterYear] = useState<number | "">("");
+  const [previewPaper, setPreviewPaper] = useState<(typeof papers)[number] | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [sortBy, setSortBy] = useState<"newest" | "downloads" | "marks">("newest");
+  const [bookmarkedIds, setBookmarkedIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem("pariksha_bookmarks");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [showOnlyBookmarks, setShowOnlyBookmarks] = useState(false);
+  const [highlightResults, setHighlightResults] = useState(false);
+
+  const handleScrollToResults = () => {
+    // Find the first actual result card, not just the header
+    const firstCard = document.querySelector("[data-result-card]") as HTMLElement | null;
+    const resultsContainer = document.getElementById("results-cards-container");
+    
+    if (firstCard) {
+      // Scroll the first card into view with some offset
+      firstCard.scrollIntoView({ behavior: "smooth", block: "center" });
+      
+      // Highlight ALL result cards with a "found you!" pulse
+      setHighlightResults(true);
+      setTimeout(() => setHighlightResults(false), 2800);
+    } else {
+      // Fallback: scroll to the results header if no cards exist
+      const header = document.getElementById("results-grid-header");
+      if (header) {
+        header.scrollIntoView({ behavior: "smooth", block: "start" });
+        setHighlightResults(true);
+        setTimeout(() => setHighlightResults(false), 2200);
+      }
+    }
+  };
+
+  const toggleBookmark = (id: string) => {
+
+    setBookmarkedIds(prev => {
+      const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
+      localStorage.setItem("pariksha_bookmarks", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const cat = resolveGoalCategory(hierFilter);
+  const stream = hierFilter.stream;
+
+  const hasActiveFilters = Boolean(
+    search ||
+    hierFilter.level !== "" ||
+    filterSubject ||
+    filterType ||
+    filterMedium ||
+    filterYear ||
+    showOnlyBookmarks
+  );
+
+  const resetAllFilters = () => {
+    setSearch("");
+    setHierFilter(EMPTY_FILTER);
+    setFilterSubject("");
+    setFilterType("");
+    setFilterMedium("");
+    setFilterYear("");
+    setShowOnlyBookmarks(false);
+  };
+
+  // Stream-aware deduplicated subjects
+  const availableSubjects = Array.from(
+    new Map(
+      subjects
+        .filter(s => {
+          if (cat && s.goalCategory !== cat) return false;
+          if (stream && s.stream && s.stream !== stream) return false;
+          return true;
+        })
+        .map(s => [s.name, s])
+    ).values()
+  );
+
+  // Dynamic years list from published papers
+  const availableYears = Array.from(
+    new Set(papers.filter(p => p.status === "published").map(p => p.year))
+  ).sort((a, b) => b - a);
+
+  // Relevant paper types
+  const isBoard = cat?.startsWith("board");
+  const relevantTypes: PaperType[] = !cat
+    ? ["board", "prelims", "model", "practice", "unit-test", "semester", "chapter-wise", "pyq", "mock-test", "subject-wise", "minor-test", "major-test"]
+    : isBoard
+      ? ["board", "prelims", "model", "practice", "unit-test", "semester", "chapter-wise"]
+      : ["pyq", "mock-test", "subject-wise", "chapter-wise", "minor-test", "major-test", "practice"];
+
+  // Filter papers
+  const filteredPapers = papers.filter(p => {
+    if (p.status !== "published") return false;
+    if (showOnlyBookmarks && !bookmarkedIds.includes(p.id)) return false;
+    if (cat && p.goalCategory !== cat) return false;
+    if (stream && p.stream && p.stream !== stream) return false;
+    if (search && !p.title.toLowerCase().includes(search.toLowerCase()) && !p.subject.toLowerCase().includes(search.toLowerCase())) return false;
+    if (filterSubject) {
+      const selectedSub = availableSubjects.find(s => s.id === filterSubject || s.name === filterSubject);
+      if (selectedSub && p.subject !== selectedSub.name && p.subjectId !== filterSubject) return false;
+    }
+    if (filterMedium && p.medium && p.medium !== filterMedium) return false;
+    if (filterYear && p.year !== filterYear) return false;
+    if (filterType && p.type !== filterType) return false;
+    return true;
+  });
+
+  // Filter quizzes
+  const filteredQuizzes = quizzes.filter(q => {
+    if (q.status !== "published") return false;
+    if (showOnlyBookmarks && !bookmarkedIds.includes(q.id)) return false;
+    if (cat && q.goalCategory !== cat) return false;
+    if (stream && q.stream && q.stream !== stream) return false;
+    if (search && !q.title.toLowerCase().includes(search.toLowerCase()) && !q.chapter.toLowerCase().includes(search.toLowerCase()) && !q.subject.toLowerCase().includes(search.toLowerCase())) return false;
+    if (filterSubject) {
+      const selectedSub = availableSubjects.find(s => s.id === filterSubject || s.name === filterSubject);
+      if (selectedSub && q.subject !== selectedSub.name && q.subjectId !== filterSubject) return false;
+    }
+    return true;
+  });
+
+
+  // Dynamic sorting
+  const sortedPapers = [...filteredPapers].sort((a, b) => {
+    if (sortBy === "downloads") return b.analytics.downloads - a.analytics.downloads;
+    if (sortBy === "marks") return b.marks - a.marks;
+    return b.year - a.year;
+  });
+
+  const sortedQuizzes = [...filteredQuizzes].sort((a, b) => {
+    if (sortBy === "downloads") return b.analytics.totalAttempts - a.analytics.totalAttempts;
+    if (sortBy === "marks") return b.totalMarks - a.totalMarks;
+    return 0;
+  });
+
+
+  return (
+    <section id="content-explorer-section" className="py-2 px-1 relative" style={{ backgroundColor: "transparent" }}>
+      <div className="max-w-6xl mx-auto space-y-5">
+
+        {/* 1. STANDALONE SEARCH BAR CARD (High Stacking Context z-50) */}
+        <div className="relative z-50 rounded-2xl p-3.5 sm:p-4 animate-apple-unveil" style={{ background: "rgba(255,255,255,0.95)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 4px 20px rgba(30,58,138,0.06)" }}>
+          <div className="relative z-50">
+            <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder={`Search ${activeTab === "papers" ? "subjective papers" : "objective quizzes"} by name, subject, or chapter...`}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full pl-11 pr-8 py-3 bg-[#F8FAFC] border border-gray-200/90 rounded-xl text-sm focus:outline-none focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A]/10 placeholder:text-gray-400 font-medium transition-all"
+            />
+            {search && (
+              <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                <X size={16} />
+              </button>
+            )}
+
+            {/* Live Auto-Suggest Dropdown (z-50 Layer) */}
+            {search.length >= 2 && (
+              <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-gray-200/90 rounded-2xl shadow-2xl ring-1 ring-black/5 z-50 overflow-hidden divide-y divide-gray-100 animate-slide-down">
+
+                <div className="px-3 py-1.5 bg-gray-50 text-[10px] font-bold text-gray-400 uppercase tracking-wider flex justify-between items-center">
+                  <span>Matches ({filteredPapers.length + filteredQuizzes.length})</span>
+                  <button onClick={() => setSearch("")} className="hover:text-gray-700">Close</button>
+                </div>
+                {filteredPapers.slice(0, 3).map(p => (
+                  <div
+                    key={p.id}
+                    onClick={() => { setPreviewPaper(p); setSearch(""); }}
+                    className="px-4 py-2.5 hover:bg-blue-50/80 cursor-pointer transition-colors flex items-center justify-between"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold text-[#1E3A8A] truncate font-['Poppins']">{p.title}</p>
+                      <p className="text-[10px] text-gray-400 mt-0.5">{p.subject} · {p.year} · Subjective ({p.marks} Marks)</p>
+                    </div>
+                    <span className="text-[10px] bg-blue-100 text-[#1E3A8A] px-2.5 py-0.5 rounded-full font-bold ml-2">Paper</span>
+                  </div>
+                ))}
+                {filteredQuizzes.slice(0, 2).map(q => (
+                  <div
+                    key={q.id}
+                    onClick={() => { onRequireAuth("Attempt Quiz"); setSearch(""); }}
+                    className="px-4 py-2.5 hover:bg-purple-50/80 cursor-pointer transition-colors flex items-center justify-between"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold text-purple-900 truncate font-['Poppins']">{q.title}</p>
+                      <p className="text-[10px] text-gray-400 mt-0.5">{q.subject} · Objective ({q.questionsCount} Qs)</p>
+                    </div>
+                    <span className="text-[10px] bg-purple-100 text-purple-700 px-2.5 py-0.5 rounded-full font-bold ml-2">Quiz</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* PROMINENT OR DIVIDER */}
+        <div className="relative flex items-center justify-center my-1">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300/70" />
+          </div>
+          <span className="relative bg-[#F5F6FA]/95 backdrop-blur-md px-4 py-1 rounded-full text-[11px] font-black text-gray-500 tracking-widest border border-[#E2E6EF] shadow-sm uppercase">
+            OR
+          </span>
+        </div>
+
+        {/* 2. STANDALONE DUAL MODE TAB SWITCHER */}
+        <div className="rounded-2xl p-2 sm:p-2.5 bg-[#F8F9FC]/90 backdrop-blur-md border border-[#E2E6EF] shadow-sm animate-apple-unveil">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <button
+              onClick={() => {
+                setActiveTab("papers");
+                setFilterSubject("");
+                setFilterType("");
+                setFilterMedium("");
+                setFilterYear("");
+              }}
+              className={`p-3.5 rounded-xl text-left transition-all flex items-center justify-between ${
+                activeTab === "papers"
+                  ? "bg-white text-[#1E3A8A] shadow-md border border-blue-100 ring-2 ring-blue-500/20"
+                  : "bg-gray-50/70 text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${activeTab === "papers" ? "bg-blue-100" : "bg-gray-200/60"}`}>
+                  <BookOpen size={20} className={activeTab === "papers" ? "text-[#1E3A8A]" : "text-gray-500"} />
+                </div>
+                <div>
+                  <div className="font-bold text-xs sm:text-sm font-['Poppins'] flex items-center gap-1.5">
+                    Question Papers
+                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-blue-50 text-[#1E3A8A]">
+                      Subjective
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-500 font-medium mt-0.5">Official PYQs, Model & Board Papers</p>
+                </div>
+              </div>
+              <span className={`text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0 ${activeTab === "papers" ? "bg-[#1E3A8A] text-white" : "bg-gray-200 text-gray-600"}`}>
+                {filteredPapers.length}
+              </span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab("quizzes");
+                setFilterSubject("");
+                setFilterType("");
+                setFilterMedium("");
+                setFilterYear("");
+              }}
+              className={`p-3.5 rounded-xl text-left transition-all flex items-center justify-between ${
+                activeTab === "quizzes"
+                  ? "bg-white text-purple-900 shadow-md border border-purple-100 ring-2 ring-purple-500/20"
+                  : "bg-gray-50/70 text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${activeTab === "quizzes" ? "bg-purple-100" : "bg-gray-200/60"}`}>
+                  <Brain size={20} className={activeTab === "quizzes" ? "text-purple-700" : "text-gray-500"} />
+                </div>
+
+                <div>
+                  <div className="font-bold text-xs sm:text-sm font-['Poppins'] flex items-center gap-1.5">
+                    MCQ Quizzes
+                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-purple-50 text-purple-700">
+                      Objective
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-500 font-medium mt-0.5">Speed tests with negative marking</p>
+                </div>
+              </div>
+              <span className={`text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0 ${activeTab === "quizzes" ? "bg-purple-700 text-white" : "bg-gray-200 text-gray-600"}`}>
+                {filteredQuizzes.length}
+              </span>
+            </button>
+          </div>
+        </div>
+
+
+        {/* 2. UNIFIED CONTENT EXPLORER FILTER CARD (Apple Progressive Unveiling Flow) */}
+        <div className="rounded-3xl p-4 sm:p-6 space-y-5 animate-apple-unveil" style={{ background: "rgba(255,255,255,0.95)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 8px 32px rgba(30,58,138,0.08)" }}>
+
+          {/* 2.1 Education Level Hierarchy (Step 1 & Step 2) */}
+          <HierarchicalFilter
+            value={hierFilter}
+            onChange={next => {
+              setHierFilter(next);
+              setFilterSubject("");
+              setFilterType("");
+              setFilterMedium("");
+              setFilterYear("");
+            }}
+          />
+
+          {/* 2.2 Sub-Filters Section — Unveils Step-by-Step with Apple Spring Motion */}
+          {hierFilter.level !== "" || search !== "" ? (
+            <div className="pt-3 border-t border-gray-100 space-y-4 animate-apple-unveil">
+
+              {/* Step 4: Medium Filter (Unveils after Grade/Exam is selected or search active) */}
+              {(hierFilter.grade || (hierFilter.collegeYear && hierFilter.stream) || hierFilter.examType || search !== "") && (
+                <div data-step="step-medium" className="animate-apple-unveil transition-all duration-300 rounded-xl">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <ChevronRight size={12} className="text-blue-400" />
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Select Medium</p>
+                      {!filterMedium && <span className="text-[9px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full animate-pulse ml-1">Select below ↓</span>}
+                    </div>
+                    {filterMedium && (
+                      <button onClick={() => setFilterMedium("")} className="text-[10px] text-blue-600 font-bold hover:underline">
+                        <Pencil size={10} className="inline -mt-px" /> Show All Mediums
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide touch-pan-x">
+                    {[
+                      { id: "", label: "All Mediums" },
+                      { id: "english", label: "English Medium" },
+                      { id: "marathi", label: "Marathi Medium" },
+                      { id: "semi-english", label: "Semi-English" },
+                    ]
+                      .filter(m => !filterMedium || m.id === filterMedium)
+                      .map(m => (
+                        <button
+                          key={m.id}
+                          onClick={() => setFilterMedium(filterMedium === m.id ? "" : m.id)}
+                          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border flex-shrink-0 touch-target-min animate-apple-unveil ${
+                            filterMedium === m.id ? "bg-[#1E3A8A] text-white border-transparent shadow-sm" : "bg-[#F1F3F8] text-gray-600 border-[#E2E6EF] hover:bg-[#E8ECF4]"
+                          }`}
+                        >
+                          <Languages size={13} className="inline mr-1 -mt-0.5" /> {m.label} {filterMedium === m.id && m.id !== "" && <Check size={11} className="inline ml-0.5 -mt-px" />}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Step 5: Subject Filter (Unveils when Medium is selected or search active) */}
+              {availableSubjects.length > 0 && (filterMedium !== "" || search !== "") && (
+                <div className="animate-apple-unveil pt-2 border-t border-gray-100/80">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Step 5: Select Subject</p>
+                    {filterSubject && (
+                      <button onClick={() => setFilterSubject("")} className="text-[10px] text-blue-600 font-bold hover:underline">
+                        <Pencil size={10} className="inline -mt-px" /> Show All Subjects
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide touch-pan-x">
+                    {availableSubjects
+                      .filter(s => !filterSubject || filterSubject === s.id || filterSubject === s.name)
+                      .map((s, idx) => (
+                        <button
+                          key={s.id}
+                          style={{ animationDelay: `${idx * 0.03}s` }}
+                          onClick={() => setFilterSubject(filterSubject === s.id ? "" : s.id)}
+                          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border flex-shrink-0 touch-target-min animate-apple-unveil ${
+                            filterSubject === s.id ? "bg-[#1E3A8A] text-white border-transparent shadow-sm" : "bg-[#F1F3F8] text-gray-600 border-[#E2E6EF] hover:bg-[#E8ECF4]"
+                          }`}
+                        >
+                          <SubjectIcon name={s.name} size={13} className="inline mr-1 -mt-0.5" /> {s.name} {filterSubject === s.id && <Check size={11} className="inline ml-0.5 -mt-px" />}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Step 6: Paper Type & Year Filters (Unveils when Subject is selected or search active) */}
+              {activeTab === "papers" && (filterSubject !== "" || search !== "") && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-100/80 animate-apple-unveil">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Step 6: Paper Type</p>
+                      {filterType && (
+                        <button onClick={() => setFilterType("")} className="text-[10px] text-blue-600 font-bold hover:underline">
+                          <Pencil size={10} className="inline -mt-px" /> Show All Types
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide touch-pan-x">
+                      {relevantTypes
+                        .filter(t => !filterType || filterType === t)
+                        .map(t => (
+                          <button
+                            key={t}
+                            onClick={() => setFilterType(filterType === t ? "" : t)}
+                            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border flex-shrink-0 animate-apple-unveil ${
+                              filterType === t ? "bg-[#1E3A8A] text-white border-transparent shadow-sm" : "bg-[#F1F3F8] text-gray-600 border-[#E2E6EF] hover:bg-[#E8ECF4]"
+                            }`}
+                          >
+                            {PAPER_TYPE_CONFIG[t]?.label ?? t} {filterType === t && <Check size={11} className="inline ml-0.5 -mt-px" />}
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Year</p>
+                      {filterYear && (
+                        <button onClick={() => setFilterYear("")} className="text-[10px] text-blue-600 font-bold hover:underline">
+                          <Pencil size={10} className="inline -mt-px" /> Show All Years
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide touch-pan-x">
+                      {availableYears
+                        .filter(y => !filterYear || filterYear === y)
+                        .map(y => (
+                          <button
+                            key={y}
+                            onClick={() => setFilterYear(filterYear === y ? "" : y)}
+                            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border flex-shrink-0 animate-apple-unveil ${
+                              filterYear === y ? "bg-[#1E3A8A] text-white border-transparent shadow-sm" : "bg-[#F1F3F8] text-gray-600 border-[#E2E6EF] hover:bg-[#E8ECF4]"
+                            }`}
+                          >
+                            {y} {filterYear === y && <Check size={11} className="inline ml-0.5 -mt-px" />}
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+
+              {/* Step 6: Trending Searches */}
+              <div className="flex items-center gap-2 overflow-x-auto text-[11px] pt-3 border-t border-gray-100 scrollbar-hide touch-pan-x animate-apple-unveil">
+                <span className="text-gray-400 font-bold flex-shrink-0 flex items-center gap-1"><TrendingUp size={13} className="text-orange-500" /> Trending:</span>
+                {["NEET 2024 Biology", "Class 10 SSC Math", "JEE Mains Physics", "MHT-CET PCM"].map(trend => (
+                  <button
+                    key={trend}
+                    onClick={() => setSearch(trend)}
+                    className="bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 px-3 py-1 rounded-full flex-shrink-0 transition-colors font-medium text-xs"
+                  >
+                    {trend}
+                  </button>
+                ))}
+              </div>
+
+              {/* Step 7: ENTER / APPLY ACTION CTA BUTTON */}
+              <div className="pt-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3 animate-apple-unveil">
+                <p className="text-xs text-gray-500 font-medium hidden sm:block">
+                  <Lightbulb size={13} className="inline text-amber-500 flex-shrink-0" /> Press <kbd className="bg-gray-100 border border-gray-300 px-1.5 py-0.5 rounded text-[10px] font-mono text-gray-700 font-bold">Enter ↵</kbd> or click button to jump directly to highlighted results
+                </p>
+                <button
+                  onClick={handleScrollToResults}
+                  className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-[#1E3A8A] via-[#2563EB] to-[#7C3AED] hover:from-[#152e72] hover:to-[#6d28d9] text-white text-xs sm:text-sm font-bold shadow-lg shadow-blue-500/25 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 group cursor-pointer"
+                >
+                  <span>Explore {activeTab === "papers" ? sortedPapers.length : sortedQuizzes.length} Matching Results</span>
+                  <ArrowDownCircle size={17} className="group-hover:translate-y-0.5 transition-transform" />
+                  <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px] font-mono">Enter ↵</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-4 px-4 bg-gradient-to-r from-blue-50/80 via-indigo-50/50 to-purple-50/80 backdrop-blur-md rounded-2xl border border-dashed border-blue-200/90 text-xs font-semibold text-gray-600 shadow-sm animate-apple-unveil">
+              <Sparkles size={14} className="inline text-amber-500 mr-1" /> Select your Education Level above (<span className="text-[#1E3A8A] font-bold">School, College, or Competitive</span>) to unveil Grade, Medium & Subject filters step-by-step!
+            </div>
+          )}
+        </div>
+
+
+
+
+
+        {/* ── Dynamic Live Status & Controls Header (Smooth Scroll & Highlight Target) ── */}
+        <div
+          id="results-grid-header"
+          className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl border transition-all duration-500 ${
+            highlightResults
+              ? "border-blue-500 ring-4 ring-blue-500/30 scale-[1.01] shadow-2xl bg-blue-50/95"
+              : "bg-[#F8F9FC]/90 backdrop-blur-md border-[#E2E6EF] shadow-sm"
+          }`}
+        >
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-bold text-[#1E3A8A] font-['Poppins'] flex items-center gap-1.5">
+              <Sparkles size={14} className="text-amber-500 animate-pulse" />
+              Showing {activeTab === "papers" ? sortedPapers.length : sortedQuizzes.length} {activeTab === "papers" ? "Subjective Papers" : "Objective Quizzes"}
+            </span>
+            <button
+              onClick={() => setShowOnlyBookmarks(!showOnlyBookmarks)}
+              className={`text-[11px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1 transition-all border ${
+                showOnlyBookmarks
+                  ? "bg-amber-400 text-slate-900 border-amber-500 shadow-sm scale-105"
+                  : "bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100"
+              }`}
+            >
+              <Star size={11} className={showOnlyBookmarks ? "fill-slate-900" : "fill-amber-400"} />
+              Saved Bookmarks ({bookmarkedIds.length})
+            </button>
+            {hasActiveFilters && (
+              <button
+                onClick={resetAllFilters}
+                className="text-[11px] bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1 transition-colors"
+              >
+                <RotateCcw size={11} /> Clear All Filters (✕)
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Sort dropdown */}
+            <select
+              value={sortBy}
+              onChange={e => setSortBy(e.target.value as any)}
+              className="bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-700 rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-[#1E3A8A]"
+            >
+              <option value="newest">Sort: Latest Year</option>
+              <option value="downloads">Sort: Most Popular</option>
+              <option value="marks">Sort: Highest Marks</option>
+            </select>
+
+            {/* View Mode Toggle */}
+            <div className="flex bg-gray-100 p-1 rounded-xl">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-1.5 rounded-lg text-xs transition-all ${viewMode === "grid" ? "bg-white text-[#1E3A8A] shadow-sm" : "text-gray-400"}`}
+                title="Grid View"
+              >
+                <LayoutGrid size={14} />
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-1.5 rounded-lg text-xs transition-all ${viewMode === "list" ? "bg-white text-[#1E3A8A] shadow-sm" : "text-gray-400"}`}
+                title="Detailed List View"
+              >
+                <List size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Content Cards Grid / List */}
+        {activeTab === "papers" ? (
+          sortedPapers.length === 0 ? (
+            <div className="text-center py-12 bg-[#F8F9FC] rounded-2xl border border-[#E2E6EF]">
+              <BookOpen size={36} className="mx-auto mb-2 text-gray-300" />
+              <p className="text-gray-600 font-semibold text-sm">No question papers found</p>
+              <p className="text-xs text-gray-400 mt-1">Try selecting different subjects or exam levels above</p>
+            </div>
+          ) : (
+            <div id="results-cards-container" className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}>
+              {sortedPapers.map((p, idx) => {
+                const isBookmarked = bookmarkedIds.includes(p.id);
+                return (
+                  <div
+                    key={p.id}
+                    data-result-card
+                    style={{ animationDelay: `${idx * 0.04}s` }}
+                    className={`rounded-2xl border motion-card-hover animate-stagger-card transition-all duration-500 ${
+                      highlightResults
+                        ? "border-blue-500 ring-2 ring-blue-400/40 shadow-[0_0_20px_rgba(37,99,235,0.25)] bg-blue-50/60 scale-[1.015]"
+                        : "bg-white border-gray-100 hover:border-blue-200"
+                    } ${
+                      viewMode === "grid" ? "p-5 flex flex-col justify-between" : "p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4"
+                    }`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-50 text-[#1E3A8A]">
+                          {PAPER_TYPE_CONFIG[p.type]?.label ?? p.type} · {p.year}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-semibold text-gray-400 capitalize">{p.medium}</span>
+                          <button
+                            onClick={() => toggleBookmark(p.id)}
+                            className="p-1 text-gray-300 hover:text-amber-500 transition-colors"
+                            title={isBookmarked ? "Remove Bookmark" : "Bookmark Paper"}
+                          >
+                            <Star size={15} className={isBookmarked ? "text-amber-500 fill-amber-500" : ""} />
+                          </button>
+                        </div>
+                      </div>
+                      <h3 className="font-bold text-[#1E3A8A] text-sm font-['Poppins'] leading-snug mb-1 truncate">
+                        {p.title}
+                      </h3>
+                      <p className="text-xs text-gray-500 mb-3">{p.subject}</p>
+                      <div className="flex items-center gap-3 text-xs text-gray-400 bg-gray-50/80 p-2 rounded-xl border border-gray-100">
+                        <span><Award size={12} className="inline mr-1" /> {p.marks} Marks</span>
+                        <span><Clock size={12} className="inline mr-1" /> {p.timeLimitMinutes}m</span>
+                        <span className="text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-md text-[10px]">
+                          <Download size={11} className="inline mr-0.5" /> {p.analytics.downloads.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className={`flex items-center gap-2 ${viewMode === "grid" ? "pt-3 border-t border-gray-100 mt-4" : "flex-shrink-0"}`}>
+                      <button
+                        onClick={() => setPreviewPaper(p)}
+                        className="flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-bold bg-[#1E3A8A] text-white hover:bg-[#1D4ED8] transition-colors flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
+                      >
+                        <Eye size={13} /> View Paper
+                      </button>
+                      <button
+                        onClick={() => onRequireAuth("Download Paper PDF")}
+                        className="py-2 px-3 rounded-xl text-xs font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-1 active:scale-95"
+                        title="Download PDF"
+                      >
+                        <Download size={13} /> PDF
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )
+        ) : (
+
+          sortedQuizzes.length === 0 ? (
+            <div className="text-center py-12 bg-[#F8F9FC] rounded-2xl border border-[#E2E6EF]">
+              <Brain size={36} className="mx-auto mb-2 text-gray-300" />
+              <p className="text-gray-600 font-semibold text-sm">No quizzes found</p>
+              <p className="text-xs text-gray-400 mt-1">Try selecting different subjects or exam levels above</p>
+            </div>
+          ) : (
+            <div id="results-cards-container" className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}>
+              {sortedQuizzes.map((q, idx) => {
+                const diffCfg = DIFFICULTY_CONFIG[q.difficulty] ?? DIFFICULTY_CONFIG.medium;
+                return (
+                  <div
+                    key={q.id}
+                    data-result-card
+                    style={{ animationDelay: `${idx * 0.04}s` }}
+                    className={`rounded-2xl border motion-card-hover animate-stagger-card transition-all duration-500 ${
+                      highlightResults
+                        ? "border-purple-500 ring-2 ring-purple-400/40 shadow-[0_0_20px_rgba(124,58,237,0.25)] bg-purple-50/60 scale-[1.015]"
+                        : "bg-white border-gray-100 hover:border-violet-200"
+                    } ${
+                      viewMode === "grid" ? "p-5 flex flex-col justify-between" : "p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4"
+                    }`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <span
+                          className="text-[10px] font-bold px-2.5 py-0.5 rounded-full"
+                          style={{ backgroundColor: diffCfg.bg, color: diffCfg.text }}
+                        >
+                          ● {diffCfg.label}
+                        </span>
+                        <span className="text-xs font-semibold text-gray-400">{q.questionsCount} Questions</span>
+                      </div>
+                      <h3 className="font-bold text-[#1E3A8A] text-sm font-['Poppins'] leading-snug mb-1 truncate">
+                        {q.title}
+                      </h3>
+                      <p className="text-xs text-gray-500 mb-3">{q.subject} · {q.chapter}</p>
+                      <div className="flex items-center gap-3 text-xs text-gray-400 bg-gray-50/80 p-2 rounded-xl border border-gray-100">
+                        <span><Clock size={12} className="inline mr-1" /> {q.timeLimitMinutes}m</span>
+                        <span><Award size={12} className="inline mr-1" /> {q.totalMarks}M</span>
+                        <span className="text-violet-700 font-semibold bg-violet-50 px-2 py-0.5 rounded-md text-[10px]">
+                          <Users size={11} className="inline mr-0.5" /> {q.analytics.totalAttempts.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => onRequireAuth("Attempt Full Quiz")}
+                      className={`py-2.5 rounded-xl text-xs font-bold bg-[#FF7A00] text-white hover:bg-[#E66E00] transition-colors flex items-center justify-center gap-1.5 shadow-sm active:scale-95 ${
+                        viewMode === "grid" ? "w-full mt-4" : "px-5 flex-shrink-0"
+                      }`}
+                    >
+                      <Brain size={14} /> Start Quiz Practice
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )
+        )}
+
+
+
+      </div>
+
+      {/* Guest Paper Preview Modal */}
+      {previewPaper && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setPreviewPaper(null)} />
+          <div className="relative bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl z-10 animate-modal-zoom space-y-4">
+
+            <div className="flex items-start justify-between">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-100 text-[#1E3A8A]">
+                  {previewPaper.subject} · {previewPaper.year}
+                </span>
+                <h3 className="font-bold text-[#1E3A8A] text-lg font-['Poppins'] mt-2 leading-snug">
+                  {previewPaper.title}
+                </h3>
+              </div>
+              <button onClick={() => setPreviewPaper(null)} className="p-1 rounded-full text-gray-400 hover:text-gray-600">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="bg-gray-50 rounded-2xl p-4 space-y-2 text-xs text-gray-600 border border-gray-100">
+              <div className="flex justify-between">
+                <span>Total Marks:</span>
+                <span className="font-bold text-gray-800">{previewPaper.marks} Marks</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Duration:</span>
+                <span className="font-bold text-gray-800">{previewPaper.timeLimitMinutes} Minutes</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Medium:</span>
+                <span className="font-bold text-gray-800">{previewPaper.medium}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Paper Type:</span>
+                <span className="font-bold text-gray-800">{PAPER_TYPE_CONFIG[previewPaper.type]?.label ?? previewPaper.type}</span>
+              </div>
+            </div>
+
+            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-800 text-xs leading-relaxed">
+              <Lightbulb size={14} className="inline text-amber-600 mr-1 flex-shrink-0" /> <strong>Instant Preview:</strong> This paper contains official exam-pattern questions, solution hints, and downloadable PDF solutions.
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => { setPreviewPaper(null); onRequireAuth("Download PDF"); }}
+                className="flex-1 py-3 bg-[#FF7A00] text-white rounded-xl text-xs font-bold hover:bg-[#E66E00] transition-colors shadow-md flex items-center justify-center gap-1.5"
+              >
+                <Download size={14} /> Register Free to Download PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+

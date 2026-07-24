@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿﻿import { useState } from "react";
 import {
   Plus, Edit2, Trash2, X, CheckCircle, ChevronDown, ChevronRight, BookOpen, Layers,
   Calculator, FlaskConical, Atom, Dna, Microscope, Map, Landmark, TrendingUp,
@@ -119,7 +119,7 @@ export function AdminSubjects() {
 
       {/* Subject Form */}
       {showSubjectForm && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-5">
+        <div className="rounded-2xl p-6 mb-5" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
           <div className="flex items-center justify-between mb-4">
             <h3 style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600, color: "#1E3A8A" }}>
               {editingSubject ? "Edit Subject" : "Add New Subject"}
@@ -215,7 +215,7 @@ export function AdminSubjects() {
           const subChapters = chapterList.filter(c => c.subjectId === sub.id).sort((a, b) => a.chapterNumber - b.chapterNumber);
           const isExpanded = expandedSubject === sub.id;
           return (
-            <div key={sub.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div key={sub.id} className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
               <div className="flex items-center gap-3 p-4">
                 <button onClick={() => setExpandedSubject(isExpanded ? null : sub.id)} className="flex items-center gap-3 flex-1 min-w-0">
                   <div
@@ -310,7 +310,7 @@ export function AdminSubjects() {
           );
         })}
         {filteredSubjects.length === 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center">
+          <div className="rounded-2xl p-10 text-center" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
             <BookOpen size={32} className="mx-auto text-gray-200 mb-3" />
             <p className="text-gray-400 text-sm">No subjects for {activeStandard}th standard. Add one above.</p>
           </div>

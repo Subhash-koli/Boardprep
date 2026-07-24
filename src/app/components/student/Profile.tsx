@@ -42,15 +42,16 @@ export function Profile() {
   return (
     <div className="max-w-5xl mx-auto space-y-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl p-5 shadow-sm">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold text-[#1E3A8A] font-['Poppins']">Profile & Settings</h2>
-          <p className="text-gray-500 text-sm">Manage your personal information and exam goals</p>
+          <p className="text-gray-500 text-sm">Manage your profile information and account preferences</p>
+
         </div>
       </div>
 
       {/* ── Profile Card ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
+      <div className="rounded-2xl p-4 sm:p-6" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
         {/* Avatar + name */}
         <div className="flex items-center gap-4 mb-6">
           <div className="relative flex-shrink-0">
@@ -137,83 +138,8 @@ export function Profile() {
         </div>
       </div>
 
-      {/* ── Goal Manager ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-[#1E3A8A] font-['Poppins']">My Exam Goals</h3>
-          <button
-            onClick={() => setShowGoalManager(g => !g)}
-            className="text-xs text-[#1E3A8A] font-medium hover:underline"
-          >
-            {showGoalManager ? "Done" : "Manage"}
-          </button>
-        </div>
-
-        <div className="space-y-2">
-          {(user?.goals ?? []).map(goal => {
-            const isActive = goal.id === currentGoal?.id;
-            const gDays = goal.examDate
-              ? Math.max(0, Math.ceil((new Date(goal.examDate).getTime() - Date.now()) / 86400000))
-              : null;
-            return (
-              <div
-                key={goal.id}
-                className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${isActive ? "border-[#1E3A8A] bg-blue-50" : "border-gray-100 bg-gray-50"}`}
-              >
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: goal.bgColor }}
-                >
-                  <GoalIcon category={goal.category} size={18} style={{ color: goal.textColor }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-semibold font-['Poppins'] truncate ${isActive ? "text-[#1E3A8A]" : "text-gray-800"}`}>
-                    {goal.label}
-                  </p>
-                  {gDays !== null && (
-                    <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
-                      <Calendar size={10} /> {gDays} days left
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {!isActive && (
-                    <button
-                      onClick={() => setCurrentGoal(goal)}
-                      className="text-xs text-[#1E3A8A] hover:underline font-medium"
-                    >
-                      Switch
-                    </button>
-                  )}
-                  {isActive && (
-                    <span className="text-[10px] bg-[#1E3A8A] text-white px-2 py-0.5 rounded-full font-semibold">Active</span>
-                  )}
-                  {showGoalManager && (user?.goals?.length ?? 0) > 1 && (
-                    <button
-                      onClick={() => removeGoal(goal.id)}
-                      className="p-1 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                      aria-label="Remove goal"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Add new goal → go to onboarding */}
-        <button
-          onClick={() => setView("onboarding")}
-          className="mt-3 w-full flex items-center justify-center gap-2 border-2 border-dashed border-gray-200 hover:border-[#1E3A8A] text-gray-500 hover:text-[#1E3A8A] py-3 rounded-xl text-sm font-medium transition-all"
-        >
-          <Plus size={15} /> Add New Exam Goal
-        </button>
-      </div>
-
       {/* ── Stats for current goal ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
+      <div className="rounded-2xl p-4 sm:p-6" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
         <h3 className="font-semibold text-[#1E3A8A] font-['Poppins'] mb-4 flex items-center gap-2">
           <Target size={16} /> Performance — {currentGoal?.shortLabel ?? "All Goals"}
         </h3>
@@ -245,7 +171,7 @@ export function Profile() {
 
       {/* ── Recent Attempts ── */}
       {goalAttempts.length > 0 && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
+        <div className="rounded-2xl p-4 sm:p-6" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-[#1E3A8A] font-['Poppins']">Recent Attempts</h3>
             <span className="text-xs text-gray-400">{currentGoal?.shortLabel}</span>
@@ -280,7 +206,7 @@ export function Profile() {
       )}
 
       {/* ── Account ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
+      <div className="rounded-2xl p-4 sm:p-6" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
         <h3 className="font-semibold text-red-600 font-['Poppins'] mb-4">Account</h3>
         <button
           onClick={logout}

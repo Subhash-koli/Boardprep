@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Search, Shield, ShieldOff, Eye, X, Mail, BookOpen, Brain, Trophy, Calendar } from "lucide-react";
 import { students } from "../data/mockData";
 import type { Student } from "../data/mockData";
@@ -101,14 +101,29 @@ export function AdminUsers() {
 
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-xl" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}>Students</h2>
-          <p className="text-gray-500 text-sm">{studentList.length} registered students</p>
+          <h2 className="text-xl" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}>User Management & Roles</h2>
+          <p className="text-gray-500 text-sm">{studentList.length} registered accounts across roles</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs bg-green-100 text-green-700 px-3 py-1.5 rounded-full">{studentList.filter(s => !s.isBlocked).length} Active</span>
-          <span className="text-xs bg-red-100 text-red-600 px-3 py-1.5 rounded-full">{studentList.filter(s => s.isBlocked).length} Blocked</span>
+          <span className="text-xs bg-green-100 text-green-700 px-3 py-1.5 rounded-full font-medium">{studentList.filter(s => !s.isBlocked).length} Active</span>
+          <span className="text-xs bg-red-100 text-red-600 px-3 py-1.5 rounded-full font-medium">{studentList.filter(s => s.isBlocked).length} Blocked</span>
         </div>
       </div>
+
+      {/* Role Selector Tabs */}
+      <div className="flex gap-2 border-b border-gray-200 pb-2 overflow-x-auto">
+        {["All Users", "Students", "Teachers", "Coordinators"].map((role, idx) => (
+          <button
+            key={role}
+            className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+              idx === 0 ? "bg-[#1E3A8A] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            {role}
+          </button>
+        ))}
+      </div>
+
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
@@ -148,7 +163,7 @@ export function AdminUsers() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>

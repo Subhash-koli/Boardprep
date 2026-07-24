@@ -93,7 +93,7 @@ function getSteps(state: OnboardingState): string[] {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function OnboardingFlow() {
-  const { setView, user, setUser, addGoal } = useApp();
+  const { setView, user, setUser, addGoal, setShowLoginModal } = useApp();
   const [step, setStep] = useState(0);
   const [state, setState] = useState<OnboardingState>({
     goalType: null,
@@ -218,7 +218,7 @@ export default function OnboardingFlow() {
     } as User;
 
     setUser(updatedUser);
-    setView("dashboard");
+    setView("papers");
   };
 
   // ── Step content resolver ────────────────────────────────────────────────
@@ -249,7 +249,7 @@ export default function OnboardingFlow() {
           <span className="text-base font-bold text-[#1E3A8A] font-['Poppins']">ParikshaCrack</span>
         </div>
         <button
-          onClick={() => setView("login")}
+          onClick={() => { setView("landing"); setShowLoginModal(true); }}
           className="flex items-center gap-1 text-sm text-gray-400 hover:text-gray-600 transition-colors min-h-[44px] px-2"
           aria-label="Skip onboarding"
         >

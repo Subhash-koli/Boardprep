@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿﻿import { useState } from "react";
 import { Lock, Mail, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useApp } from "../context/AppContext";
 
@@ -27,7 +27,7 @@ export function AdminLogin() {
 
   return (
     <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+      <div className="rounded-2xl p-8 w-full max-w-md" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
         <div className="flex items-center gap-2 mb-6">
           <img src={LogoImage} alt="ParikshaCrack Logo" className="w-12 h-12 object-contain" />
           <div>

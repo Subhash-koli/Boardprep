@@ -1,4 +1,4 @@
-import { Flame, BookOpen, Brain, Star, TrendingUp, ChevronRight, Bell, Zap, Target, Calendar, Trophy } from "lucide-react";
+import { Flame, BookOpen, Brain, Star, TrendingUp, ChevronRight, Bell, Zap, Target, Calendar, Trophy, CheckCircle } from "lucide-react";
 import { GoalIcon } from "../shared/GoalIcons";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useApp } from "../context/AppContext";
@@ -8,7 +8,7 @@ import { DIFFICULTY_CONFIG } from "../data/mockData";
 // ── Stat Card ─────────────────────────────────────────────────────────────────
 function StatCard({ icon: Icon, label, value, color, bg }: { icon: any; label: string; value: string | number; color: string; bg: string }) {
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col gap-2">
+    <div className="rounded-2xl p-4 flex flex-col gap-2" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}>
       <div className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center`}>
         <Icon size={18} className={color} />
       </div>
@@ -23,15 +23,17 @@ function CountdownBanner({ days, label, color, category }: { days: number; label
   const urgency = days <= 30 ? "red" : days <= 90 ? "orange" : "blue";
   const bg = urgency === "red" ? "from-red-600 to-red-500" : urgency === "orange" ? "from-orange-500 to-amber-500" : "from-[#1E3A8A] to-blue-600";
   return (
-    <div className={`bg-gradient-to-r ${bg} rounded-2xl p-4 flex items-center gap-4`}>
-      <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+    <div className={`bg-gradient-to-r ${bg} rounded-2xl p-4 flex items-center gap-4 relative overflow-hidden`}>
+      {/* Film grain */}
+      <div className="absolute inset-0 pointer-events-none rounded-2xl" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E\")", backgroundSize: "300px 300px", mixBlendMode: "overlay" }} />
+      <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 relative z-10">
         <GoalIcon category={category} size={22} className="text-white" />
       </div>
-      <div className="flex-1">
+      <div className="flex-1 relative z-10">
         <p className="text-white/80 text-xs font-medium">{label}</p>
         <p className="text-white text-2xl font-bold font-['Poppins']">{days} <span className="text-base font-medium">days left</span></p>
       </div>
-      <div className="text-right hidden sm:block">
+      <div className="text-right hidden sm:block relative z-10">
         <p className="text-white/70 text-xs">Stay consistent</p>
         <p className="text-white text-xs font-semibold flex items-center gap-1 justify-end"><Flame size={12} className="text-orange-300" /> Keep going!</p>
       </div>
@@ -49,20 +51,21 @@ export function Dashboard() {
   const activeAnnouncements = announcements.filter(a => {
     if (!a.isActive) return false;
     if (a.targetGoals.includes("all")) return true;
+    if (!cat) return true;
     if (cat && a.targetGoals.includes(cat)) return true;
     return false;
   });
 
   const recentQuizzes = quizzes
-    .filter(q => q.goalCategory === cat && q.status === "published")
+    .filter(q => (!cat || q.goalCategory === cat) && q.status === "published")
     .slice(0, 3);
 
   const recentPapers = papers
-    .filter(p => p.goalCategory === cat && p.status === "published")
+    .filter(p => (!cat || p.goalCategory === cat) && p.status === "published")
     .slice(0, 3);
 
   // Stats derived from attempts for current goal
-  const goalAttempts = completedAttempts.filter(a => a.goalCategory === cat);
+  const goalAttempts = completedAttempts.filter(a => !cat || a.goalCategory === cat);
   const avgScore = goalAttempts.length > 0
     ? Math.round(goalAttempts.reduce((sum, a) => sum + a.percentage, 0) / goalAttempts.length)
     : 0;
@@ -92,6 +95,8 @@ export function Dashboard() {
         className="rounded-2xl p-5 text-white relative overflow-hidden"
         style={{ background: `linear-gradient(135deg, ${currentGoal?.color ?? "#1E3A8A"} 0%, #1D4ED8 100%)` }}
       >
+        {/* Film grain overlay */}
+        <div className="absolute inset-0 pointer-events-none rounded-2xl" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E\")", backgroundSize: "300px 300px", mixBlendMode: "overlay" }} />
         {/* Decorative circle */}
         <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/5 rounded-full" />
         <div className="absolute -right-2 top-8 w-20 h-20 bg-white/5 rounded-full" />
@@ -118,21 +123,83 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="relative mt-4 flex gap-2 flex-wrap">
+        <div className="relative mt-4 flex gap-2 flex-wrap items-center justify-between">
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => setView("quizzes")}
+              className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl text-sm transition-all font-medium min-h-[40px]"
+            >
+              <Brain size={15} /> Take a Quiz
+            </button>
+            <button
+              onClick={() => setView("papers")}
+              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm transition-all min-h-[40px]"
+            >
+              <BookOpen size={15} /> Browse Papers
+            </button>
+          </div>
           <button
-            onClick={() => setView("quizzes")}
-            className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl text-sm transition-all font-medium min-h-[40px]"
+            onClick={() => {
+              const msg = `I am on a ${user?.streak ?? 1}-day study streak preparing for ${currentGoal?.shortLabel ?? "HSC Board & NEET"} on ParikshaCrack! Join me: https://parikshacrack.in`;
+              window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, "_blank");
+            }}
+            className="flex items-center gap-1.5 bg-green-500/80 hover:bg-green-500 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-sm"
           >
-            <Brain size={15} /> Take a Quiz
-          </button>
-          <button
-            onClick={() => setView("papers")}
-            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm transition-all min-h-[40px]"
-          >
-            <BookOpen size={15} /> Browse Papers
+            💬 Share Streak on WhatsApp
           </button>
         </div>
       </div>
+
+      {/* ── 30-Day Adaptive Exam Countdown Track ── */}
+      <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold bg-gradient-to-r from-[#1E3A8A] to-[#2563EB] text-white px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                Day 14 of 30 Roadmap
+              </span>
+              <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+                46% Completed
+              </span>
+            </div>
+            <h3 className="font-bold text-[#1E3A8A] text-sm font-['Poppins'] mt-1.5">
+              Personalized Revision Track: {currentGoal?.shortLabel ?? "Target Exam"}
+            </h3>
+          </div>
+          <span className="text-xs text-gray-500 font-medium">
+            🎯 Target Score: <strong className="text-[#1E3A8A]">92%+</strong>
+          </span>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden mb-4">
+          <div className="h-full bg-gradient-to-r from-[#1E3A8A] via-[#2563EB] to-emerald-500 rounded-full transition-all duration-700 w-[46%]" />
+        </div>
+
+        {/* Daily Tasks Checklists */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[
+            { title: "Today's High-Weightage Chapter", desc: cat === "neet" ? "Genetics & Molecular Biology" : cat === "jee-mains" ? "Integral Calculus" : "Trigonometric Identities", done: true },
+            { title: "Daily PYQ Challenge", desc: "Solve 2024 Past Paper Section A", done: true },
+            { title: "Smart Speed Quiz", desc: "15 MCQs with live negative marking", done: false },
+          ].map((t, idx) => (
+            <div key={idx} className={`p-3 rounded-xl border transition-all ${t.done ? "bg-emerald-50/70 border-emerald-200" : "bg-gray-50 border-gray-200"}`}>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Task {idx + 1}</span>
+                {t.done ? (
+                  <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5"><CheckCircle size={10} /> Completed</span>
+                ) : (
+                  <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full">Pending</span>
+                )}
+              </div>
+              <p className="text-xs font-bold text-gray-800 font-['Poppins']">{t.title}</p>
+              <p className="text-[10px] text-gray-500 mt-0.5 truncate">{t.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+
 
       {/* ── Exam Countdown (if close) ── */}
       {daysLeft !== null && daysLeft <= 180 && currentGoal && (
@@ -193,7 +260,7 @@ export function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
         {/* Score Trend Chart */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
           <h3 className="font-semibold text-[#1E3A8A] font-['Poppins'] mb-4 flex items-center gap-2 text-sm">
             <TrendingUp size={16} /> Score Trend
           </h3>
@@ -224,14 +291,14 @@ export function Dashboard() {
         </div>
 
         {/* Subject breakdown (goal subjects) */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
           <h3 className="font-semibold text-[#1E3A8A] font-['Poppins'] mb-4 flex items-center gap-2 text-sm">
             <Target size={16} /> Subject Coverage
           </h3>
           {recentQuizzes.length === 0 ? (
             <div className="h-40 flex flex-col items-center justify-center text-gray-400">
               <Brain size={32} className="mb-2 opacity-30" />
-              <p className="text-sm text-center">No quizzes taken yet for {currentGoal?.shortLabel}</p>
+              <p className="text-sm text-center">No quizzes taken yet{currentGoal ? ` for ${currentGoal.shortLabel}` : ''}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -267,7 +334,7 @@ export function Dashboard() {
 
       {/* ── Announcements ── */}
       {activeAnnouncements.length > 0 && (
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
           <h3 className="font-semibold text-[#1E3A8A] font-['Poppins'] mb-4 flex items-center gap-2 text-sm">
             <Bell size={16} /> Announcements
           </h3>
@@ -304,7 +371,7 @@ export function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
         {/* Recent Quizzes */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-[#1E3A8A] font-['Poppins'] text-sm">Recommended Quizzes</h3>
             <button onClick={() => setView("quizzes")} className="text-[#1E3A8A] text-xs flex items-center gap-1 hover:underline">
@@ -314,7 +381,7 @@ export function Dashboard() {
           {recentQuizzes.length === 0 ? (
             <div className="text-center py-6 text-gray-400">
               <Brain size={28} className="mx-auto mb-2 opacity-30" />
-              <p className="text-xs">No quizzes for {currentGoal?.shortLabel} yet</p>
+              <p className="text-xs">No quizzes{currentGoal ? ` for ${currentGoal.shortLabel}` : ''} yet</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -353,7 +420,7 @@ export function Dashboard() {
         </div>
 
         {/* Recent Papers */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-[#1E3A8A] font-['Poppins'] text-sm">Top Papers</h3>
             <button onClick={() => setView("papers")} className="text-[#1E3A8A] text-xs flex items-center gap-1 hover:underline">
@@ -363,7 +430,7 @@ export function Dashboard() {
           {recentPapers.length === 0 ? (
             <div className="text-center py-6 text-gray-400">
               <BookOpen size={28} className="mx-auto mb-2 opacity-30" />
-              <p className="text-xs">No papers for {currentGoal?.shortLabel} yet</p>
+              <p className="text-xs">No papers{currentGoal ? ` for ${currentGoal.shortLabel}` : ''} yet</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -410,6 +477,37 @@ export function Dashboard() {
           ))}
         </div>
       </div>
+
+      {/* ── Maharashtra District Leaderboard ── */}
+      <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="font-semibold text-[#1E3A8A] font-['Poppins'] text-sm flex items-center gap-2">
+              <Trophy size={16} className="text-amber-500" /> Top Aspirants in Maharashtra
+            </h3>
+            <p className="text-gray-400 text-xs mt-0.5">Weekly district toppers based on quiz accuracy & streaks</p>
+          </div>
+          <span className="text-[10px] bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-semibold">Live Regional Ranks</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[
+            { rank: 1, name: "Aarav Deshmukh", district: "Pune", score: "98.4%", badge: "🥇 1st Place", color: "bg-amber-50 border-amber-200 text-amber-800" },
+            { rank: 2, name: "Saniya Kulkarni", district: "Nagpur", score: "96.8%", badge: "🥈 2nd Place", color: "bg-slate-50 border-slate-200 text-slate-700" },
+            { rank: 3, name: "Rohan Patil", district: "Nashik", score: "95.2%", badge: "🥉 3rd Place", color: "bg-orange-50 border-orange-200 text-orange-800" },
+          ].map(top => (
+            <div key={top.name} className={`rounded-xl p-3.5 border ${top.color} flex items-center gap-3`}>
+              <div className="w-9 h-9 rounded-xl bg-white shadow-sm flex items-center justify-center font-bold text-sm flex-shrink-0 font-['Poppins']">
+                #{top.rank}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold truncate font-['Poppins']">{top.name}</p>
+                <p className="text-[10px] opacity-75">{top.district} District · {top.score}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
+
