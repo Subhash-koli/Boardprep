@@ -394,6 +394,123 @@
   z-index: 0;
 }
 
+/* ── Premium Tab Switcher ──────────────────────────────────────── */
+
+/* Outer container — stronger glass surface */
+.tab-switcher-container {
+  background: linear-gradient(135deg, rgba(248,249,252,0.95), rgba(241,245,249,0.92));
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(226, 230, 239, 0.9);
+  box-shadow:
+    0 4px 20px rgba(30, 58, 138, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* Active tab card */
+.tab-card-active {
+  position: relative;
+  background: white;
+  border-left: 3.5px solid var(--tab-accent, #2563EB);
+  border-top: 1px solid rgba(226, 230, 239, 0.6);
+  border-right: 1px solid rgba(226, 230, 239, 0.6);
+  border-bottom: 1px solid rgba(226, 230, 239, 0.6);
+  box-shadow:
+    0 6px 24px -4px var(--tab-shadow, rgba(37, 99, 235, 0.14)),
+    0 2px 6px rgba(0, 0, 0, 0.04);
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Inactive tab card */
+.tab-card-inactive {
+  position: relative;
+  background: rgba(248, 250, 252, 0.5);
+  border: 1px solid transparent;
+  border-left: 3.5px solid transparent;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tab-card-inactive:hover {
+  background: rgba(241, 245, 249, 0.8);
+  border-color: rgba(226, 230, 239, 0.6);
+  border-left-color: rgba(226, 230, 239, 0.4);
+  transform: scale(1.01);
+  box-shadow: 0 2px 12px rgba(30, 58, 138, 0.06);
+}
+
+/* Icon container — gradient with grayscale toggle */
+.tab-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  flex-shrink: 0;
+  transition: all 0.28s ease;
+}
+
+.tab-icon-container.active {
+  background: var(--icon-bg, linear-gradient(135deg, #DBEAFE, #BFDBFE));
+  box-shadow: 0 3px 10px -2px var(--icon-shadow, rgba(37, 99, 235, 0.2));
+}
+
+.tab-icon-container.inactive {
+  background: rgba(226, 230, 239, 0.5);
+  filter: grayscale(0.6);
+}
+
+.tab-card-inactive:hover .tab-icon-container.inactive {
+  filter: grayscale(0);
+  background: rgba(226, 230, 239, 0.7);
+}
+
+/* Count pill — active/inactive variants */
+.tab-count-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.25s ease;
+}
+
+.tab-count-pill.active {
+  background: var(--tab-accent, #2563EB);
+  color: white;
+  box-shadow: 0 2px 8px -1px var(--tab-shadow, rgba(37, 99, 235, 0.3));
+}
+
+.tab-count-pill.inactive {
+  background: transparent;
+  color: #94A3B8;
+  border: 1.5px solid rgba(226, 230, 239, 0.9);
+}
+
+/* Badge dot indicator */
+.tab-badge-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--badge-dot-color, #2563EB);
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+/* Tab icon pop animation on selection */
+@keyframes tabIconPop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+.tab-icon-pop {
+  animation: tabIconPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+
 /* ── Stat card pulse animation (hero) ───────────────────────────── */
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(20px); }

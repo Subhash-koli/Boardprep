@@ -175,18 +175,7 @@ export function LandingPage() {
           }}
         />
 
-        {/* Carousel dot indicators */}
-        <div className="absolute top-4 sm:top-6 right-4 sm:right-6 flex gap-1.5 sm:gap-2 z-20">
-          {images.map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => setCurrentImageIndex(idx)}
-              className={`h-2 sm:h-2.5 rounded-full transition-all duration-300 ${idx === currentImageIndex ? "w-6 sm:w-8" : "w-2 sm:w-2.5 bg-white/40 hover:bg-white/60"}`}
-              style={idx === currentImageIndex ? { backgroundColor: "#FF7A00" } : {}}
-              aria-label={`Go to slide ${idx + 1}`}
-            />
-          ))}
-        </div>
+
 
         {/* Hero content */}
         <div className="max-w-5xl mx-auto text-center relative z-10 w-full px-2">
@@ -840,9 +829,10 @@ function LandingContentExplorer({
           </span>
         </div>
 
-        {/* 2. STANDALONE DUAL MODE TAB SWITCHER */}
-        <div className="rounded-2xl p-2 sm:p-2.5 bg-[#F8F9FC]/90 backdrop-blur-md border border-[#E2E6EF] shadow-sm animate-apple-unveil">
+        {/* 2. STANDALONE DUAL MODE TAB SWITCHER — Premium Redesign */}
+        <div className="tab-switcher-container rounded-2xl p-2.5 sm:p-3 animate-apple-unveil">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {/* Papers Tab */}
             <button
               onClick={() => {
                 setActiveTab("papers");
@@ -851,31 +841,48 @@ function LandingContentExplorer({
                 setFilterMedium("");
                 setFilterYear("");
               }}
-              className={`p-3.5 rounded-xl text-left transition-all flex items-center justify-between ${
-                activeTab === "papers"
-                  ? "bg-white text-[#1E3A8A] shadow-md border border-blue-100 ring-2 ring-blue-500/20"
-                  : "bg-gray-50/70 text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent"
+              className={`p-4 rounded-xl text-left flex items-center justify-between gap-3 ${
+                activeTab === "papers" ? "tab-card-active" : "tab-card-inactive"
               }`}
+              style={{
+                "--tab-accent": "#1E3A8A",
+                "--tab-shadow": "rgba(30,58,138,0.14)",
+                "--icon-bg": "linear-gradient(135deg, #DBEAFE, #BFDBFE)",
+                "--icon-shadow": "rgba(37,99,235,0.2)",
+                "--badge-dot-color": "#2563EB",
+              } as React.CSSProperties}
             >
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${activeTab === "papers" ? "bg-blue-100" : "bg-gray-200/60"}`}>
-                  <BookOpen size={20} className={activeTab === "papers" ? "text-[#1E3A8A]" : "text-gray-500"} />
+              <div className="flex items-center gap-3.5">
+                <div className={`tab-icon-container ${activeTab === "papers" ? "active tab-icon-pop" : "inactive"}`}>
+                  <BookOpen size={21} className={activeTab === "papers" ? "text-[#1E3A8A]" : "text-gray-500"} />
                 </div>
                 <div>
-                  <div className="font-bold text-xs sm:text-sm font-['Poppins'] flex items-center gap-1.5">
+                  <div className="font-bold text-[13px] sm:text-sm" style={{ fontFamily: "Poppins, sans-serif", color: activeTab === "papers" ? "#1E3A8A" : "#64748B" }}>
                     Question Papers
-                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-blue-50 text-[#1E3A8A]">
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span
+                      className="text-[9px] font-bold uppercase px-2 py-[2px] rounded-md tracking-wide flex items-center"
+                      style={{
+                        background: activeTab === "papers" ? "#EFF6FF" : "rgba(241,245,249,0.8)",
+                        color: activeTab === "papers" ? "#1E3A8A" : "#94A3B8",
+                      }}
+                    >
+                      <span className="tab-badge-dot" style={{ "--badge-dot-color": activeTab === "papers" ? "#2563EB" : "#CBD5E1" } as React.CSSProperties} />
                       Subjective
                     </span>
+                    <span className="text-[10px] text-gray-400 font-medium hidden sm:inline">· PYQs & Board Papers</span>
                   </div>
-                  <p className="text-[11px] text-gray-500 font-medium mt-0.5">Official PYQs, Model & Board Papers</p>
                 </div>
               </div>
-              <span className={`text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0 ${activeTab === "papers" ? "bg-[#1E3A8A] text-white" : "bg-gray-200 text-gray-600"}`}>
-                {filteredPapers.length}
+              <span className={`tab-count-pill ${activeTab === "papers" ? "active" : "inactive"}`}
+                style={{ "--tab-accent": "#1E3A8A", "--tab-shadow": "rgba(30,58,138,0.25)" } as React.CSSProperties}
+              >
+                {filteredPapers.length} <span className="font-medium hidden min-[420px]:inline">papers</span>
               </span>
             </button>
 
+            {/* Quizzes Tab */}
             <button
               onClick={() => {
                 setActiveTab("quizzes");
@@ -884,29 +891,44 @@ function LandingContentExplorer({
                 setFilterMedium("");
                 setFilterYear("");
               }}
-              className={`p-3.5 rounded-xl text-left transition-all flex items-center justify-between ${
-                activeTab === "quizzes"
-                  ? "bg-white text-purple-900 shadow-md border border-purple-100 ring-2 ring-purple-500/20"
-                  : "bg-gray-50/70 text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent"
+              className={`p-4 rounded-xl text-left flex items-center justify-between gap-3 ${
+                activeTab === "quizzes" ? "tab-card-active" : "tab-card-inactive"
               }`}
+              style={{
+                "--tab-accent": "#7C3AED",
+                "--tab-shadow": "rgba(124,58,237,0.14)",
+                "--icon-bg": "linear-gradient(135deg, #EDE9FE, #DDD6FE)",
+                "--icon-shadow": "rgba(124,58,237,0.2)",
+                "--badge-dot-color": "#7C3AED",
+              } as React.CSSProperties}
             >
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${activeTab === "quizzes" ? "bg-purple-100" : "bg-gray-200/60"}`}>
-                  <Brain size={20} className={activeTab === "quizzes" ? "text-purple-700" : "text-gray-500"} />
+              <div className="flex items-center gap-3.5">
+                <div className={`tab-icon-container ${activeTab === "quizzes" ? "active tab-icon-pop" : "inactive"}`}>
+                  <Brain size={21} className={activeTab === "quizzes" ? "text-purple-700" : "text-gray-500"} />
                 </div>
-
                 <div>
-                  <div className="font-bold text-xs sm:text-sm font-['Poppins'] flex items-center gap-1.5">
+                  <div className="font-bold text-[13px] sm:text-sm" style={{ fontFamily: "Poppins, sans-serif", color: activeTab === "quizzes" ? "#5B21B6" : "#64748B" }}>
                     MCQ Quizzes
-                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-purple-50 text-purple-700">
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span
+                      className="text-[9px] font-bold uppercase px-2 py-[2px] rounded-md tracking-wide flex items-center"
+                      style={{
+                        background: activeTab === "quizzes" ? "#F5F3FF" : "rgba(241,245,249,0.8)",
+                        color: activeTab === "quizzes" ? "#7C3AED" : "#94A3B8",
+                      }}
+                    >
+                      <span className="tab-badge-dot" style={{ "--badge-dot-color": activeTab === "quizzes" ? "#7C3AED" : "#CBD5E1" } as React.CSSProperties} />
                       Objective
                     </span>
+                    <span className="text-[10px] text-gray-400 font-medium hidden sm:inline">· Negative marking</span>
                   </div>
-                  <p className="text-[11px] text-gray-500 font-medium mt-0.5">Speed tests with negative marking</p>
                 </div>
               </div>
-              <span className={`text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0 ${activeTab === "quizzes" ? "bg-purple-700 text-white" : "bg-gray-200 text-gray-600"}`}>
-                {filteredQuizzes.length}
+              <span className={`tab-count-pill ${activeTab === "quizzes" ? "active" : "inactive"}`}
+                style={{ "--tab-accent": "#7C3AED", "--tab-shadow": "rgba(124,58,237,0.25)" } as React.CSSProperties}
+              >
+                {filteredQuizzes.length} <span className="font-medium hidden min-[420px]:inline">quizzes</span>
               </span>
             </button>
           </div>
