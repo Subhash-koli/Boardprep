@@ -3,7 +3,7 @@ import {
   FlaskConical, Stethoscope, Atom, GraduationCap, School, BookMarked, Calculator, Microscope,
   Gift, Heart, Search, Eye, Download, X, Clock, Award, ChevronDown,
   LayoutGrid, List, RotateCcw, Sparkles, ArrowDownCircle,
-  Languages, Pencil, Check, TrendingUp, Lightbulb,
+  Languages, Pencil, Check, TrendingUp, Lightbulb, UserPlus,
   type LucideIcon
 } from "lucide-react";
 
@@ -284,13 +284,10 @@ export function LandingPage() {
       <section className="texture-paper py-14 sm:py-20 px-3 sm:px-4">
         <div className="max-w-5xl mx-auto section-bg-orb">
           <div className="text-center mb-10 sm:mb-14 relative z-10">
-            <h2
-              className="section-heading-accent text-xl sm:text-2xl md:text-3xl"
-              style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}
-            >
+            <h2 className="section-heading-accent text-2xl sm:text-3xl md:text-4xl font-extrabold font-heading text-[#1E3A8A] tracking-tight">
               Everything You Need to Score High
             </h2>
-            <p className="text-gray-500 text-sm sm:text-base mt-4">
+            <p className="text-slate-600 font-display text-sm sm:text-base mt-2.5 font-medium tracking-normal">
               One platform. Every exam. Real exam patterns.
             </p>
           </div>
@@ -298,7 +295,7 @@ export function LandingPage() {
             {features.map((f, idx) => (
               <div
                 key={f.title}
-                className="feature-card-premium rounded-xl sm:rounded-2xl p-5 sm:p-7 reveal-card group"
+                className="feature-card-premium rounded-2xl p-6 sm:p-7 reveal-card group"
                 style={{
                   "--accent-color": f.accent,
                   "--accent-shadow": f.accentShadow,
@@ -308,17 +305,21 @@ export function LandingPage() {
                 } as React.CSSProperties}
               >
                 <div className="flex items-start gap-4">
-                  <div className="feature-icon-glow flex-shrink-0">
-                    <f.icon size={24} className={f.iconClass} />
+                  <div className="feature-icon-glow w-12 h-12 rounded-2xl flex-shrink-0 border border-white/40 shadow-sm">
+                    <f.icon size={22} className={f.iconClass} strokeWidth={2} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="mb-1.5 text-sm sm:text-base font-semibold" style={{ fontFamily: "Poppins, sans-serif", color: "#1E3A8A" }}>{f.title}</h3>
-                    <p className="text-gray-500 text-xs sm:text-sm leading-relaxed">{f.desc}</p>
+                    <h3 className="mb-1.5 text-base sm:text-lg font-bold font-heading text-slate-900 group-hover:text-[#1E3A8A] transition-colors leading-snug tracking-tight">
+                      {f.title}
+                    </h3>
+                    <p className="text-slate-600 font-display text-xs sm:text-sm leading-relaxed font-normal tracking-normal">
+                      {f.desc}
+                    </p>
                   </div>
                 </div>
                 {/* Hover arrow indicator */}
                 <div className="flex justify-end mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <ChevronRight size={16} className="text-gray-400" />
+                  <ChevronRight size={16} className="text-slate-400 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
             ))}
@@ -651,6 +652,7 @@ function LandingContentExplorer({
 }: {
   onRequireAuth: (promptMsg: string) => void;
 }) {
+  const { setView, setSelectedPaperId, setSelectedQuizId, setShowLoginModal, user } = useApp();
   const [hierFilter, setHierFilter] = useState<HierarchicalFilterState>(EMPTY_FILTER);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<"papers" | "quizzes">("papers");
@@ -659,6 +661,7 @@ function LandingContentExplorer({
   const [filterMedium, setFilterMedium] = useState("");
   const [filterYear, setFilterYear] = useState<number | "">("");
   const [previewPaper, setPreviewPaper] = useState<(typeof papers)[number] | null>(null);
+  const [previewIntent, setPreviewIntent] = useState<"view" | "download">("view");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState<"newest" | "downloads" | "marks">("newest");
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>(() => {
@@ -1291,13 +1294,13 @@ function LandingContentExplorer({
 
                       <div className={`flex items-center gap-2 ${viewMode === "grid" ? "pt-3 border-t border-gray-100 mt-4" : "flex-shrink-0"}`}>
                         <button
-                          onClick={() => setPreviewPaper(p)}
+                          onClick={() => { setPreviewIntent("view"); setPreviewPaper(p); }}
                           className="flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-bold bg-[#1E3A8A] text-white hover:bg-[#1D4ED8] transition-colors flex items-center justify-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
                         >
                           <Eye size={13} /> View Paper
                         </button>
                         <button
-                          onClick={() => onRequireAuth("Download Paper PDF")}
+                          onClick={() => { setPreviewIntent("download"); setPreviewPaper(p); }}
                           className="py-2 px-3 rounded-xl text-xs font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-1 active:scale-95 cursor-pointer"
                           title="Download PDF"
                         >
@@ -1379,7 +1382,14 @@ function LandingContentExplorer({
                       </div>
 
                       <button
-                        onClick={() => onRequireAuth("Attempt Full Quiz")}
+                        onClick={() => {
+                          setSelectedQuizId(q.id);
+                          if (user) {
+                            setView("quiz-detail");
+                          } else {
+                            setView("register");
+                          }
+                        }}
                         className={`py-2.5 rounded-xl text-xs font-bold bg-[#FF7A00] text-white hover:bg-[#E66E00] transition-colors flex items-center justify-center gap-1.5 shadow-sm active:scale-95 cursor-pointer ${viewMode === "grid" ? "w-full mt-4" : "px-5 flex-shrink-0"
                           }`}
                       >
@@ -1458,15 +1468,29 @@ function LandingContentExplorer({
             </div>
 
             <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-800 text-xs leading-relaxed">
-              <Lightbulb size={14} className="inline text-amber-600 mr-1 flex-shrink-0" /> <strong>Instant Preview:</strong> This paper contains official exam-pattern questions, solution hints, and downloadable PDF solutions.
+              <Lightbulb size={14} className="inline text-amber-600 mr-1 flex-shrink-0" /> <strong>Instant Preview:</strong> This paper contains official exam-pattern questions, solution hints, and complete paper solutions.
             </div>
 
-            <div className="flex gap-2 pt-2">
+            <div className="flex flex-col gap-2 pt-2">
               <button
-                onClick={() => { setPreviewPaper(null); onRequireAuth("Download PDF"); }}
-                className="flex-1 py-3 bg-[#FF7A00] text-white rounded-xl text-xs font-bold hover:bg-[#E66E00] transition-colors shadow-md flex items-center justify-center gap-1.5"
+                onClick={() => {
+                  setSelectedPaperId(previewPaper.id);
+                  setPreviewPaper(null);
+                  setView("register");
+                }}
+                className="w-full py-3 bg-[#FF7A00] text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-[#E66E00] transition-colors shadow-md flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
               >
-                <Download size={14} /> Register Free to Download PDF
+                {previewIntent === "download" ? <><Download size={16} /> Register Free to Download PDF</> : <><UserPlus size={16} /> Register Free to View Paper</>}
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedPaperId(previewPaper.id);
+                  setPreviewPaper(null);
+                  setShowLoginModal(true);
+                }}
+                className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-[#1E3A8A] rounded-xl text-xs sm:text-sm font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                {previewIntent === "download" ? "Already registered? Login to Download" : "Already registered? Login to View Paper"}
               </button>
             </div>
           </div>

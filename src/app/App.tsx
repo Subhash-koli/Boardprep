@@ -31,7 +31,7 @@ const STUDENT_VIEWS = [
 ];
 
 function AppContent() {
-  const { view } = useApp();
+  const { view, user } = useApp();
 
   // Public / auth pages
   if (view === "landing")         return <LandingPage />;
@@ -59,8 +59,11 @@ function AppContent() {
     );
   }
 
-  // Student portal
+  // Student portal (Protected: Require Authentication)
   if (STUDENT_VIEWS.includes(view)) {
+    if (!user) {
+      return <LandingPage />;
+    }
     return (
       <StudentLayout>
         {view === "dashboard"    && <Dashboard />}

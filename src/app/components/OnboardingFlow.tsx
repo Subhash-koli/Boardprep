@@ -4,9 +4,9 @@ import type { User } from "./context/AppContext";
 import type { GoalCategory, Standard, Stream, Medium, Goal } from "./data/mockData";
 import { GOAL_METADATA, subjects } from "./data/mockData";
 import {
-  ChevronLeft, ChevronRight, Check, BookOpen, School, BookMarked, GraduationCap,
+  ChevronLeft, ChevronRight, Check, BookOpen, School, BookMarked,
   Stethoscope, Atom, Trophy, Microscope, Calculator, Dna, FlaskConical,
-  TrendingUp, Globe, BookText, Layers, X, type LucideIcon,
+  TrendingUp, Globe, BookText, Layers, type LucideIcon,
 } from "lucide-react";
 import { GoalIcon, SubjectIcon } from "./shared/GoalIcons";
 
@@ -93,7 +93,7 @@ function getSteps(state: OnboardingState): string[] {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function OnboardingFlow() {
-  const { setView, user, setUser, addGoal, setShowLoginModal } = useApp();
+  const { setView, user, setUser, selectedPaperId, selectedQuizId } = useApp();
   const [step, setStep] = useState(0);
   const [state, setState] = useState<OnboardingState>({
     goalType: null,
@@ -218,7 +218,13 @@ export default function OnboardingFlow() {
     } as User;
 
     setUser(updatedUser);
-    setView("papers");
+    if (selectedPaperId) {
+      setView("paper-detail");
+    } else if (selectedQuizId) {
+      setView("quiz-detail");
+    } else {
+      setView("papers");
+    }
   };
 
   // ── Step content resolver ────────────────────────────────────────────────

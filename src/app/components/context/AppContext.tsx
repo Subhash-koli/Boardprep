@@ -1,6 +1,21 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
-import type { Medium, QuizAttempt, Goal, GoalCategory } from "../data/mockData";
+import type { Medium, QuizAttempt, Goal, GoalCategory, PaperType } from "../data/mockData";
 import { GOAL_METADATA } from "../data/mockData";
+
+// ── Global Search Filter (shared between StudentLayout modal → PapersList) ────
+
+export interface GlobalSearchFilter {
+  search: string;
+  goalCategory: GoalCategory | "";
+  stream: string;
+  subject: string;
+  paperType: PaperType | "";
+  year: number | "";
+}
+
+export const EMPTY_GLOBAL_FILTER: GlobalSearchFilter = {
+  search: "", goalCategory: "", stream: "", subject: "", paperType: "", year: "",
+};
 
 // ── View state machine ────────────────────────────────────────────────────────
 
@@ -81,6 +96,8 @@ interface AppContextType {
   setLoginModalTab: (t: "student" | "admin") => void;
   darkMode: boolean;
   toggleDarkMode: () => void;
+  globalSearchFilter: GlobalSearchFilter;
+  setGlobalSearchFilter: (f: GlobalSearchFilter) => void;
 }
 
 
@@ -163,6 +180,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginModalTab, setLoginModalTab] = useState<"student" | "admin">("student");
+  const [globalSearchFilter, setGlobalSearchFilter] = useState<GlobalSearchFilter>(EMPTY_GLOBAL_FILTER);
 
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
@@ -296,6 +314,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       showLoginModal, setShowLoginModal,
       loginModalTab, setLoginModalTab,
       darkMode, toggleDarkMode,
+      globalSearchFilter, setGlobalSearchFilter,
     }}>
       {children}
     </AppContext.Provider>

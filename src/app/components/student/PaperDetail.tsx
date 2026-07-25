@@ -1,4 +1,4 @@
-import { ArrowLeft, Download, Bookmark, BookmarkCheck, Eye, Clock, Award, Calendar, FileText, ZoomIn, ZoomOut, Zap, Printer } from "lucide-react";
+import { ArrowLeft, Bookmark, BookmarkCheck, Eye, Clock, Award, Calendar, FileText, ZoomIn, ZoomOut, Zap, Printer } from "lucide-react";
 import { useState } from "react";
 import { useApp } from "../context/AppContext";
 import { papers, PAPER_TYPE_CONFIG } from "../data/mockData";
@@ -95,22 +95,6 @@ export function PaperDetail() {
             className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl text-sm flex items-center justify-center gap-2 transition-colors min-h-[44px]"
           >
             <Printer size={16} /> Print / Save as PDF
-          </button>
-          <button
-            onClick={() => {
-              const content = `PARIKSHACRACK QUESTION PAPER\nTitle: ${paper.title}\nSubject: ${paper.subject}\nYear: ${paper.year}\nMarks: ${paper.marks}\nDuration: ${paper.durationMinutes} mins\n\n--- GENERAL INSTRUCTIONS ---\n1. All questions are compulsory.\n2. Write question numbers clearly.\n3. Calculators are not allowed.\n\nDownloaded from ParikshaCrack v2.0 Platform (https://parikshacrack.in)`;
-              const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-              const url = URL.createObjectURL(blob);
-              const link = document.createElement("a");
-              link.href = url;
-              link.download = `${paper.title.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_parikshacrack.txt`;
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-            }}
-            className="flex-1 bg-[#F97316] hover:bg-orange-600 text-white py-3 rounded-xl text-sm flex items-center justify-center gap-2 transition-colors min-h-[44px]"
-          >
-            <Download size={16} /> Download Text
           </button>
         </div>
       </div>

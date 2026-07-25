@@ -27,10 +27,10 @@ export function Bookmarks() {
   if (totalCount === 0) {
     return (
       <div className="max-w-2xl mx-auto">
-        <h2 className="text-xl font-bold text-[#1E3A8A] font-['Poppins'] mb-6">Bookmarks</h2>
+        <h2 className="text-xl font-bold text-[#1E3A8A] font-['Poppins'] mb-6">Saved Items</h2>
         <div className="text-center py-20 rounded-2xl" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
           <Bookmark size={48} className="mx-auto mb-4 text-gray-200" />
-          <p className="text-gray-600 font-semibold font-['Poppins'] mb-1">No bookmarks yet</p>
+          <p className="text-gray-600 font-semibold font-['Poppins'] mb-1">No saved items yet</p>
           <p className="text-gray-400 text-sm mb-6">Save papers and quizzes for quick access later</p>
           <div className="flex gap-3 justify-center flex-wrap px-4">
             <button
@@ -55,7 +55,7 @@ export function Bookmarks() {
     <div className="max-w-4xl mx-auto">
       {/* ── Header ── */}
       <div className="mb-5">
-        <h2 className="text-xl font-bold text-[#1E3A8A] font-['Poppins']">Bookmarks</h2>
+        <h2 className="text-xl font-bold text-[#1E3A8A] font-['Poppins']">Saved Items</h2>
         <p className="text-gray-500 text-sm mt-0.5">
           {totalCount} saved item{totalCount !== 1 ? "s" : ""}
         </p>
@@ -219,7 +219,7 @@ export function Bookmarks() {
       {tab === "papers" && papersCount === 0 && (
         <div className="text-center py-12 rounded-2xl" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
           <FileText size={36} className="mx-auto mb-3 text-gray-200" />
-          <p className="text-gray-500 font-medium text-sm">No paper bookmarks yet</p>
+          <p className="text-gray-500 font-medium text-sm">No saved papers yet</p>
           <button onClick={() => setView("papers")} className="mt-3 text-[#1E3A8A] text-sm hover:underline">
             Browse Papers
           </button>
@@ -228,7 +228,7 @@ export function Bookmarks() {
       {tab === "quizzes" && quizzesCount === 0 && (
         <div className="text-center py-12 rounded-2xl" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
           <Brain size={36} className="mx-auto mb-3 text-gray-200" />
-          <p className="text-gray-500 font-medium text-sm">No quiz bookmarks yet</p>
+          <p className="text-gray-500 font-medium text-sm">No saved quizzes yet</p>
           <button onClick={() => setView("quizzes")} className="mt-3 text-[#1E3A8A] text-sm hover:underline">
             Browse Quizzes
           </button>

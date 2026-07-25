@@ -484,8 +484,8 @@ export function QuizAttempt() {
             <button
               onClick={toggleQuestionBookmark}
               className={`p-2 rounded-xl transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center ${isBookmarkedQuestion ? "bg-amber-50 text-amber-600" : "text-gray-300 hover:text-amber-500 hover:bg-amber-50"}`}
-              aria-label="Bookmark question"
-              title="Bookmark for review"
+              aria-label="Save question"
+              title="Save for review"
             >
               {isBookmarkedQuestion ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
             </button>

@@ -156,7 +156,7 @@ function UnifiedLoginForm({ onSuccessStudent, onSuccessAdmin, onRegister }: { on
 
 // ── Unified Login Modal ───────────────────────────────────────────────────────
 export function LoginModal() {
-  const { showLoginModal, setShowLoginModal, setView } = useApp();
+  const { showLoginModal, setShowLoginModal, setView, selectedPaperId, selectedQuizId } = useApp();
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setShowLoginModal(false); };
     if (showLoginModal) document.addEventListener("keydown", handler);
@@ -170,7 +170,16 @@ export function LoginModal() {
 
   if (!showLoginModal) return null;
 
-  const handleStudentSuccess = () => { setShowLoginModal(false); setView("papers"); };
+  const handleStudentSuccess = () => {
+    setShowLoginModal(false);
+    if (selectedPaperId) {
+      setView("paper-detail");
+    } else if (selectedQuizId) {
+      setView("quiz-detail");
+    } else {
+      setView("papers");
+    }
+  };
   const handleAdminSuccess   = () => { setShowLoginModal(false); setView("admin-dashboard"); };
   const handleRegister       = () => { setShowLoginModal(false); setView("register"); };
 
@@ -294,7 +303,7 @@ export function RegisterPage() {
 
 // ── Verify OTP Page ───────────────────────────────────────────────────────────
 export function VerifyOTPPage() {
-  const { setView, authEmail, setUser } = useApp();
+  const { setView, authEmail, setUser, selectedPaperId, selectedQuizId } = useApp();
   const [otp, setOtp]         = useState(["", "", "", "", "", ""]);
   const [error, setError]     = useState("");
   const [loading, setLoading] = useState(false);
@@ -313,7 +322,13 @@ export function VerifyOTPPage() {
     setTimeout(() => {
       setLoading(false);
       setUser({ id: `u_${Date.now()}`, name: "New Student", email: authEmail, goals: [], currentGoalId: "", medium: "english", streak: 0, isAdmin: false });
-      setView("onboarding");
+      if (selectedPaperId) {
+        setView("paper-detail");
+      } else if (selectedQuizId) {
+        setView("quiz-detail");
+      } else {
+        setView("onboarding");
+      }
     }, 800);
   };
 
