@@ -216,7 +216,7 @@ export function LandingPage() {
           </p>
 
           {/* ── SEARCH-FIRST CONTENT EXPLORER (Above the Fold) ──────── */}
-          <div className="mb-8 text-left text-gray-800">
+          <div id="content-explorer-section" className="mb-8 text-left text-gray-800">
             <LandingContentExplorer onRequireAuth={() => setShowLoginModal(true)} />
           </div>
 
@@ -321,7 +321,11 @@ export function LandingPage() {
             {examGoals.map((g, idx) => (
               <div
                 key={g.label}
-                className={`exam-goal-card ${g.comingSoon ? "coming-soon-card" : ""} rounded-xl sm:rounded-2xl p-5 sm:p-7 relative reveal-card`}
+                onClick={() => {
+                  const el = document.getElementById("content-explorer-section");
+                  el?.scrollIntoView({ behavior: "smooth" });
+                }}
+                className={`exam-goal-card ${g.comingSoon ? "coming-soon-card" : ""} rounded-xl sm:rounded-2xl p-5 sm:p-7 relative reveal-card cursor-pointer`}
                 style={{
                   "--goal-bg": g.goalBg,
                   "--goal-border": g.goalBorder,
@@ -350,7 +354,12 @@ export function LandingPage() {
                   {g.tags.map(t => (
                     <span
                       key={t}
-                      className={`tag-chip-interactive ${g.comingSoon ? "opacity-60" : ""}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const el = document.getElementById("content-explorer-section");
+                        el?.scrollIntoView({ behavior: "smooth" });
+                      }}
+                      className={`tag-chip-interactive cursor-pointer ${g.comingSoon ? "opacity-60" : ""}`}
                       style={{
                         "--chip-border": g.chipBorder,
                         "--chip-border-hover": g.chipBorderHover,
@@ -376,7 +385,14 @@ export function LandingPage() {
               { icon: Calculator, label: "MHT-CET PCM"   },
               { icon: Trophy,     label: "JEE Advanced", comingSoon: true },
             ].map(g => (
-              <span key={g.label} className="exam-pill-premium">
+              <span
+                key={g.label}
+                onClick={() => {
+                  const el = document.getElementById("content-explorer-section");
+                  el?.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="exam-pill-premium cursor-pointer"
+              >
                 <g.icon size={13} />
                 {g.label}
                 {g.comingSoon && <span className="bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide leading-none shadow-sm">Soon</span>}
@@ -840,8 +856,9 @@ function LandingContentExplorer({
                 setFilterType("");
                 setFilterMedium("");
                 setFilterYear("");
+                setTimeout(handleScrollToResults, 60);
               }}
-              className={`p-4 rounded-xl text-left flex items-center justify-between gap-3 ${
+              className={`p-4 rounded-xl text-left flex items-center justify-between gap-3 cursor-pointer ${
                 activeTab === "papers" ? "tab-card-active" : "tab-card-inactive"
               }`}
               style={{
@@ -890,8 +907,9 @@ function LandingContentExplorer({
                 setFilterType("");
                 setFilterMedium("");
                 setFilterYear("");
+                setTimeout(handleScrollToResults, 60);
               }}
-              className={`p-4 rounded-xl text-left flex items-center justify-between gap-3 ${
+              className={`p-4 rounded-xl text-left flex items-center justify-between gap-3 cursor-pointer ${
                 activeTab === "quizzes" ? "tab-card-active" : "tab-card-inactive"
               }`}
               style={{
