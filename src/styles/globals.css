@@ -159,6 +159,241 @@
   background: linear-gradient(90deg, transparent, rgba(30, 58, 138, 0.12), transparent);
 }
 
+/* ── Premium Feature Cards ─────────────────────────────────────── */
+.feature-card-premium {
+  position: relative;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(226, 230, 239, 0.8);
+  border-left: 4px solid var(--accent-color, #3B82F6);
+  box-shadow:
+    0 2px 12px rgba(30, 58, 138, 0.05),
+    0 1px 3px rgba(0, 0, 0, 0.02);
+  transition: all 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.feature-card-premium::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-color, #3B82F6), transparent);
+  opacity: 0;
+  transition: opacity 0.32s ease;
+}
+
+.feature-card-premium:hover {
+  transform: translateY(-6px) scale(1.005);
+  box-shadow:
+    0 16px 40px -8px var(--accent-shadow, rgba(59, 130, 246, 0.18)),
+    0 4px 12px rgba(0, 0, 0, 0.05);
+  border-color: rgba(226, 230, 239, 0.5);
+  border-left-color: var(--accent-color, #3B82F6);
+}
+
+.feature-card-premium:hover::after {
+  opacity: 1;
+}
+
+/* Gradient icon container */
+.feature-icon-glow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--icon-gradient, linear-gradient(135deg, #DBEAFE, #93C5FD));
+  box-shadow: 0 4px 14px -2px var(--icon-shadow, rgba(59, 130, 246, 0.25));
+  transition: all 0.3s ease;
+}
+
+.feature-card-premium:hover .feature-icon-glow {
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px -2px var(--icon-shadow, rgba(59, 130, 246, 0.35));
+}
+
+/* ── Section Heading Accent ────────────────────────────────────── */
+.section-heading-accent {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 12px;
+}
+
+.section-heading-accent::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 4px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #1E3A8A, #3B82F6, #FF7A00);
+}
+
+/* ── Exam Goal Cards ───────────────────────────────────────────── */
+.exam-goal-card {
+  position: relative;
+  border: 1.5px solid var(--goal-border, rgba(59, 130, 246, 0.2));
+  background: var(--goal-bg, linear-gradient(135deg, #EFF6FF 0%, #F8FAFF 60%, #EEF2FF 100%));
+  box-shadow: 0 2px 12px -2px var(--goal-shadow, rgba(59, 130, 246, 0.08));
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.exam-goal-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--goal-accent-gradient, linear-gradient(90deg, #3B82F6, #60A5FA));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.exam-goal-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px -6px var(--goal-shadow, rgba(59, 130, 246, 0.15));
+  border-color: var(--goal-border-hover, rgba(59, 130, 246, 0.35));
+}
+
+.exam-goal-card:hover::before {
+  opacity: 1;
+}
+
+/* Ring shadow icon for exam goals */
+.goal-icon-ring {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: white;
+  box-shadow:
+    0 0 0 3px var(--ring-color, rgba(59, 130, 246, 0.12)),
+    0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+}
+
+.exam-goal-card:hover .goal-icon-ring {
+  box-shadow:
+    0 0 0 4px var(--ring-color, rgba(59, 130, 246, 0.2)),
+    0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: scale(1.05);
+}
+
+/* ── Interactive Tag Chips ─────────────────────────────────────── */
+.tag-chip-interactive {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+  background: white;
+  border: 1px solid var(--chip-border, rgba(226, 230, 239, 0.9));
+  color: var(--chip-text, #475569);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  cursor: default;
+}
+
+.tag-chip-interactive:hover {
+  transform: translateY(-1px) scale(1.04);
+  box-shadow: 0 4px 12px -2px var(--chip-shadow, rgba(59, 130, 246, 0.15));
+  border-color: var(--chip-border-hover, rgba(59, 130, 246, 0.3));
+  background: var(--chip-bg-hover, #F0F7FF);
+}
+
+/* ── Coming Soon Overlay ───────────────────────────────────────── */
+.coming-soon-card {
+  position: relative;
+}
+
+.coming-soon-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 8px,
+    rgba(255, 255, 255, 0.03) 8px,
+    rgba(255, 255, 255, 0.03) 16px
+  );
+  pointer-events: none;
+}
+
+/* ── Scroll Stagger Animation ──────────────────────────────────── */
+@keyframes revealUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.reveal-card {
+  opacity: 0;
+  animation: revealUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ── Bottom Exam Pill Premium ──────────────────────────────────── */
+.exam-pill-premium {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+  background: linear-gradient(135deg, #F8FAFC, #F1F5F9);
+  border: 1px solid rgba(226, 230, 239, 0.9);
+  color: #475569;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.exam-pill-premium:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.1);
+  border-color: rgba(59, 130, 246, 0.25);
+  background: linear-gradient(135deg, #EFF6FF, #E8EFFF);
+}
+
+/* ── Decorative Gradient Orb (behind feature grids) ────────────── */
+.section-bg-orb {
+  position: relative;
+}
+
+.section-bg-orb::before {
+  content: '';
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.06) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
 /* ── Stat card pulse animation (hero) ───────────────────────────── */
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(20px); }
@@ -353,6 +588,28 @@ html.dark .glass-card-light {
   border-color: rgba(255, 255, 255, 0.1) !important;
   color: #F8FAFC !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+html.dark .feature-card-premium {
+  background: rgba(15, 23, 42, 0.88) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+html.dark .exam-goal-card {
+  background: rgba(15, 23, 42, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+html.dark .tag-chip-interactive,
+html.dark .exam-pill-premium {
+  background: rgba(30, 41, 59, 0.8) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #CBD5E1 !important;
+}
+
+html.dark .goal-icon-ring {
+  background: rgba(30, 41, 59, 0.9) !important;
 }
 
 html.dark input,

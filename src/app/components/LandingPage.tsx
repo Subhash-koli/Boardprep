@@ -25,10 +25,14 @@ const STUDYImage   = new URL("../../imports/STUDY.jpg",      import.meta.url).hr
 const LogoImage    = new URL("../../imports/logo.png",       import.meta.url).href;
 
 const features = [
-  { icon: BookOpen,  title: "PYQ Papers",             desc: "NEET, JEE, HSC & SSC past papers organised by year, subject, and paper type — downloadable & viewable online.", color: "bg-blue-100 text-blue-700" },
-  { icon: Brain,     title: "Smart Quiz Engine",       desc: "Real exam-pattern MCQs with live negative marking (+4/−1 for NEET/JEE, +1/0 for boards). Practice or Exam mode.", color: "bg-purple-100 text-purple-700" },
-  { icon: BarChart3, title: "Analytics & Percentile",  desc: "Track score trends, subject weak-spots, negative-mark patterns, and your percentile vs peers.", color: "bg-green-100 text-green-700" },
-  { icon: Zap,       title: "Smart Filtering",         desc: "Browse by School · College · Competitive. Narrow by grade, stream, year, subject — search-engine style discovery.", color: "bg-orange-100 text-orange-700" },
+  { icon: BookOpen,  title: "PYQ Papers",             desc: "NEET, JEE, HSC & SSC past papers organised by year, subject, and paper type — downloadable & viewable online.",
+    accent: "#2563EB", accentShadow: "rgba(37,99,235,0.18)", iconGradient: "linear-gradient(135deg, #DBEAFE, #93C5FD)", iconShadow: "rgba(37,99,235,0.25)", iconClass: "text-blue-700" },
+  { icon: Brain,     title: "Smart Quiz Engine",       desc: "Real exam-pattern MCQs with live negative marking (+4/−1 for NEET/JEE, +1/0 for boards). Practice or Exam mode.",
+    accent: "#7C3AED", accentShadow: "rgba(124,58,237,0.18)", iconGradient: "linear-gradient(135deg, #EDE9FE, #C4B5FD)", iconShadow: "rgba(124,58,237,0.25)", iconClass: "text-purple-700" },
+  { icon: BarChart3, title: "Analytics & Percentile",  desc: "Track score trends, subject weak-spots, negative-mark patterns, and your percentile vs peers.",
+    accent: "#059669", accentShadow: "rgba(5,150,105,0.18)", iconGradient: "linear-gradient(135deg, #D1FAE5, #6EE7B7)", iconShadow: "rgba(5,150,105,0.25)", iconClass: "text-green-700" },
+  { icon: Zap,       title: "Smart Filtering",         desc: "Browse by School · College · Competitive. Narrow by grade, stream, year, subject — search-engine style discovery.",
+    accent: "#EA580C", accentShadow: "rgba(234,88,12,0.18)", iconGradient: "linear-gradient(135deg, #FFEDD5, #FDBA74)", iconShadow: "rgba(234,88,12,0.25)", iconClass: "text-orange-700" },
 ];
 
 const stats = [
@@ -38,11 +42,27 @@ const stats = [
   { value: "84K+",   label: "Attempts" },
 ];
 
-const examGoals: { icon: LucideIcon; label: string; iconColor: string; bg: string; text: string; border: string; tags: string[]; comingSoon?: boolean }[] = [
-  { icon: School,        label: "SSC Class 10", iconColor: "text-orange-600", bg: "bg-orange-50",  text: "text-orange-700", border: "border-orange-200", tags: ["Mathematics", "Science", "English", "Marathi", "History"] },
-  { icon: GraduationCap, label: "HSC Class 12", iconColor: "text-blue-600",   bg: "bg-blue-50",    text: "text-blue-700",   border: "border-blue-200",   tags: ["Physics", "Chemistry", "Maths", "Biology", "Economics"] },
-  { icon: Atom,          label: "JEE Mains",    iconColor: "text-violet-600", bg: "bg-violet-50",  text: "text-violet-700", border: "border-violet-200", tags: ["Physics", "Chemistry", "Mathematics"],               comingSoon: true },
-  { icon: Stethoscope,   label: "NEET UG",      iconColor: "text-green-600",  bg: "bg-green-50",   text: "text-green-700",  border: "border-green-200",  tags: ["Physics", "Chemistry", "Botany", "Zoology"],        comingSoon: true },
+const examGoals: {
+  icon: LucideIcon; label: string; iconColor: string; text: string; tags: string[]; comingSoon?: boolean;
+  goalBg: string; goalBorder: string; goalBorderHover: string; goalShadow: string; goalAccentGradient: string;
+  ringColor: string; chipBorder: string; chipBorderHover: string; chipShadow: string; chipBgHover: string; chipText: string;
+}[] = [
+  { icon: School,        label: "SSC Class 10", iconColor: "text-orange-600", text: "text-orange-700",
+    goalBg: "linear-gradient(135deg, #FFF7ED 0%, #FFFBF5 60%, #FEF3C7 100%)", goalBorder: "rgba(251,146,60,0.25)", goalBorderHover: "rgba(251,146,60,0.45)", goalShadow: "rgba(251,146,60,0.12)", goalAccentGradient: "linear-gradient(90deg, #F97316, #FDBA74)",
+    ringColor: "rgba(251,146,60,0.15)", chipBorder: "rgba(251,146,60,0.2)", chipBorderHover: "rgba(251,146,60,0.4)", chipShadow: "rgba(251,146,60,0.15)", chipBgHover: "#FFF7ED", chipText: "#9A3412",
+    tags: ["Mathematics", "Science", "English", "Marathi", "History"] },
+  { icon: GraduationCap, label: "HSC Class 12", iconColor: "text-blue-600", text: "text-blue-700",
+    goalBg: "linear-gradient(135deg, #EFF6FF 0%, #F8FAFF 60%, #E0E7FF 100%)", goalBorder: "rgba(59,130,246,0.25)", goalBorderHover: "rgba(59,130,246,0.45)", goalShadow: "rgba(59,130,246,0.12)", goalAccentGradient: "linear-gradient(90deg, #3B82F6, #93C5FD)",
+    ringColor: "rgba(59,130,246,0.15)", chipBorder: "rgba(59,130,246,0.2)", chipBorderHover: "rgba(59,130,246,0.4)", chipShadow: "rgba(59,130,246,0.15)", chipBgHover: "#EFF6FF", chipText: "#1E40AF",
+    tags: ["Physics", "Chemistry", "Maths", "Biology", "Economics"] },
+  { icon: Atom,          label: "JEE Mains", iconColor: "text-violet-600", text: "text-violet-700",
+    goalBg: "linear-gradient(135deg, #F5F3FF 0%, #FAF5FF 60%, #EDE9FE 100%)", goalBorder: "rgba(139,92,246,0.25)", goalBorderHover: "rgba(139,92,246,0.45)", goalShadow: "rgba(139,92,246,0.12)", goalAccentGradient: "linear-gradient(90deg, #8B5CF6, #C4B5FD)",
+    ringColor: "rgba(139,92,246,0.15)", chipBorder: "rgba(139,92,246,0.2)", chipBorderHover: "rgba(139,92,246,0.4)", chipShadow: "rgba(139,92,246,0.15)", chipBgHover: "#F5F3FF", chipText: "#5B21B6",
+    tags: ["Physics", "Chemistry", "Mathematics"], comingSoon: true },
+  { icon: Stethoscope,   label: "NEET UG", iconColor: "text-green-600", text: "text-green-700",
+    goalBg: "linear-gradient(135deg, #ECFDF5 0%, #F0FDF4 60%, #D1FAE5 100%)", goalBorder: "rgba(16,185,129,0.25)", goalBorderHover: "rgba(16,185,129,0.45)", goalShadow: "rgba(16,185,129,0.12)", goalAccentGradient: "linear-gradient(90deg, #10B981, #6EE7B7)",
+    ringColor: "rgba(16,185,129,0.15)", chipBorder: "rgba(16,185,129,0.2)", chipBorderHover: "rgba(16,185,129,0.4)", chipShadow: "rgba(16,185,129,0.15)", chipBgHover: "#ECFDF5", chipText: "#065F46",
+    tags: ["Physics", "Chemistry", "Botany", "Zoology"], comingSoon: true },
 ];
 
 const freeFeatures = [
@@ -248,29 +268,46 @@ export function LandingPage() {
 
 
 
-      {/* ── Features — Off-White + Paper Grain ───────────────────────── */}
-      <section className="texture-paper py-12 sm:py-16 px-3 sm:px-4">
-        <div className="max-w-5xl mx-auto">
-          <h2
-            className="text-center text-xl sm:text-2xl md:text-3xl mb-2 sm:mb-3"
-            style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}
-          >
-            Everything You Need to Score High
-          </h2>
-          <p className="text-center text-gray-500 text-sm sm:text-base mb-8 sm:mb-10">
-            One platform. Every exam. Real exam patterns.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-            {features.map(f => (
+      {/* ── Features — Off-White + Paper Grain + Gradient Orb ───────── */}
+      <section className="texture-paper py-14 sm:py-20 px-3 sm:px-4">
+        <div className="max-w-5xl mx-auto section-bg-orb">
+          <div className="text-center mb-10 sm:mb-14 relative z-10">
+            <h2
+              className="section-heading-accent text-xl sm:text-2xl md:text-3xl"
+              style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}
+            >
+              Everything You Need to Score High
+            </h2>
+            <p className="text-gray-500 text-sm sm:text-base mt-4">
+              One platform. Every exam. Real exam patterns.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-7 relative z-10">
+            {features.map((f, idx) => (
               <div
                 key={f.title}
-                className="glass-card-light rounded-xl sm:rounded-2xl p-4 sm:p-6 transition-all duration-200"
+                className="feature-card-premium rounded-xl sm:rounded-2xl p-5 sm:p-7 reveal-card group"
+                style={{
+                  "--accent-color": f.accent,
+                  "--accent-shadow": f.accentShadow,
+                  "--icon-gradient": f.iconGradient,
+                  "--icon-shadow": f.iconShadow,
+                  animationDelay: `${idx * 0.1}s`,
+                } as React.CSSProperties}
               >
-                <div className={`w-10 sm:w-12 h-10 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center ${f.color} mb-3 sm:mb-4`}>
-                  <f.icon size={20} className="sm:w-[22px] sm:h-[22px]" />
+                <div className="flex items-start gap-4">
+                  <div className="feature-icon-glow flex-shrink-0">
+                    <f.icon size={24} className={f.iconClass} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="mb-1.5 text-sm sm:text-base font-semibold" style={{ fontFamily: "Poppins, sans-serif", color: "#1E3A8A" }}>{f.title}</h3>
+                    <p className="text-gray-500 text-xs sm:text-sm leading-relaxed">{f.desc}</p>
+                  </div>
                 </div>
-                <h3 className="mb-2 text-sm sm:text-base" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 600, color: "#1E3A8A" }}>{f.title}</h3>
-                <p className="text-gray-500 text-xs sm:text-sm leading-relaxed">{f.desc}</p>
+                {/* Hover arrow indicator */}
+                <div className="flex justify-end mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <ChevronRight size={16} className="text-gray-400" />
+                </div>
               </div>
             ))}
           </div>
@@ -279,46 +316,70 @@ export function LandingPage() {
 
       <div className="section-divider" />
 
-      {/* ── Exam Goals — White + Paper Grain ─────────────────────────── */}
-      <section className="texture-paper-white py-10 sm:py-14 px-3 sm:px-4">
+      {/* ── Exam Goals — White + Paper Grain + Premium Cards ────────── */}
+      <section className="texture-paper-white py-12 sm:py-18 px-3 sm:px-4">
         <div className="max-w-5xl mx-auto">
-          <h2
-            className="text-center text-xl sm:text-2xl md:text-3xl mb-3"
-            style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}
-          >
-            Supported Exam Goals
-          </h2>
-          <p className="text-center text-gray-500 text-sm mb-8 sm:mb-10">Browse School · College · Competitive — choose your path and discover content</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-            {examGoals.map(g => (
+          <div className="text-center mb-10 sm:mb-14">
+            <h2
+              className="section-heading-accent text-xl sm:text-2xl md:text-3xl"
+              style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}
+            >
+              Supported Exam Goals
+            </h2>
+            <p className="text-gray-500 text-sm sm:text-base mt-4">Browse School · College · Competitive — choose your path and discover content</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-7">
+            {examGoals.map((g, idx) => (
               <div
                 key={g.label}
-                className={`${g.bg} border ${g.border} rounded-xl sm:rounded-2xl p-4 sm:p-6 relative overflow-hidden transition-all duration-200 hover:shadow-md`}
+                className={`exam-goal-card ${g.comingSoon ? "coming-soon-card" : ""} rounded-xl sm:rounded-2xl p-5 sm:p-7 relative reveal-card`}
+                style={{
+                  "--goal-bg": g.goalBg,
+                  "--goal-border": g.goalBorder,
+                  "--goal-border-hover": g.goalBorderHover,
+                  "--goal-shadow": g.goalShadow,
+                  "--goal-accent-gradient": g.goalAccentGradient,
+                  "--ring-color": g.ringColor,
+                  animationDelay: `${idx * 0.12}s`,
+                } as React.CSSProperties}
               >
                 {g.comingSoon && (
-                  <div className="absolute top-3 right-3 z-10">
-                    <span className="inline-flex items-center gap-1 bg-amber-400 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
+                  <div className="absolute top-3.5 right-3.5 z-10">
+                    <span className="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide shadow-sm">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-900/40 animate-pulse" />
                       Coming Soon
                     </span>
                   </div>
                 )}
-                <div className="flex items-center gap-3 mb-3 sm:mb-4">
-                  <div className={`w-9 h-9 rounded-xl bg-white/60 border ${g.border} flex items-center justify-center flex-shrink-0`}>
-                    <g.icon size={18} className={g.comingSoon ? "opacity-60 " + g.iconColor : g.iconColor} />
+                <div className="flex items-center gap-3.5 mb-4 sm:mb-5">
+                  <div className="goal-icon-ring" style={{ "--ring-color": g.ringColor } as React.CSSProperties}>
+                    <g.icon size={20} className={`${g.comingSoon ? "opacity-60 " : ""}${g.iconColor}`} />
                   </div>
-                  <div className={`${g.text} text-sm font-bold ${g.comingSoon ? "opacity-70" : ""}`} style={{ fontFamily: "Poppins, sans-serif" }}>{g.label}</div>
+                  <div className={`${g.text} text-sm sm:text-base font-bold ${g.comingSoon ? "opacity-70" : ""}`} style={{ fontFamily: "Poppins, sans-serif" }}>{g.label}</div>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {g.tags.map(t => (
-                    <span key={t} className={`bg-white ${g.text} border ${g.border} text-xs px-2.5 py-1 rounded-full ${g.comingSoon ? "opacity-60" : ""}`}>{t}</span>
+                    <span
+                      key={t}
+                      className={`tag-chip-interactive ${g.comingSoon ? "opacity-60" : ""}`}
+                      style={{
+                        "--chip-border": g.chipBorder,
+                        "--chip-border-hover": g.chipBorderHover,
+                        "--chip-shadow": g.chipShadow,
+                        "--chip-bg-hover": g.chipBgHover,
+                        "--chip-text": g.chipText,
+                        color: g.chipText,
+                      } as React.CSSProperties}
+                    >
+                      {t}
+                    </span>
                   ))}
                 </div>
               </div>
             ))}
           </div>
-          {/* Extra exam pills */}
-          <div className="flex flex-wrap gap-2 justify-center mt-5">
+          {/* Extra exam pills — premium chips */}
+          <div className="flex flex-wrap gap-2.5 justify-center mt-8">
             {[
               { icon: BookOpen,   label: "Class 9 & 8"   },
               { icon: BookMarked, label: "Class 11"       },
@@ -326,10 +387,10 @@ export function LandingPage() {
               { icon: Calculator, label: "MHT-CET PCM"   },
               { icon: Trophy,     label: "JEE Advanced", comingSoon: true },
             ].map(g => (
-              <span key={g.label} className="bg-gray-100 text-gray-600 text-xs px-3 py-1.5 rounded-full border border-gray-200 flex items-center gap-1.5">
-                <g.icon size={12} />
+              <span key={g.label} className="exam-pill-premium">
+                <g.icon size={13} />
                 {g.label}
-                {g.comingSoon && <span className="bg-amber-400 text-amber-900 text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide leading-none">Soon</span>}
+                {g.comingSoon && <span className="bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide leading-none shadow-sm">Soon</span>}
               </span>
             ))}
           </div>
