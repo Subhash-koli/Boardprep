@@ -1,54 +1,17 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
-  Search, Eye, Download, Bookmark, BookmarkCheck, FileText,
-  X, ChevronDown, Clock, Award, TrendingUp,
-  BarChart2, ChevronRight, Eye as ViewsIcon,
+  Eye, Download, Bookmark, BookmarkCheck, FileText,
+  Clock, Award, ChevronRight, ArrowLeft, Folder, FolderOpen, List, FolderTree, Info, CheckCircle2
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
-import { papers, subjects, PAPER_TYPE_CONFIG } from "../data/mockData";
-import type { PaperType, Medium } from "../data/mockData";
-import { HierarchicalFilter, EMPTY_FILTER, resolveGoalCategory, filterBreadcrumb } from "./HierarchicalFilter";
-import type { HierarchicalFilterState } from "./HierarchicalFilter";
-import { SubjectIcon } from "../shared/GoalIcons";
+import { papers, PAPER_TYPE_CONFIG } from "../data/mockData";
+import { MAIN_FOLDERS } from "./FolderExplorer";
+import type { FolderNode } from "./FolderExplorer";
 
-
-interface FilterState {
-  subject: string;
-  year: number | "";
-  type: PaperType | "";
-  medium: Medium | "";
-}
-
-// ── Sort Dropdown ─────────────────────────────────────────────────────────────
 type SortKey = "popular" | "newest" | "oldest" | "marks-high" | "marks-low";
-const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: "popular", label: "Most Popular" },
-  { value: "newest", label: "Newest First" },
-  { value: "oldest", label: "Oldest First" },
-  { value: "marks-high", label: "Most Marks" },
-  { value: "marks-low", label: "Fewest Marks" },
-];
 
-// Pill button helper
-function Pill({
-  active, onClick, children,
-}: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 cursor-pointer select-none whitespace-nowrap flex-shrink-0
-        ${active
-          ? "bg-gradient-to-r from-[#1E3A8A] to-[#2563EB] text-white border-transparent shadow-[0_4px_14px_rgba(30,58,138,0.35)] scale-105"
-          : "bg-white text-gray-600 border-gray-200 hover:border-[#1E3A8A] hover:text-[#1E3A8A] hover:shadow-md hover:scale-105 active:scale-95"
-        }`}
-    >
-      {children}
-    </button>
-  );
-}
-
-// ── Paper Preview Card ────────────────────────────────────────────────────────
-function PaperCard({
+// ── Mobile Responsive Paper Row Component ─────────────────────────────────────
+function PaperRow({
   paper: p,
   bookmarked,
   onView,
@@ -63,151 +26,118 @@ function PaperCard({
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div
-      className="rounded-2xl hover:-translate-y-0.5 transition-all duration-200 flex flex-col overflow-hidden" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}
-    >
-      {/* Top colour strip */}
-      <div
-        className="h-1 w-full"
-        style={{ background: `linear-gradient(90deg, ${typeCfg.text}, ${typeCfg.border})` }}
-      />
+    <div className="group bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl rounded-2xl p-3.5 sm:p-4 border border-white/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-all duration-200">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
+        {/* Left: Icon + Title & Badges */}
+        <div className="flex items-start gap-3 min-w-0 flex-1">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-blue-500/10 to-indigo-600/15 text-[#1E3A8A] dark:text-blue-400 flex flex-col items-center justify-center font-bold flex-shrink-0 mt-0.5 border border-blue-500/20 shadow-2xs">
+            <FileText size={16} className="sm:w-[18px] sm:h-[18px]" />
+            <span className="text-[7px] sm:text-[8px] font-black tracking-wider uppercase text-blue-700 dark:text-blue-300 mt-0.5">PDF</span>
+          </div>
 
-      <div className="p-4 flex flex-col flex-1">
-        {/* Badges row */}
-        <div className="flex items-start justify-between gap-2 mb-3">
-          <div className="flex flex-wrap gap-1.5 min-w-0">
-            <span
-              className="text-[10px] px-2 py-0.5 rounded-full font-semibold border flex-shrink-0"
-              style={{ background: typeCfg.bg, color: typeCfg.text, borderColor: typeCfg.border }}
-            >
-              {typeCfg.label}
-            </span>
-            <span className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full flex-shrink-0">
-              {p.year}
-            </span>
-            {p.medium && (
-              <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full capitalize flex-shrink-0">
-                {p.medium}
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 flex-wrap mb-1">
+              <span
+                className="text-[10px] px-2 py-0.5 rounded-full font-bold border flex-shrink-0"
+                style={{ background: typeCfg.bg, color: typeCfg.text, borderColor: typeCfg.border }}
+              >
+                {typeCfg.label}
               </span>
-            )}
-            {p.session && (
-              <span className="text-[10px] bg-violet-50 text-violet-700 px-2 py-0.5 rounded-full capitalize flex-shrink-0">
-                {p.session}
+              <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold px-2 py-0.5 rounded-full border border-slate-200/60 dark:border-slate-700">
+                {p.year}
               </span>
-            )}
-            {p.shift && (
-              <span className="text-[10px] bg-sky-50 text-sky-700 px-2 py-0.5 rounded-full capitalize flex-shrink-0">
-                {p.shift.replace("-", " ")}
-              </span>
-            )}
-          </div>
-          <button
-            onClick={onBookmark}
-            className={`flex-shrink-0 p-1.5 rounded-xl transition-colors ${bookmarked ? "text-[#F97316] bg-orange-50" : "text-gray-300 hover:text-[#F97316] hover:bg-orange-50"
-              }`}
-            aria-label={bookmarked ? "Remove bookmark" : "Bookmark paper"}
-          >
-            {bookmarked ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
-          </button>
-        </div>
-
-        {/* Title */}
-        <h3 className="text-sm font-bold text-[#1E3A8A] font-['Poppins'] leading-snug mb-0.5">
-          {p.title}
-        </h3>
-        <p className="text-xs text-gray-400 mb-3">{p.subject}</p>
-
-        {/* Stats row */}
-        <div className="grid grid-cols-3 gap-1.5 mb-3">
-          <div className="bg-blue-50 rounded-xl p-2 text-center">
-            <Award size={12} className="text-[#1E3A8A] mx-auto mb-0.5" />
-            <p className="text-[10px] text-gray-500">Marks</p>
-            <p className="text-xs font-bold text-[#1E3A8A]">{p.marks}</p>
-          </div>
-          <div className="bg-purple-50 rounded-xl p-2 text-center">
-            <Clock size={12} className="text-purple-600 mx-auto mb-0.5" />
-            <p className="text-[10px] text-gray-500">Time</p>
-            <p className="text-xs font-bold text-purple-600">{p.durationMinutes}m</p>
-          </div>
-          <div className="bg-orange-50 rounded-xl p-2 text-center">
-            <TrendingUp size={12} className="text-[#F97316] mx-auto mb-0.5" />
-            <p className="text-[10px] text-gray-500">Downloads</p>
-            <p className="text-xs font-bold text-[#F97316]">
-              {p.analytics.downloads >= 1000
-                ? `${(p.analytics.downloads / 1000).toFixed(1)}k`
-                : p.analytics.downloads}
-            </p>
-          </div>
-        </div>
-
-        {/* Expandable preview panel */}
-        {expanded && (
-          <div className="mb-3 bg-gray-50 rounded-xl p-3 animate-fade-in">
-            <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Paper Details</p>
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] text-gray-500">Views</span>
-                <span className="text-[10px] font-semibold text-gray-700 flex items-center gap-1">
-                  <ViewsIcon size={9} />
-                  {p.analytics.views.toLocaleString()}
+              {p.medium && (
+                <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-medium px-2 py-0.5 rounded-full capitalize border border-slate-200/60 dark:border-slate-700">
+                  {p.medium}
                 </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] text-gray-500">Bookmarks</span>
-                <span className="text-[10px] font-semibold text-gray-700">{p.analytics.bookmarks.toLocaleString()}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] text-gray-500">Added</span>
-                <span className="text-[10px] font-semibold text-gray-700">
-                  {new Date(p.createdAt).toLocaleDateString("en-IN", { month: "short", year: "numeric" })}
+              )}
+              {p.session && (
+                <span className="text-[10px] bg-violet-50 text-violet-700 font-semibold px-2 py-0.5 rounded-full capitalize border border-violet-200/60">
+                  {p.session}
                 </span>
-              </div>
-              {p.examName && (
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-gray-500">Exam</span>
-                  <span className="text-[10px] font-semibold text-gray-700">{p.examName}</span>
-                </div>
+              )}
+              {p.shift && (
+                <span className="text-[10px] bg-sky-50 text-sky-700 font-semibold px-2 py-0.5 rounded-full capitalize border border-sky-200/60">
+                  {p.shift.replace("-", " ")}
+                </span>
               )}
             </div>
-            <div className="mt-2 pt-2 border-t border-gray-200">
-              <div className="flex items-center gap-1.5">
-                <BarChart2 size={11} className="text-gray-400" />
-                <span className="text-[10px] text-gray-500">
-                  Popularity score: <span className="font-semibold text-[#1E3A8A]">
-                    {Math.round((p.analytics.downloads / Math.max(p.analytics.views, 1)) * 100)}%
-                  </span> download rate
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* Actions */}
-        <div className="flex gap-2 mt-auto">
-          <button
-            onClick={onView}
-            className="flex-1 bg-[#1E3A8A] hover:bg-[#1D4ED8] text-white py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors min-h-[40px]"
-          >
-            <Eye size={13} /> View Paper
-          </button>
-          <button
-            onClick={() => setExpanded(e => !e)}
-            className={`px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all min-h-[40px] border ${expanded
-                ? "bg-[#1E3A8A]/10 text-[#1E3A8A] border-[#1E3A8A]/20"
-                : "bg-gray-100 text-gray-600 border-transparent hover:bg-gray-200"
+            <h3 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm font-['Poppins'] group-hover:text-[#1E3A8A] dark:group-hover:text-blue-400 transition-colors leading-snug">
+              {p.title}
+            </h3>
+            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">{p.subject}</p>
+          </div>
+        </div>
+
+        {/* Middle & Right Footer Group on Mobile */}
+        <div className="flex flex-wrap items-center justify-between md:justify-end gap-2.5 pt-2.5 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-slate-800">
+          {/* Metadata Specs */}
+          <div className="flex items-center gap-3 text-[11px] sm:text-xs font-semibold text-slate-600 dark:text-slate-300 md:border-x border-slate-100 dark:border-slate-800 md:px-4">
+            <span className="flex items-center gap-1">
+              <Award size={13} className="text-amber-500" /> {p.marks}M
+            </span>
+            <span className="flex items-center gap-1 text-violet-700 dark:text-violet-400">
+              <Clock size={13} /> {p.durationMinutes}m
+            </span>
+            <span className="flex items-center gap-1 text-[#F97316]">
+              <Download size={13} /> {(p.analytics.downloads / 1000).toFixed(1)}k
+            </span>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setExpanded(e => !e)}
+              className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all border cursor-pointer ${
+                expanded
+                  ? "bg-blue-50 text-[#1E3A8A] border-blue-200"
+                  : "bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-slate-700 hover:bg-slate-100"
               }`}
-            title={expanded ? "Hide details" : "Show details"}
-          >
-            <ChevronRight
-              size={13}
-              className={`transition-transform duration-200 ${expanded ? "rotate-90" : ""}`}
-            />
-          </button>
-          <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 px-3 rounded-xl text-xs flex items-center gap-1.5 transition-colors min-h-[40px]">
-            <Download size={13} />
-          </button>
+              title="Toggle details"
+            >
+              <Info size={14} />
+            </button>
+            <button
+              onClick={onBookmark}
+              className="text-slate-400 hover:text-[#F97316] transition-colors p-2 rounded-xl border border-slate-200/80 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+              title={bookmarked ? "Remove Bookmark" : "Save Bookmark"}
+            >
+              {bookmarked ? (
+                <BookmarkCheck size={15} className="text-[#F97316] fill-[#F97316]" />
+              ) : (
+                <Bookmark size={15} />
+              )}
+            </button>
+            <button
+              onClick={onView}
+              className="bg-[#1E3A8A] hover:bg-[#1D4ED8] text-white px-3.5 py-2 rounded-xl text-xs font-bold font-['Poppins'] flex items-center gap-1 transition-colors shadow-xs active:scale-95 cursor-pointer min-h-[38px]"
+            >
+              <Eye size={13} /> View
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Expandable Spec Drawer */}
+      {expanded && (
+        <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] sm:text-xs text-slate-600 dark:text-slate-400 bg-slate-50/80 dark:bg-slate-800/60 p-2.5 rounded-xl animate-fade-in">
+          <div>
+            <span className="text-slate-400 block text-[9px] uppercase font-bold tracking-wider">Chapter / Context</span>
+            <span className="font-semibold text-slate-800 dark:text-slate-200">{p.chapter ?? "Full Syllabus Paper"}</span>
+          </div>
+          <div>
+            <span className="text-slate-400 block text-[9px] uppercase font-bold tracking-wider">Answer Key</span>
+            <span className="font-semibold text-emerald-600 flex items-center gap-1 mt-0.5">
+              <CheckCircle2 size={11} /> Solutions Included
+            </span>
+          </div>
+          <div>
+            <span className="text-slate-400 block text-[9px] uppercase font-bold tracking-wider">Views & Downloads</span>
+            <span className="font-semibold text-slate-800 dark:text-slate-200">{p.analytics.views.toLocaleString()} views</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -215,71 +145,42 @@ function PaperCard({
 // ── Main Component ────────────────────────────────────────────────────────────
 export function PapersList() {
   const { setView, setSelectedPaperId, toggleBookmark, isBookmarked } = useApp();
-  const [search, setSearch] = useState("");
-  const [hierFilter, setHierFilter] = useState<HierarchicalFilterState>(EMPTY_FILTER);
-  const [filters, setFilters] = useState<FilterState>({ subject: "", year: "", type: "", medium: "" });
-  const [sort, setSort] = useState<SortKey>("popular");
-  const [sortOpen, setSortOpen] = useState(false);
+  const [pathStack, setPathStack] = useState<FolderNode[]>([]);
+  const [viewMode, setViewMode] = useState<"folders" | "flat">("folders");
+  const [sort] = useState<SortKey>("popular");
   const [page, setPage] = useState(1);
-  const sortRef = useRef<HTMLDivElement>(null);
   const PER_PAGE = 12;
 
-  // Resolve hierarchical filter to goalCategory
-  const cat = resolveGoalCategory(hierFilter) || undefined;
-  const stream = hierFilter.stream || undefined;
+  const breadcrumbRef = useRef<HTMLDivElement>(null);
 
-  // Close sort dropdown on outside click
+  // Auto scroll breadcrumbs track rightward when navigating deeper
   useEffect(() => {
-    const h = (e: MouseEvent) => {
-      if (sortRef.current && !sortRef.current.contains(e.target as Node)) setSortOpen(false);
-    };
-    document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
-  }, []);
+    if (breadcrumbRef.current) {
+      breadcrumbRef.current.scrollLeft = breadcrumbRef.current.scrollWidth;
+    }
+  }, [pathStack]);
 
-  // Stream-aware deduplicated subjects
-  const availableSubjects = Array.from(
-    new Map(
-      subjects
-        .filter(s => {
-          if (cat && s.goalCategory !== cat) return false;
-          if (stream && s.stream && s.stream !== stream) return false;
-          return true;
-        })
-        .map(s => [s.name, s])
-    ).values()
-  );
+  // Active folder level
+  const currentFolder = pathStack.length > 0 ? pathStack[pathStack.length - 1] : null;
+  const childFolders = currentFolder ? currentFolder.children ?? [] : MAIN_FOLDERS;
 
-  // Dynamic years list from published papers
-  const availableYears = Array.from(
-    new Set(papers.filter(p => p.status === "published").map(p => p.year))
-  ).sort((a, b) => b - a);
+  // Filter conditions
+  const activeGoal = pathStack.find(f => f.goalCategory)?.goalCategory;
+  const activeStream = pathStack.find(f => f.stream)?.stream;
+  const activeSubject = pathStack.find(f => f.subject)?.subject;
+  const activeYear = pathStack.find(f => f.year)?.year;
+  const activePaperType = pathStack.find(f => f.paperType)?.paperType;
 
-  // Relevant paper types
-  const isBoard = cat?.startsWith("board");
-  const relevantTypes: PaperType[] = !cat
-    ? ["board", "prelims", "model", "practice", "unit-test", "semester", "chapter-wise", "pyq", "mock-test", "subject-wise", "minor-test", "major-test"]
-    : isBoard
-      ? ["board", "prelims", "model", "practice", "unit-test", "semester", "chapter-wise"]
-      : ["pyq", "mock-test", "subject-wise", "chapter-wise", "minor-test", "major-test", "practice"];
-
-  // Filter papers
+  // Filter matching papers
   let filtered = papers.filter(p => {
     if (p.status !== "published") return false;
-    if (cat && p.goalCategory !== cat) return false;
-    // stream filter: if stream selected and paper has stream, match it
-    if (stream && p.stream && p.stream !== stream) return false;
-    if (search && !p.title.toLowerCase().includes(search.toLowerCase()) && !p.subject.toLowerCase().includes(search.toLowerCase())) return false;
-    if (filters.subject) {
-      const selectedSub = availableSubjects.find(s => s.id === filters.subject || s.name === filters.subject);
-      if (selectedSub && p.subject !== selectedSub.name && p.subjectId !== filters.subject) return false;
-    }
-    if (filters.year && p.year !== filters.year) return false;
-    if (filters.type && p.type !== filters.type) return false;
-    if (filters.medium && p.medium !== filters.medium) return false;
+    if (activeGoal && p.goalCategory !== activeGoal) return false;
+    if (activeStream && p.stream && p.stream !== activeStream) return false;
+    if (activeSubject && p.subject !== activeSubject) return false;
+    if (activeYear && p.year !== activeYear) return false;
+    if (activePaperType && p.type !== activePaperType) return false;
     return true;
   });
-
 
   // Sort
   filtered = [...filtered].sort((a, b) => {
@@ -293,253 +194,201 @@ export function PapersList() {
 
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
-  const activeFilterCount = [filters.subject, filters.year, filters.type, filters.medium].filter(Boolean).length;
 
-  const updateFilters = (partial: Partial<FilterState>) => {
-    setFilters(prev => ({ ...prev, ...partial }));
-    setPage(1);
-  };
-  const clearFilters = () => {
-    setHierFilter(EMPTY_FILTER);
-    setFilters({ subject: "", year: "", type: "", medium: "" });
-    setPage(1);
+  // Helper count
+  const countPapersInFolder = (fNode: FolderNode): number => {
+    const targetGoal = fNode.goalCategory ?? activeGoal;
+    const targetStream = fNode.stream ?? activeStream;
+    const targetSubject = fNode.subject ?? activeSubject;
+    const targetYear = fNode.year ?? activeYear;
+    const targetPaperType = fNode.paperType ?? activePaperType;
+
+    return papers.filter(p => {
+      if (p.status !== "published") return false;
+      if (targetGoal && p.goalCategory !== targetGoal) return false;
+      if (targetStream && p.stream && p.stream !== targetStream) return false;
+      if (targetSubject && p.subject !== targetSubject) return false;
+      if (targetYear && p.year !== targetYear) return false;
+      if (targetPaperType && p.type !== targetPaperType) return false;
+      return true;
+    }).length;
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-4 min-w-0">
+    <div className="max-w-6xl mx-auto space-y-3.5 min-w-0">
 
-      {/* ── Header ── */}
-      <div className="flex items-start justify-between gap-2 flex-wrap">
-        <div>
-          <h2 className="text-lg font-bold text-[#1E3A8A] font-['Poppins'] flex items-center gap-2">
-            <FileText size={18} className="text-[#1E3A8A]" />
-            Question Papers
-          </h2>
-          <p className="text-gray-500 text-xs mt-0.5">
-            <span className="font-medium text-gray-600">{filterBreadcrumb(hierFilter)}</span>
-            {" "}&middot; <span className="font-medium text-gray-700">{filtered.length}</span> papers
-          </p>
-        </div>
-      </div>
-
-      {/* ── Hierarchical Filter ── */}
-      <HierarchicalFilter
-        value={hierFilter}
-        onChange={next => { setHierFilter(next); setFilters({ subject: "", year: "", type: "", medium: "" }); setPage(1); }}
-      />
-
-      {/* ── Inline Filter Panel ── */}
-      <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
-        {/* Search + Sort row */}
-        <div className="p-3 sm:p-4 border-b border-gray-50 flex gap-2">
-          <div className="flex-1 relative min-w-0">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 flex-shrink-0" />
-            <input
-              type="text"
-              placeholder="Search papers…"
-              value={search}
-              onChange={e => { setSearch(e.target.value); setPage(1); }}
-              className="w-full pl-8 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#1E3A8A] bg-[#F8FAFC] placeholder:text-gray-400 min-w-0"
-            />
-            {search && (
-              <button onClick={() => setSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                <X size={14} />
-              </button>
-            )}
-          </div>
-
-          {/* Sort */}
-          <div className="relative flex-shrink-0" ref={sortRef}>
+      {/* ── Top Header & Single-Line Scrollable Breadcrumbs Control Bar ── */}
+      <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-3.5 sm:p-4 rounded-2xl border border-white/80 dark:border-slate-800 shadow-xs space-y-3 min-w-0">
+        {/* Single-Line Scrollable Path Track */}
+        <div className="flex items-center justify-between gap-2 min-w-0">
+          <div
+            ref={breadcrumbRef}
+            className="flex items-center gap-1 text-[11px] sm:text-xs font-semibold text-[#1E3A8A] dark:text-blue-400 font-['Poppins'] overflow-x-auto whitespace-nowrap py-1 scroll-smooth flex-1 min-w-0"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
             <button
-              onClick={() => setSortOpen(o => !o)}
-              className="flex items-center gap-1.5 px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-[#F8FAFC] text-gray-600 hover:border-gray-300 min-h-[44px] whitespace-nowrap"
+              onClick={() => { setPathStack([]); setViewMode("folders"); }}
+              className={`hover:underline flex items-center gap-1 cursor-pointer px-2.5 py-1 rounded-lg transition-colors flex-shrink-0 ${
+                pathStack.length === 0
+                  ? "text-slate-900 dark:text-white font-bold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+                  : "bg-blue-50 dark:bg-blue-900/40 text-[#1E3A8A] dark:text-blue-300 border border-blue-100 dark:border-blue-800"
+              }`}
             >
-              <span className="hidden sm:inline text-xs">{SORT_OPTIONS.find(s => s.value === sort)?.label}</span>
-              <span className="sm:hidden text-xs">Sort</span>
-              <ChevronDown size={13} className={`transition-transform ${sortOpen ? "rotate-180" : ""}`} />
+              <FolderTree size={13} /> Root Directory
             </button>
-            {sortOpen && (
-              <div className="absolute right-0 top-full mt-1 bg-white border border-gray-100 rounded-xl shadow-lg z-30 w-44 py-1">
-                {SORT_OPTIONS.map(opt => (
-                  <button
-                    key={opt.value}
-                    onClick={() => { setSort(opt.value); setSortOpen(false); }}
-                    className={`w-full text-left px-4 py-2.5 text-sm min-h-[44px] transition-colors ${sort === opt.value ? "bg-blue-50 text-[#1E3A8A] font-semibold" : "text-gray-700 hover:bg-gray-50"
-                      }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Subject filter */}
-        {availableSubjects.length > 0 && (
-          <div className="px-3 sm:px-4 py-3 border-b border-gray-50">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Subject</p>
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-              <Pill active={!filters.subject} onClick={() => updateFilters({ subject: "" })}>All</Pill>
-              {availableSubjects.map(s => (
-                <Pill
-                  key={s.id}
-                  active={filters.subject === s.id}
-                  onClick={() => updateFilters({ subject: filters.subject === s.id ? "" : s.id })}
+            {pathStack.map((node, idx) => (
+              <React.Fragment key={node.id}>
+                <ChevronRight size={11} className="text-slate-400 flex-shrink-0" />
+                <button
+                  onClick={() => setPathStack(prev => prev.slice(0, idx + 1))}
+                  className={`hover:underline cursor-pointer px-2 py-1 rounded-lg transition-colors flex-shrink-0 ${
+                    idx === pathStack.length - 1
+                      ? "text-slate-900 dark:text-white font-bold bg-slate-100 dark:bg-slate-800"
+                      : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  }`}
                 >
-                  <SubjectIcon name={s.name} size={13} className="inline mr-1 -mt-0.5" /> {s.name}
-                </Pill>
-              ))}
-
-            </div>
+                  {node.name}
+                </button>
+              </React.Fragment>
+            ))}
           </div>
-        )}
 
-        {/* Paper Type filter */}
-        <div className="px-3 sm:px-4 py-3 border-b border-gray-50">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Paper Type</p>
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            <Pill active={!filters.type} onClick={() => updateFilters({ type: "" })}>All Types</Pill>
-            {relevantTypes.map(t => {
-              const cfg = PAPER_TYPE_CONFIG[t];
-              return (
-                <Pill
-                  key={t}
-                  active={filters.type === t}
-                  onClick={() => updateFilters({ type: filters.type === t ? "" : t })}
-                >
-                  {cfg.label}
-                </Pill>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Year + Medium row */}
-        <div className="px-3 sm:px-4 py-3">
-          <div className="space-y-2.5">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Year</p>
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                <Pill active={!filters.year} onClick={() => updateFilters({ year: "" })}>All</Pill>
-                {availableYears.map(y => (
-                  <Pill
-                    key={y}
-                    active={filters.year === y}
-                    onClick={() => updateFilters({ year: filters.year === y ? "" : y })}
-                  >
-                    {y}
-                  </Pill>
-                ))}
-
-              </div>
-            </div>
-
-            {isBoard && (
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Medium</p>
-                <div className="flex gap-2 flex-wrap">
-                  {(["", "english", "semi-english", "marathi"] as const).map(m => (
-                    <Pill
-                      key={m}
-                      active={filters.medium === m}
-                      onClick={() => updateFilters({ medium: m as Medium | "" })}
-                    >
-                      {m === "" ? "All"
-                        : m === "english" ? "English"
-                          : m === "semi-english" ? "Semi-English"
-                            : "Marathi"}
-                    </Pill>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Active filter pills + clear */}
-        {activeFilterCount > 0 && (
-          <div className="px-3 sm:px-4 pb-3 flex flex-wrap gap-1.5 items-center border-t border-gray-50 pt-2.5">
-            <span className="text-[10px] text-gray-400 font-medium">Active:</span>
-            {filters.subject && (
-              <span className="flex items-center gap-1 bg-blue-50 text-[#1E3A8A] border border-blue-100 text-[10px] px-2 py-0.5 rounded-full">
-                {availableSubjects.find(s => s.id === filters.subject)?.name ?? filters.subject}
-                <button onClick={() => updateFilters({ subject: "" })}><X size={10} /></button>
-              </span>
-            )}
-            {filters.type && (
-              <span className="flex items-center gap-1 bg-blue-50 text-[#1E3A8A] border border-blue-100 text-[10px] px-2 py-0.5 rounded-full">
-                {PAPER_TYPE_CONFIG[filters.type]?.label}
-                <button onClick={() => updateFilters({ type: "" })}><X size={10} /></button>
-              </span>
-            )}
-            {filters.year && (
-              <span className="flex items-center gap-1 bg-blue-50 text-[#1E3A8A] border border-blue-100 text-[10px] px-2 py-0.5 rounded-full">
-                {filters.year}
-                <button onClick={() => updateFilters({ year: "" })}><X size={10} /></button>
-              </span>
-            )}
-            {filters.medium && (
-              <span className="flex items-center gap-1 bg-blue-50 text-[#1E3A8A] border border-blue-100 text-[10px] px-2 py-0.5 rounded-full capitalize">
-                {filters.medium}
-                <button onClick={() => updateFilters({ medium: "" })}><X size={10} /></button>
-              </span>
-            )}
-            <button onClick={clearFilters} className="text-[10px] text-red-500 hover:underline font-semibold ml-1">
-              Clear all
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* ── Papers Grid ── */}
-      {paginated.length === 0 ? (
-        <div className="text-center py-16 text-gray-400 rounded-2xl" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
-          <FileText size={44} className="mx-auto mb-3 opacity-20" />
-          <p className="text-gray-500 font-medium">No papers found</p>
-          <p className="text-sm text-gray-400 mt-1">Try adjusting your search or filters</p>
-          {activeFilterCount > 0 && (
-            <button onClick={clearFilters} className="mt-3 text-[#1E3A8A] text-sm hover:underline">
-              Clear filters
+          {pathStack.length > 0 && (
+            <button
+              onClick={() => setPathStack(prev => prev.slice(0, -1))}
+              className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 flex items-center gap-1 cursor-pointer shadow-2xs active:scale-95 transition-all flex-shrink-0"
+            >
+              <ArrowLeft size={12} /> Back
             </button>
           )}
         </div>
-      ) : (
-        <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
-          {paginated.map(paper => (
-            <PaperCard
-              key={paper.id}
-              paper={paper}
-              bookmarked={isBookmarked("paper", paper.id)}
-              onView={() => { setSelectedPaperId(paper.id); setView("paper-detail"); }}
-              onBookmark={() => toggleBookmark("paper", paper.id)}
-            />
-          ))}
-        </div>
-      )}
 
-      {/* ── Pagination ── */}
-      {totalPages > 1 && (
-        <div className="flex justify-center gap-1.5 pt-2 flex-wrap">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+        {/* Title & View Mode Switcher */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1 border-t border-slate-100 dark:border-slate-800">
+          <h2 className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white font-['Poppins'] flex items-center gap-2 leading-tight min-w-0">
+            <FileText size={18} className="text-[#1E3A8A] dark:text-blue-400 flex-shrink-0" />
+            <span className="whitespace-nowrap sm:whitespace-normal font-extrabold text-xs sm:text-lg tracking-tight">
+              {currentFolder ? currentFolder.name : "Question Papers Explorer"}
+            </span>
+          </h2>
+
+          {/* Segmented Switcher */}
+          <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200/60 dark:border-slate-700 w-full sm:w-auto flex-shrink-0">
             <button
-              key={p}
-              onClick={() => { setPage(p); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-              className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${page === p ? "bg-[#1E3A8A] text-white" : "bg-white text-gray-600 border border-gray-200 hover:border-[#1E3A8A]"
-                }`}
+              onClick={() => setViewMode("folders")}
+              className={`flex-1 sm:flex-none px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                viewMode === "folders"
+                  ? "bg-white dark:bg-slate-900 text-[#1E3A8A] dark:text-blue-400 shadow-xs font-bold"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              }`}
             >
-              {p}
+              <List size={13} /> Directory List
             </button>
-          ))}
+            <button
+              onClick={() => setViewMode("flat")}
+              className={`flex-1 sm:flex-none px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                viewMode === "flat"
+                  ? "bg-white dark:bg-slate-900 text-[#1E3A8A] dark:text-blue-400 shadow-xs font-bold"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              }`}
+            >
+              <FileText size={13} /> All Papers ({filtered.length})
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Mode 1: Mobile Responsive Directory List Rows ── */}
+      {viewMode === "folders" && childFolders.length > 0 ? (
+        <div className="space-y-2">
+          {childFolders.map(folder => {
+            const paperCount = countPapersInFolder(folder);
+            return (
+              <div
+                key={folder.id}
+                onClick={() => setPathStack(prev => [...prev, folder])}
+                className="group bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl rounded-2xl p-3.5 sm:p-4 border border-white/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.004] active:scale-[0.985] cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 overflow-hidden"
+              >
+                {/* Main Folder Info */}
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br ${folder.color ?? "from-blue-600 to-indigo-700"} text-white flex items-center justify-center font-bold shadow-xs group-hover:scale-105 transition-transform flex-shrink-0`}>
+                    <Folder size={20} className="group-hover:hidden" />
+                    <FolderOpen size={20} className="hidden group-hover:block" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <h3 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base font-['Poppins'] group-hover:text-[#1E3A8A] dark:group-hover:text-blue-400 transition-colors leading-snug">
+                        {folder.name}
+                      </h3>
+                      {folder.badge && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/40 text-[#1E3A8A] dark:text-blue-300 border border-blue-100 dark:border-blue-800 flex-shrink-0">
+                          {folder.badge}
+                        </span>
+                      )}
+                    </div>
+                    {folder.description && (
+                      <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">{folder.description}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right Side: Paper Count Badge & Arrow */}
+                <div className="flex items-center justify-between sm:justify-end gap-2 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
+                  <span className="text-[11px] sm:text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl border border-slate-200/70 dark:border-slate-700 flex items-center gap-1.5">
+                    <FileText size={12} className="text-[#1E3A8A] dark:text-blue-400" />
+                    <span>{paperCount} Papers</span>
+                  </span>
+                  <ChevronRight size={16} className="text-slate-400 group-hover:text-[#1E3A8A] dark:group-hover:text-blue-400 group-hover:translate-x-1 transition-all" />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+
+      {/* ── Mode 2 / Leaf View: Detailed Paper Rows ── */}
+      {(viewMode === "flat" || childFolders.length === 0) && (
+        <div className="space-y-2.5">
+          {paginated.length === 0 ? (
+            <div className="text-center py-14 text-slate-400 rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/80 dark:border-slate-800 shadow-sm p-4">
+              <FileText size={40} className="mx-auto mb-2 opacity-20" />
+              <p className="text-slate-500 font-medium text-xs sm:text-sm">No papers found in this directory</p>
+              <button onClick={() => setPathStack([])} className="mt-2 text-[#1E3A8A] dark:text-blue-400 text-xs font-semibold hover:underline">
+                Back to Root Directory
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {paginated.map(paper => (
+                <PaperRow
+                  key={paper.id}
+                  paper={paper}
+                  bookmarked={isBookmarked("paper", paper.id)}
+                  onView={() => { setSelectedPaperId(paper.id); setView("paper-detail"); }}
+                  onBookmark={() => toggleBookmark("paper", paper.id)}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-center gap-1.5 pt-2 flex-wrap">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                <button
+                  key={p}
+                  onClick={() => { setPage(p); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                  className={`w-8 h-8 rounded-xl text-xs font-medium transition-all ${
+                    page === p ? "bg-[#1E3A8A] text-white" : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-[#1E3A8A]"
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
-
-      <style>{`
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        @keyframes fade-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
-        .animate-fade-in { animation: fade-in 0.2s ease-out; }
-      `}</style>
     </div>
   );
 }

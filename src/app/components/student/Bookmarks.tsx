@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Bookmark, BookOpen, Brain, Trash2, Eye, ChevronRight, FileText, SlidersHorizontal } from "lucide-react";
+import { Bookmark, BookOpen, Brain, Trash2, Eye, ChevronRight, FileText } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { papers, quizzes, PAPER_TYPE_CONFIG, DIFFICULTY_CONFIG } from "../data/mockData";
 
 type Tab = "all" | "papers" | "quizzes";
 
 export function Bookmarks() {
-  const { bookmarks, toggleBookmark, setView, setSelectedPaperId, setSelectedQuizId, currentGoal } = useApp();
+  const { bookmarks, toggleBookmark, setView, setSelectedPaperId, setSelectedQuizId } = useApp();
   const [tab, setTab] = useState<Tab>("all");
 
   const bookmarkedPapers = bookmarks

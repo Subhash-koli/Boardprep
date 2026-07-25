@@ -1,21 +1,25 @@
 import { ReactNode, useState, useRef, useEffect } from "react";
 import {
   LayoutDashboard, FileText, Brain, Bookmark, User,
-  LogOut, Bell, X, Moon, Sun,
+  LogOut, Bell, X, Moon, Sun, Search, Filter,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 
 import type { View } from "../context/AppContext";
-import { announcements } from "../data/mockData";
+import { announcements, subjects, papers, PAPER_TYPE_CONFIG } from "../data/mockData";
+import type { PaperType } from "../data/mockData";
+import { HierarchicalFilter, EMPTY_FILTER, resolveGoalCategory } from "./HierarchicalFilter";
+import type { HierarchicalFilterState } from "./HierarchicalFilter";
 
 const LogoImage = new URL("../../../imports/logo.png", import.meta.url).href;
 
-const navItems: { icon: any; label: string; view: View }[] = [
-  { icon: LayoutDashboard, label: "Dashboard",  view: "dashboard" },
-  { icon: FileText,        label: "Papers",      view: "papers"    },
-  { icon: Brain,           label: "Quizzes",     view: "quizzes"   },
-  { icon: Bookmark,        label: "Bookmarks",   view: "bookmarks" },
-  { icon: User,            label: "Profile",     view: "profile"   },
+const navItems: { icon: any; label: string; view: View | "explore" }[] = [
+  { icon: LayoutDashboard, label: "Dashboard",       view: "dashboard" },
+  { icon: Search,          label: "Search & Filter", view: "explore"   },
+  { icon: FileText,        label: "Papers",           view: "papers"    },
+  { icon: Brain,           label: "Quizzes",          view: "quizzes"   },
+  { icon: Bookmark,        label: "Bookmarks",        view: "bookmarks" },
+  { icon: User,            label: "Profile",          view: "profile"   },
 ];
 
 // ── Notification Bell ─────────────────────────────────────────────────────────
@@ -92,9 +96,55 @@ function NotifBell() {
 
 export function StudentLayout({ children }: { children: ReactNode }) {
   const { view, setView, user, setUser, darkMode, toggleDarkMode } = useApp();
-
+  const [searchDrawerOpen, setSearchDrawerOpen] = useState(false);
+  const [hierFilter, setHierFilter] = useState<HierarchicalFilterState>(EMPTY_FILTER);
+  const [modalSearch, setModalSearch] = useState("");
+  const [modalSubject, setModalSubject] = useState("");
+  const [modalType, setModalType] = useState("");
+  const [modalYear, setModalYear] = useState<number | "">("");
 
   const logout = () => { setUser(null); setView("landing"); };
+
+  // Stream-aware deduplicated subjects
+  const cat = resolveGoalCategory(hierFilter) || undefined;
+  const stream = hierFilter.stream || undefined;
+
+  const availableSubjects = Array.from(
+    new Map(
+      subjects
+        .filter(s => {
+          if (cat && s.goalCategory !== cat) return false;
+          if (stream && s.stream && s.stream !== stream) return false;
+          return true;
+        })
+        .map(s => [s.name, s])
+    ).values()
+  );
+
+  const availableYears = Array.from(
+    new Set(papers.filter(p => p.status === "published").map(p => p.year))
+  ).sort((a, b) => b - a);
+
+  const isBoard = cat?.startsWith("board");
+  const relevantTypes: PaperType[] = !cat
+    ? ["board", "prelims", "model", "practice", "unit-test", "semester", "chapter-wise", "pyq", "mock-test", "subject-wise", "minor-test", "major-test"]
+    : isBoard
+      ? ["board", "prelims", "model", "practice", "unit-test", "semester", "chapter-wise"]
+      : ["pyq", "mock-test", "subject-wise", "chapter-wise", "minor-test", "major-test", "practice"];
+
+  const matchingPapers = papers.filter(p => {
+    if (p.status !== "published") return false;
+    if (cat && p.goalCategory !== cat) return false;
+    if (stream && p.stream && p.stream !== stream) return false;
+    if (modalSearch && !p.title.toLowerCase().includes(modalSearch.toLowerCase()) && !p.subject.toLowerCase().includes(modalSearch.toLowerCase())) return false;
+    if (modalSubject) {
+      const selectedSub = availableSubjects.find(s => s.id === modalSubject || s.name === modalSubject);
+      if (selectedSub && p.subject !== selectedSub.name && p.subjectId !== modalSubject) return false;
+    }
+    if (modalYear && p.year !== modalYear) return false;
+    if (modalType && p.type !== modalType) return false;
+    return true;
+  });
 
   return (
     <div className="min-h-screen texture-paper flex">
@@ -113,12 +163,18 @@ export function StudentLayout({ children }: { children: ReactNode }) {
         {/* Nav items */}
         <nav className="flex-1 py-3 px-2 relative z-10">
           {navItems.map(item => {
-            const isActive = view === item.view;
+            const isActive = item.view === "explore" ? searchDrawerOpen : view === item.view;
             return (
               <button
-                key={item.view}
-                onClick={() => setView(item.view)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl mb-0.5 transition-all duration-150 text-sm min-h-[44px] ${
+                key={item.label}
+                onClick={() => {
+                  if (item.view === "explore") {
+                    setSearchDrawerOpen(true);
+                  } else {
+                    setView(item.view as View);
+                  }
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl mb-0.5 transition-all duration-150 text-sm min-h-[44px] cursor-pointer ${
                   isActive
                     ? "bg-white/15 text-white font-semibold"
                     : "text-blue-200 hover:bg-white/8 hover:text-white font-normal"
@@ -211,21 +267,27 @@ export function StudentLayout({ children }: { children: ReactNode }) {
           aria-label="Main navigation"
         >
           {navItems.map(item => {
-            const isActive = view === item.view;
+            const isActive = item.view === "explore" ? searchDrawerOpen : view === item.view;
             return (
               <button
-                key={item.view}
-                onClick={() => setView(item.view)}
+                key={item.label}
+                onClick={() => {
+                  if (item.view === "explore") {
+                    setSearchDrawerOpen(true);
+                  } else {
+                    setView(item.view as View);
+                  }
+                }}
                 aria-label={item.label}
                 aria-current={isActive ? "page" : undefined}
-                className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 rounded-xl mx-0.5 transition-all duration-150 min-w-[44px] ${
+                className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 rounded-xl mx-0.5 transition-all duration-150 min-w-[44px] cursor-pointer ${
                   isActive
                     ? "text-[#1E3A8A] bg-[#1E3A8A]/5 border-t-2 border-t-[#1E3A8A]"
                     : "text-gray-400 hover:text-gray-600"
                 } -mt-px`}
               >
-                <item.icon size={22} />
-                <span className={`text-[10px] mt-0.5 font-medium font-['Poppins'] ${isActive ? "font-semibold" : ""}`}>
+                <item.icon size={20} />
+                <span className={`text-[10px] mt-0.5 font-medium font-['Poppins'] ${isActive ? "font-semibold text-[#1E3A8A]" : ""}`}>
                   {item.label.split(" ")[0]}
                 </span>
               </button>
@@ -233,6 +295,176 @@ export function StudentLayout({ children }: { children: ReactNode }) {
           })}
         </nav>
       </div>
+
+      {/* ── Global Search & Filter Drawer Modal ── */}
+      {searchDrawerOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSearchDrawerOpen(false)} />
+          <div className="relative bg-white rounded-3xl max-w-3xl w-full p-5 sm:p-6 shadow-2xl z-10 animate-modal-zoom space-y-4 max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#1E3A8A] flex items-center justify-center font-bold">
+                  <Search size={18} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 text-base font-['Poppins']">Search & Filter Explorer</h3>
+                  <p className="text-xs text-gray-500">Filter by Education Level, Subject, Paper Type, and Year</p>
+                </div>
+              </div>
+              <button onClick={() => setSearchDrawerOpen(false)} className="p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100">
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Search Input Bar */}
+            <div className="relative">
+              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search papers or quizzes by name, subject, or chapter..."
+                value={modalSearch}
+                onChange={e => setModalSearch(e.target.value)}
+                className="w-full pl-10 pr-8 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#1E3A8A] placeholder:text-gray-400 font-medium"
+              />
+              {modalSearch && (
+                <button onClick={() => setModalSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
+            {/* Hierarchical Level Filter */}
+            <HierarchicalFilter
+              value={hierFilter}
+              onChange={next => { setHierFilter(next); setModalSubject(""); setModalType(""); setModalYear(""); }}
+            />
+
+            {/* Subject Chips */}
+            <div>
+              <label className="text-[10px] font-bold text-gray-400 tracking-wider uppercase block mb-1.5 font-['Poppins']">Subject</label>
+              <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1">
+                <button
+                  onClick={() => setModalSubject("")}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                    !modalSubject ? "bg-[#1E3A8A] text-white border-[#1E3A8A]" : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  All
+                </button>
+                {availableSubjects.map(s => (
+                  <button
+                    key={s.id}
+                    onClick={() => setModalSubject(prev => prev === s.id || prev === s.name ? "" : s.id)}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                      modalSubject === s.id || modalSubject === s.name
+                        ? "bg-[#1E3A8A] text-white border-[#1E3A8A]"
+                        : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    {s.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Paper Type Chips */}
+            <div>
+              <label className="text-[10px] font-bold text-gray-400 tracking-wider uppercase block mb-1.5 font-['Poppins']">Paper Type</label>
+              <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1">
+                <button
+                  onClick={() => setModalType("")}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                    !modalType ? "bg-[#1E3A8A] text-white border-[#1E3A8A]" : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  All Types
+                </button>
+                {relevantTypes.map(t => {
+                  const cfg = PAPER_TYPE_CONFIG[t];
+                  return (
+                    <button
+                      key={t}
+                      onClick={() => setModalType(prev => prev === t ? "" : t)}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                        modalType === t
+                          ? "bg-[#1E3A8A] text-white border-[#1E3A8A]"
+                          : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      {cfg?.label ?? t}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Year Chips */}
+            <div>
+              <label className="text-[10px] font-bold text-gray-400 tracking-wider uppercase block mb-1.5 font-['Poppins']">Year</label>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  onClick={() => setModalYear("")}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                    !modalYear ? "bg-[#1E3A8A] text-white border-[#1E3A8A]" : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  All
+                </button>
+                {availableYears.map(y => (
+                  <button
+                    key={y}
+                    onClick={() => setModalYear(prev => prev === y ? "" : y)}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                      modalYear === y
+                        ? "bg-[#1E3A8A] text-white border-[#1E3A8A]"
+                        : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    {y}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Action Footer */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-gray-100">
+              <button
+                onClick={() => {
+                  setHierFilter(EMPTY_FILTER);
+                  setModalSearch("");
+                  setModalSubject("");
+                  setModalType("");
+                  setModalYear("");
+                }}
+                className="text-xs font-semibold text-red-500 hover:underline cursor-pointer"
+              >
+                Clear All Filters
+              </button>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  onClick={() => {
+                    setSearchDrawerOpen(false);
+                    setView("papers");
+                  }}
+                  className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs font-bold bg-[#1E3A8A] text-white hover:bg-[#1D4ED8] shadow-sm flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
+                >
+                  <FileText size={15} /> Find Question Papers ({matchingPapers.length})
+                </button>
+                <button
+                  onClick={() => {
+                    setSearchDrawerOpen(false);
+                    setView("quizzes");
+                  }}
+                  className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs font-bold bg-[#FF7A00] text-white hover:bg-[#E66E00] shadow-sm flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
+                >
+                  <Brain size={15} /> Find Rank Challenges
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import {
   BookOpen, Brain, BarChart3, Users, ChevronRight, Star, CheckCircle, Zap, Trophy,
   FlaskConical, Stethoscope, Atom, GraduationCap, School, BookMarked, Calculator, Microscope,
-  Gift, Heart, Search, Eye, Download, X, Clock, Award,
+  Gift, Heart, Search, Eye, Download, X, Clock, Award, ChevronDown,
   LayoutGrid, List, RotateCcw, Sparkles, ArrowDownCircle,
   Languages, Pencil, Check, TrendingUp, Lightbulb,
   type LucideIcon
@@ -225,16 +225,16 @@ export function LandingPage() {
           </div>
 
           <h1
-            className="text-xl min-[400px]:text-2xl sm:text-4xl md:text-5xl mb-3 sm:mb-4 leading-tight drop-shadow-md"
-            style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700 }}
+            className="text-sm min-[360px]:text-base min-[400px]:text-xl sm:text-3xl md:text-5xl mb-3 sm:mb-4 leading-snug sm:leading-tight drop-shadow-md font-bold text-white max-w-4xl mx-auto px-1 sm:px-2"
+            style={{ fontFamily: "Poppins, sans-serif" }}
           >
-            Don't Let the Exam Surprise You. <br className="hidden sm:block" />
-            <span className="text-base min-[400px]:text-lg sm:text-3xl md:text-4xl font-semibold text-blue-100 inline sm:block mt-1 sm:mt-1.5">
-              Practice with <span style={{ color: "#FF7A00" }}>Real Question Papers</span> & Challenge Your Preparation
+            <span className="whitespace-nowrap sm:whitespace-normal block">Don't Let the Exam Surprise You.</span>
+            <span className="block text-xs min-[360px]:text-sm sm:text-2xl md:text-3xl font-semibold text-blue-100 mt-1.5 sm:mt-2 leading-snug">
+              Practice with <span className="text-[#FF7A00] font-bold">Real Question Papers</span> & Challenge Your Preparation
             </span>
           </h1>
 
-          <p className="text-blue-100/90 text-xs sm:text-base mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed px-2 drop-shadow-sm font-medium">
+          <p className="text-blue-100/90 text-xs sm:text-base mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed px-4 drop-shadow-sm font-medium">
             Access 400+ past year papers, official marking keys & instant speed tests with zero login friction.
           </p>
 
@@ -671,6 +671,12 @@ function LandingContentExplorer({
   });
   const [showOnlyBookmarks, setShowOnlyBookmarks] = useState(false);
   const [highlightResults, setHighlightResults] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(6);
+
+  // Reset visible item count back to 6 whenever filters, search, or active tab change
+  useEffect(() => {
+    setVisibleCount(6);
+  }, [hierFilter, search, activeTab, filterSubject, filterType, filterMedium, filterYear, showOnlyBookmarks, sortBy]);
 
   const handleScrollToResults = () => {
     // If user hasn't selected an Education Level yet, guide them directly to Step 1: Education Level
@@ -1239,67 +1245,90 @@ function LandingContentExplorer({
               <p className="text-xs text-gray-400 mt-1">Try selecting different subjects or exam levels above</p>
             </div>
           ) : (
-            <div id="results-cards-container" className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}>
-              {sortedPapers.map((p, idx) => {
-                const isBookmarked = bookmarkedIds.includes(p.id);
-                return (
-                  <div
-                    key={p.id}
-                    data-result-card
-                    style={{ animationDelay: `${idx * 0.04}s` }}
-                    className={`rounded-2xl border motion-card-hover animate-stagger-card transition-all duration-500 ${highlightResults
-                        ? "border-blue-500 ring-2 ring-blue-400/40 shadow-[0_0_20px_rgba(37,99,235,0.25)] bg-blue-50/60 scale-[1.015]"
-                        : "bg-white border-gray-100 hover:border-blue-200"
-                      } ${viewMode === "grid" ? "p-5 flex flex-col justify-between" : "p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4"
-                      }`}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-50 text-[#1E3A8A]">
-                          {PAPER_TYPE_CONFIG[p.type]?.label ?? p.type} · {p.year}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold text-gray-400 capitalize">{p.medium}</span>
-                          <button
-                            onClick={() => toggleBookmark(p.id)}
-                            className="p-1 text-gray-300 hover:text-amber-500 transition-colors"
-                            title={isBookmarked ? "Remove Bookmark" : "Bookmark Paper"}
-                          >
-                            <Star size={15} className={isBookmarked ? "text-amber-500 fill-amber-500" : ""} />
-                          </button>
+            <div>
+              <div id="results-cards-container" className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}>
+                {sortedPapers.slice(0, visibleCount).map((p, idx) => {
+                  const isBookmarked = bookmarkedIds.includes(p.id);
+                  return (
+                    <div
+                      key={p.id}
+                      data-result-card
+                      style={{ animationDelay: `${idx * 0.04}s` }}
+                      className={`rounded-2xl border motion-card-hover animate-stagger-card transition-all duration-500 ${highlightResults
+                          ? "border-blue-500 ring-2 ring-blue-400/40 shadow-[0_0_20px_rgba(37,99,235,0.25)] bg-blue-50/60 scale-[1.015]"
+                          : "bg-white border-gray-100 hover:border-blue-200"
+                        } ${viewMode === "grid" ? "p-5 flex flex-col justify-between" : "p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4"
+                        }`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-50 text-[#1E3A8A]">
+                            {PAPER_TYPE_CONFIG[p.type]?.label ?? p.type} · {p.year}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-gray-400 capitalize">{p.medium}</span>
+                            <button
+                              onClick={() => toggleBookmark(p.id)}
+                              className="p-1 text-gray-300 hover:text-amber-500 transition-colors"
+                              title={isBookmarked ? "Remove Bookmark" : "Bookmark Paper"}
+                            >
+                              <Star size={15} className={isBookmarked ? "text-amber-500 fill-amber-500" : ""} />
+                            </button>
+                          </div>
+                        </div>
+                        <h3 className="font-bold text-[#1E3A8A] text-sm font-['Poppins'] leading-snug mb-1 truncate">
+                          {p.title}
+                        </h3>
+                        <p className="text-xs text-gray-500 mb-3">{p.subject}</p>
+                        <div className="flex items-center gap-3 text-xs text-gray-400 bg-gray-50/80 p-2 rounded-xl border border-gray-100">
+                          <span><Award size={12} className="inline mr-1" /> {p.marks} Marks</span>
+                          <span><Clock size={12} className="inline mr-1" /> {p.durationMinutes}m</span>
+                          <span className="text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-md text-[10px]">
+                            <Download size={11} className="inline mr-0.5" /> {p.analytics.downloads.toLocaleString()}
+                          </span>
                         </div>
                       </div>
-                      <h3 className="font-bold text-[#1E3A8A] text-sm font-['Poppins'] leading-snug mb-1 truncate">
-                        {p.title}
-                      </h3>
-                      <p className="text-xs text-gray-500 mb-3">{p.subject}</p>
-                      <div className="flex items-center gap-3 text-xs text-gray-400 bg-gray-50/80 p-2 rounded-xl border border-gray-100">
-                        <span><Award size={12} className="inline mr-1" /> {p.marks} Marks</span>
-                        <span><Clock size={12} className="inline mr-1" /> {p.durationMinutes}m</span>
-                        <span className="text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-md text-[10px]">
-                          <Download size={11} className="inline mr-0.5" /> {p.analytics.downloads.toLocaleString()}
-                        </span>
+
+                      <div className={`flex items-center gap-2 ${viewMode === "grid" ? "pt-3 border-t border-gray-100 mt-4" : "flex-shrink-0"}`}>
+                        <button
+                          onClick={() => setPreviewPaper(p)}
+                          className="flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-bold bg-[#1E3A8A] text-white hover:bg-[#1D4ED8] transition-colors flex items-center justify-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
+                        >
+                          <Eye size={13} /> View Paper
+                        </button>
+                        <button
+                          onClick={() => onRequireAuth("Download Paper PDF")}
+                          className="py-2 px-3 rounded-xl text-xs font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-1 active:scale-95 cursor-pointer"
+                          title="Download PDF"
+                        >
+                          <Download size={13} /> PDF
+                        </button>
                       </div>
                     </div>
+                  );
+                })}
+              </div>
 
-                    <div className={`flex items-center gap-2 ${viewMode === "grid" ? "pt-3 border-t border-gray-100 mt-4" : "flex-shrink-0"}`}>
-                      <button
-                        onClick={() => setPreviewPaper(p)}
-                        className="flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-bold bg-[#1E3A8A] text-white hover:bg-[#1D4ED8] transition-colors flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
-                      >
-                        <Eye size={13} /> View Paper
-                      </button>
-                      <button
-                        onClick={() => onRequireAuth("Download Paper PDF")}
-                        className="py-2 px-3 rounded-xl text-xs font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-1 active:scale-95"
-                        title="Download PDF"
-                      >
-                        <Download size={13} /> PDF
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
+              {/* See More Load Button for Papers */}
+              {sortedPapers.length > visibleCount && (
+                <div className="flex flex-col items-center justify-center pt-8 pb-2">
+                  <button
+                    onClick={() => setVisibleCount(prev => prev + 6)}
+                    className="px-6 py-3 rounded-2xl bg-white hover:bg-blue-50/80 text-[#1E3A8A] text-xs sm:text-sm font-bold border border-blue-200/80 shadow-sm hover:shadow-md hover:border-blue-300 transition-all flex items-center gap-2 group cursor-pointer active:scale-95"
+                  >
+                    <span>See More ({sortedPapers.length - visibleCount} Remaining)</span>
+                    <ChevronDown size={16} className="group-hover:translate-y-0.5 transition-transform text-[#1E3A8A]" />
+                  </button>
+                  <p className="text-[11px] text-gray-400 mt-2 font-medium">
+                    Showing {Math.min(visibleCount, sortedPapers.length)} of {sortedPapers.length} matching papers
+                  </p>
+                </div>
+              )}
+              {sortedPapers.length > 6 && visibleCount >= sortedPapers.length && (
+                <div className="text-center pt-6 pb-2 text-xs font-semibold text-gray-400">
+                  ✓ All {sortedPapers.length} matching papers loaded
+                </div>
+              )}
             </div>
           )
         ) : (
@@ -1311,53 +1340,76 @@ function LandingContentExplorer({
               <p className="text-xs text-gray-400 mt-1">Try selecting different subjects or exam levels above</p>
             </div>
           ) : (
-            <div id="results-cards-container" className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}>
-              {sortedQuizzes.map((q, idx) => {
-                const diffCfg = DIFFICULTY_CONFIG[q.difficulty] ?? DIFFICULTY_CONFIG.medium;
-                return (
-                  <div
-                    key={q.id}
-                    data-result-card
-                    style={{ animationDelay: `${idx * 0.04}s` }}
-                    className={`rounded-2xl border motion-card-hover animate-stagger-card transition-all duration-500 ${highlightResults
-                        ? "border-purple-500 ring-2 ring-purple-400/40 shadow-[0_0_20px_rgba(124,58,237,0.25)] bg-purple-50/60 scale-[1.015]"
-                        : "bg-white border-gray-100 hover:border-violet-200"
-                      } ${viewMode === "grid" ? "p-5 flex flex-col justify-between" : "p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4"
-                      }`}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <span
-                          className="text-[10px] font-bold px-2.5 py-0.5 rounded-full"
-                          style={{ backgroundColor: diffCfg.bg, color: diffCfg.text }}
-                        >
-                          ● {diffCfg.label}
-                        </span>
-                        <span className="text-xs font-semibold text-gray-400">{q.questionsCount} Questions</span>
-                      </div>
-                      <h3 className="font-bold text-[#1E3A8A] text-sm font-['Poppins'] leading-snug mb-1 truncate">
-                        {q.title}
-                      </h3>
-                      <p className="text-xs text-gray-500 mb-3">{q.subject} · {q.chapter}</p>
-                      <div className="flex items-center gap-3 text-xs text-gray-400 bg-gray-50/80 p-2 rounded-xl border border-gray-100">
-                        <span><Clock size={12} className="inline mr-1" /> {q.timeLimitMinutes}m</span>
-                        <span><Award size={12} className="inline mr-1" /> {q.totalMarks}M</span>
-                        <span className="text-violet-700 font-semibold bg-violet-50 px-2 py-0.5 rounded-md text-[10px]">
-                          <Users size={11} className="inline mr-0.5" /> {q.analytics.totalAttempts.toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={() => onRequireAuth("Attempt Full Quiz")}
-                      className={`py-2.5 rounded-xl text-xs font-bold bg-[#FF7A00] text-white hover:bg-[#E66E00] transition-colors flex items-center justify-center gap-1.5 shadow-sm active:scale-95 ${viewMode === "grid" ? "w-full mt-4" : "px-5 flex-shrink-0"
+            <div>
+              <div id="results-cards-container" className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}>
+                {sortedQuizzes.slice(0, visibleCount).map((q, idx) => {
+                  const diffCfg = DIFFICULTY_CONFIG[q.difficulty] ?? DIFFICULTY_CONFIG.medium;
+                  return (
+                    <div
+                      key={q.id}
+                      data-result-card
+                      style={{ animationDelay: `${idx * 0.04}s` }}
+                      className={`rounded-2xl border motion-card-hover animate-stagger-card transition-all duration-500 ${highlightResults
+                          ? "border-purple-500 ring-2 ring-purple-400/40 shadow-[0_0_20px_rgba(124,58,237,0.25)] bg-purple-50/60 scale-[1.015]"
+                          : "bg-white border-gray-100 hover:border-violet-200"
+                        } ${viewMode === "grid" ? "p-5 flex flex-col justify-between" : "p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4"
                         }`}
                     >
-                      <Brain size={14} /> Start Quiz Practice
-                    </button>
-                  </div>
-                );
-              })}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-2">
+                          <span
+                            className="text-[10px] font-bold px-2.5 py-0.5 rounded-full"
+                            style={{ backgroundColor: diffCfg.bg, color: diffCfg.text }}
+                          >
+                            ● {diffCfg.label}
+                          </span>
+                          <span className="text-xs font-semibold text-gray-400">{q.questionsCount} Questions</span>
+                        </div>
+                        <h3 className="font-bold text-[#1E3A8A] text-sm font-['Poppins'] leading-snug mb-1 truncate">
+                          {q.title}
+                        </h3>
+                        <p className="text-xs text-gray-500 mb-3">{q.subject} · {q.chapter}</p>
+                        <div className="flex items-center gap-3 text-xs text-gray-400 bg-gray-50/80 p-2 rounded-xl border border-gray-100">
+                          <span><Clock size={12} className="inline mr-1" /> {q.timeLimitMinutes}m</span>
+                          <span><Award size={12} className="inline mr-1" /> {q.totalMarks}M</span>
+                          <span className="text-violet-700 font-semibold bg-violet-50 px-2 py-0.5 rounded-md text-[10px]">
+                            <Users size={11} className="inline mr-0.5" /> {q.analytics.totalAttempts.toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => onRequireAuth("Attempt Full Quiz")}
+                        className={`py-2.5 rounded-xl text-xs font-bold bg-[#FF7A00] text-white hover:bg-[#E66E00] transition-colors flex items-center justify-center gap-1.5 shadow-sm active:scale-95 cursor-pointer ${viewMode === "grid" ? "w-full mt-4" : "px-5 flex-shrink-0"
+                          }`}
+                      >
+                        <Brain size={14} /> Start Quiz Practice
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* See More Load Button for Quizzes */}
+              {sortedQuizzes.length > visibleCount && (
+                <div className="flex flex-col items-center justify-center pt-8 pb-2">
+                  <button
+                    onClick={() => setVisibleCount(prev => prev + 6)}
+                    className="px-6 py-3 rounded-2xl bg-white hover:bg-purple-50/80 text-purple-900 text-xs sm:text-sm font-bold border border-purple-200/80 shadow-sm hover:shadow-md hover:border-purple-300 transition-all flex items-center gap-2 group cursor-pointer active:scale-95"
+                  >
+                    <span>See More ({sortedQuizzes.length - visibleCount} Remaining)</span>
+                    <ChevronDown size={16} className="group-hover:translate-y-0.5 transition-transform text-purple-900" />
+                  </button>
+                  <p className="text-[11px] text-gray-400 mt-2 font-medium">
+                    Showing {Math.min(visibleCount, sortedQuizzes.length)} of {sortedQuizzes.length} matching rank challenges
+                  </p>
+                </div>
+              )}
+              {sortedQuizzes.length > 6 && visibleCount >= sortedQuizzes.length && (
+                <div className="text-center pt-6 pb-2 text-xs font-semibold text-gray-400">
+                  ✓ All {sortedQuizzes.length} matching rank challenges loaded
+                </div>
+              )}
             </div>
           )
         )}
