@@ -17,29 +17,37 @@ import { papers, quizzes, subjects, PAPER_TYPE_CONFIG, DIFFICULTY_CONFIG } from 
 import type { PaperType } from "./data/mockData";
 
 
-const BGImage      = new URL("../../imports/BG.jpg",         import.meta.url).href;
-const DIGIImage    = new URL("../../imports/DIGI.jpg",       import.meta.url).href;
-const STDImage     = new URL("../../imports/STD.jpg",        import.meta.url).href;
+const BGImage = new URL("../../imports/BG.jpg", import.meta.url).href;
+const DIGIImage = new URL("../../imports/DIGI.jpg", import.meta.url).href;
+const STDImage = new URL("../../imports/STD.jpg", import.meta.url).href;
 const STUPREPImage = new URL("../../imports/STUDY_PREP.jpg", import.meta.url).href;
-const STUDYImage   = new URL("../../imports/STUDY.jpg",      import.meta.url).href;
-const LogoImage    = new URL("../../imports/logo.png",       import.meta.url).href;
+const STUDYImage = new URL("../../imports/STUDY.jpg", import.meta.url).href;
+const LogoImage = new URL("../../imports/logo.png", import.meta.url).href;
 
 const features = [
-  { icon: BookOpen,  title: "PYQ Papers",             desc: "NEET, JEE, HSC & SSC past papers organised by year, subject, and paper type — downloadable & viewable online.",
-    accent: "#2563EB", accentShadow: "rgba(37,99,235,0.18)", iconGradient: "linear-gradient(135deg, #DBEAFE, #93C5FD)", iconShadow: "rgba(37,99,235,0.25)", iconClass: "text-blue-700" },
-  { icon: Brain,     title: "Smart Quiz Engine",       desc: "Real exam-pattern MCQs with live negative marking (+4/−1 for NEET/JEE, +1/0 for boards). Practice or Exam mode.",
-    accent: "#7C3AED", accentShadow: "rgba(124,58,237,0.18)", iconGradient: "linear-gradient(135deg, #EDE9FE, #C4B5FD)", iconShadow: "rgba(124,58,237,0.25)", iconClass: "text-purple-700" },
-  { icon: BarChart3, title: "Analytics & Percentile",  desc: "Track score trends, subject weak-spots, negative-mark patterns, and your percentile vs peers.",
-    accent: "#059669", accentShadow: "rgba(5,150,105,0.18)", iconGradient: "linear-gradient(135deg, #D1FAE5, #6EE7B7)", iconShadow: "rgba(5,150,105,0.25)", iconClass: "text-green-700" },
-  { icon: Zap,       title: "Smart Filtering",         desc: "Browse by School · College · Competitive. Narrow by grade, stream, year, subject — search-engine style discovery.",
-    accent: "#EA580C", accentShadow: "rgba(234,88,12,0.18)", iconGradient: "linear-gradient(135deg, #FFEDD5, #FDBA74)", iconShadow: "rgba(234,88,12,0.25)", iconClass: "text-orange-700" },
+  {
+    icon: BookOpen, title: "PYQ Papers", desc: "NEET, JEE, HSC & SSC past papers organised by year, subject, and paper type — downloadable & viewable online.",
+    accent: "#2563EB", accentShadow: "rgba(37,99,235,0.18)", iconGradient: "linear-gradient(135deg, #DBEAFE, #93C5FD)", iconShadow: "rgba(37,99,235,0.25)", iconClass: "text-blue-700"
+  },
+  {
+    icon: Brain, title: "Instant Rank Challenger", desc: "Fast-paced objective speed tests under real exam pressure with live negative marking (+4/−1 for NEET/JEE, +1/0 for boards). Practice or Exam mode.",
+    accent: "#7C3AED", accentShadow: "rgba(124,58,237,0.18)", iconGradient: "linear-gradient(135deg, #EDE9FE, #C4B5FD)", iconShadow: "rgba(124,58,237,0.25)", iconClass: "text-purple-700"
+  },
+  {
+    icon: BarChart3, title: "Analytics & Percentile", desc: "Track score trends, subject weak-spots, negative-mark patterns, and your percentile vs peers.",
+    accent: "#059669", accentShadow: "rgba(5,150,105,0.18)", iconGradient: "linear-gradient(135deg, #D1FAE5, #6EE7B7)", iconShadow: "rgba(5,150,105,0.25)", iconClass: "text-green-700"
+  },
+  {
+    icon: Zap, title: "Smart Filtering", desc: "Browse by School · College · Competitive. Narrow by grade, stream, year, subject — search-engine style discovery.",
+    accent: "#EA580C", accentShadow: "rgba(234,88,12,0.18)", iconGradient: "linear-gradient(135deg, #FFEDD5, #FDBA74)", iconShadow: "rgba(234,88,12,0.25)", iconClass: "text-orange-700"
+  },
 ];
 
 const stats = [
   { value: "5,200+", label: "Students" },
-  { value: "412+",   label: "Papers"   },
-  { value: "286+",   label: "Quizzes"  },
-  { value: "84K+",   label: "Attempts" },
+  { value: "412+", label: "Papers" },
+  { value: "286+", label: "Quizzes" },
+  { value: "84K+", label: "Attempts" },
 ];
 
 const examGoals: {
@@ -47,27 +55,35 @@ const examGoals: {
   goalBg: string; goalBorder: string; goalBorderHover: string; goalShadow: string; goalAccentGradient: string;
   ringColor: string; chipBorder: string; chipBorderHover: string; chipShadow: string; chipBgHover: string; chipText: string;
 }[] = [
-  { icon: School,        label: "SSC Class 10", iconColor: "text-orange-600", text: "text-orange-700",
-    goalBg: "linear-gradient(135deg, #FFF7ED 0%, #FFFBF5 60%, #FEF3C7 100%)", goalBorder: "rgba(251,146,60,0.25)", goalBorderHover: "rgba(251,146,60,0.45)", goalShadow: "rgba(251,146,60,0.12)", goalAccentGradient: "linear-gradient(90deg, #F97316, #FDBA74)",
-    ringColor: "rgba(251,146,60,0.15)", chipBorder: "rgba(251,146,60,0.2)", chipBorderHover: "rgba(251,146,60,0.4)", chipShadow: "rgba(251,146,60,0.15)", chipBgHover: "#FFF7ED", chipText: "#9A3412",
-    tags: ["Mathematics", "Science", "English", "Marathi", "History"] },
-  { icon: GraduationCap, label: "HSC Class 12", iconColor: "text-blue-600", text: "text-blue-700",
-    goalBg: "linear-gradient(135deg, #EFF6FF 0%, #F8FAFF 60%, #E0E7FF 100%)", goalBorder: "rgba(59,130,246,0.25)", goalBorderHover: "rgba(59,130,246,0.45)", goalShadow: "rgba(59,130,246,0.12)", goalAccentGradient: "linear-gradient(90deg, #3B82F6, #93C5FD)",
-    ringColor: "rgba(59,130,246,0.15)", chipBorder: "rgba(59,130,246,0.2)", chipBorderHover: "rgba(59,130,246,0.4)", chipShadow: "rgba(59,130,246,0.15)", chipBgHover: "#EFF6FF", chipText: "#1E40AF",
-    tags: ["Physics", "Chemistry", "Maths", "Biology", "Economics"] },
-  { icon: Atom,          label: "JEE Mains", iconColor: "text-violet-600", text: "text-violet-700",
-    goalBg: "linear-gradient(135deg, #F5F3FF 0%, #FAF5FF 60%, #EDE9FE 100%)", goalBorder: "rgba(139,92,246,0.25)", goalBorderHover: "rgba(139,92,246,0.45)", goalShadow: "rgba(139,92,246,0.12)", goalAccentGradient: "linear-gradient(90deg, #8B5CF6, #C4B5FD)",
-    ringColor: "rgba(139,92,246,0.15)", chipBorder: "rgba(139,92,246,0.2)", chipBorderHover: "rgba(139,92,246,0.4)", chipShadow: "rgba(139,92,246,0.15)", chipBgHover: "#F5F3FF", chipText: "#5B21B6",
-    tags: ["Physics", "Chemistry", "Mathematics"], comingSoon: true },
-  { icon: Stethoscope,   label: "NEET UG", iconColor: "text-green-600", text: "text-green-700",
-    goalBg: "linear-gradient(135deg, #ECFDF5 0%, #F0FDF4 60%, #D1FAE5 100%)", goalBorder: "rgba(16,185,129,0.25)", goalBorderHover: "rgba(16,185,129,0.45)", goalShadow: "rgba(16,185,129,0.12)", goalAccentGradient: "linear-gradient(90deg, #10B981, #6EE7B7)",
-    ringColor: "rgba(16,185,129,0.15)", chipBorder: "rgba(16,185,129,0.2)", chipBorderHover: "rgba(16,185,129,0.4)", chipShadow: "rgba(16,185,129,0.15)", chipBgHover: "#ECFDF5", chipText: "#065F46",
-    tags: ["Physics", "Chemistry", "Botany", "Zoology"], comingSoon: true },
-];
+    {
+      icon: School, label: "SSC Class 10", iconColor: "text-orange-600", text: "text-orange-700",
+      goalBg: "linear-gradient(135deg, #FFF7ED 0%, #FFFBF5 60%, #FEF3C7 100%)", goalBorder: "rgba(251,146,60,0.25)", goalBorderHover: "rgba(251,146,60,0.45)", goalShadow: "rgba(251,146,60,0.12)", goalAccentGradient: "linear-gradient(90deg, #F97316, #FDBA74)",
+      ringColor: "rgba(251,146,60,0.15)", chipBorder: "rgba(251,146,60,0.2)", chipBorderHover: "rgba(251,146,60,0.4)", chipShadow: "rgba(251,146,60,0.15)", chipBgHover: "#FFF7ED", chipText: "#9A3412",
+      tags: ["Mathematics", "Science", "English", "Marathi", "History"]
+    },
+    {
+      icon: GraduationCap, label: "HSC Class 12", iconColor: "text-blue-600", text: "text-blue-700",
+      goalBg: "linear-gradient(135deg, #EFF6FF 0%, #F8FAFF 60%, #E0E7FF 100%)", goalBorder: "rgba(59,130,246,0.25)", goalBorderHover: "rgba(59,130,246,0.45)", goalShadow: "rgba(59,130,246,0.12)", goalAccentGradient: "linear-gradient(90deg, #3B82F6, #93C5FD)",
+      ringColor: "rgba(59,130,246,0.15)", chipBorder: "rgba(59,130,246,0.2)", chipBorderHover: "rgba(59,130,246,0.4)", chipShadow: "rgba(59,130,246,0.15)", chipBgHover: "#EFF6FF", chipText: "#1E40AF",
+      tags: ["Physics", "Chemistry", "Maths", "Biology", "Economics"]
+    },
+    {
+      icon: Atom, label: "JEE Mains", iconColor: "text-violet-600", text: "text-violet-700",
+      goalBg: "linear-gradient(135deg, #F5F3FF 0%, #FAF5FF 60%, #EDE9FE 100%)", goalBorder: "rgba(139,92,246,0.25)", goalBorderHover: "rgba(139,92,246,0.45)", goalShadow: "rgba(139,92,246,0.12)", goalAccentGradient: "linear-gradient(90deg, #8B5CF6, #C4B5FD)",
+      ringColor: "rgba(139,92,246,0.15)", chipBorder: "rgba(139,92,246,0.2)", chipBorderHover: "rgba(139,92,246,0.4)", chipShadow: "rgba(139,92,246,0.15)", chipBgHover: "#F5F3FF", chipText: "#5B21B6",
+      tags: ["Physics", "Chemistry", "Mathematics"], comingSoon: true
+    },
+    {
+      icon: Stethoscope, label: "NEET UG", iconColor: "text-green-600", text: "text-green-700",
+      goalBg: "linear-gradient(135deg, #ECFDF5 0%, #F0FDF4 60%, #D1FAE5 100%)", goalBorder: "rgba(16,185,129,0.25)", goalBorderHover: "rgba(16,185,129,0.45)", goalShadow: "rgba(16,185,129,0.12)", goalAccentGradient: "linear-gradient(90deg, #10B981, #6EE7B7)",
+      ringColor: "rgba(16,185,129,0.15)", chipBorder: "rgba(16,185,129,0.2)", chipBorderHover: "rgba(16,185,129,0.4)", chipShadow: "rgba(16,185,129,0.15)", chipBgHover: "#ECFDF5", chipText: "#065F46",
+      tags: ["Physics", "Chemistry", "Botany", "Zoology"], comingSoon: true
+    },
+  ];
 
 const freeFeatures = [
   "All Past Year Papers — NEET, JEE, HSC & SSC",
-  "Unlimited MCQ Quizzes",
+  "Unlimited Instant Rank Challenges",
   "Full Test Series",
   "Negative Marking Engine (+4/−1 & +1/0)",
   "Full Analytics & Percentile Tracking",
@@ -91,7 +107,7 @@ export function LandingPage() {
   }, [images.length]);
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#FAFBFD" }}>
+    <div className="min-h-screen overflow-x-hidden relative w-full max-w-full" style={{ backgroundColor: "#FAFBFD" }}>
 
       {/* ── Navbar ────────────────────────────────────────────────────── */}
       <nav
@@ -179,40 +195,47 @@ export function LandingPage() {
 
         {/* Hero content */}
         <div className="max-w-5xl mx-auto text-center relative z-10 w-full px-2">
-          {/* Exam pills */}
-          <div className="flex flex-wrap gap-2 justify-center mb-5 sm:mb-6">
-            {[
-              { icon: School,       label: "SSC"     },
-              { icon: GraduationCap,label: "HSC"     },
-              { icon: Atom,         label: "JEE"     },
-              { icon: Stethoscope,  label: "NEET"    },
-              { icon: FlaskConical, label: "MHT-CET" },
-            ].map(({ icon: Icon, label }) => (
-              <button
-                key={label}
-                onClick={() => {
-                  const el = document.getElementById("content-explorer-section");
-                  el?.scrollIntoView({ behavior: "smooth" });
-                }}
-                className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs sm:text-sm font-medium text-white/90 hover:bg-white/20 transition-all cursor-pointer"
-                style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)", backdropFilter: "blur(8px)" }}
-              >
-                <Icon size={13} />
-                {label}
-              </button>
-            ))}
+          {/* Exam pills — Glass Capsule Dock */}
+          <div className="flex justify-center mb-6 sm:mb-8">
+            <div className="hero-pill-dock">
+              {[
+                { icon: School,        label: "SSC",     color: "text-orange-400", glow: "rgba(249,115,22,0.4)",  shadow: "rgba(249,115,22,0.35)" },
+                { icon: GraduationCap, label: "HSC",     color: "text-blue-400",   glow: "rgba(59,130,246,0.4)",  shadow: "rgba(59,130,246,0.35)" },
+                { icon: FlaskConical,  label: "MHT-CET", color: "text-cyan-400",   glow: "rgba(6,182,212,0.4)",  shadow: "rgba(6,182,212,0.35)"  },
+                { icon: Atom,          label: "JEE",     color: "text-purple-400", glow: "rgba(139,92,246,0.4)", shadow: "rgba(139,92,246,0.35)" },
+                { icon: Stethoscope,   label: "NEET",    color: "text-emerald-400",glow: "rgba(16,185,129,0.4)", shadow: "rgba(16,185,129,0.35)" },
+              ].map(({ icon: Icon, label, color, glow, shadow }) => (
+                <button
+                  key={label}
+                  onClick={() => {
+                    const el = document.getElementById("content-explorer-section");
+                    el?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                  className="hero-pill-item"
+                  style={{
+                    "--pill-glow": glow,
+                    "--pill-shadow": shadow,
+                  } as React.CSSProperties}
+                >
+                  <Icon size={14} className={color} />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
-
           <h1
-            className="text-2xl sm:text-4xl md:text-5xl mb-3 sm:mb-4 leading-tight"
+            className="text-xl min-[400px]:text-2xl sm:text-4xl md:text-5xl mb-3 sm:mb-4 leading-tight drop-shadow-md"
             style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700 }}
           >
-            <span style={{ color: "#FF7A00" }}>Find Past Papers & Quizzes</span> Instantly
+            Don't Let the Exam Surprise You. <br className="hidden sm:block" />
+            <span className="text-base min-[400px]:text-lg sm:text-3xl md:text-4xl font-semibold text-blue-100 inline sm:block mt-1 sm:mt-1.5">
+              Practice with <span style={{ color: "#FF7A00" }}>Real Question Papers</span> & Challenge Your Preparation
+            </span>
           </h1>
 
-          <p className="text-blue-100 text-xs sm:text-base mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed px-2">
-            Select your exam level below to explore official past papers, solution keys & chapter quizzes with zero login friction.
+          <p className="text-blue-100/90 text-xs sm:text-base mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed px-2 drop-shadow-sm font-medium">
+            Access 400+ past year papers, official marking keys & instant speed tests with zero login friction.
           </p>
 
           {/* ── SEARCH-FIRST CONTENT EXPLORER (Above the Fold) ──────── */}
@@ -379,11 +402,11 @@ export function LandingPage() {
           {/* Extra exam pills — premium chips */}
           <div className="flex flex-wrap gap-2.5 justify-center mt-8">
             {[
-              { icon: BookOpen,   label: "Class 9 & 8"   },
-              { icon: BookMarked, label: "Class 11"       },
-              { icon: Microscope, label: "MHT-CET PCB"   },
-              { icon: Calculator, label: "MHT-CET PCM"   },
-              { icon: Trophy,     label: "JEE Advanced", comingSoon: true },
+              { icon: BookOpen, label: "Class 9 & 8" },
+              { icon: BookMarked, label: "Class 11" },
+              { icon: Microscope, label: "MHT-CET PCB" },
+              { icon: Calculator, label: "MHT-CET PCM" },
+              { icon: Trophy, label: "JEE Advanced", comingSoon: true },
             ].map(g => (
               <span
                 key={g.label}
@@ -415,8 +438,8 @@ export function LandingPage() {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
             {[
-              { icon: Users,  step: "1", title: "Choose Your Path",    desc: "Register free, pick School / College / Competitive, select your exam, stream, and subjects in under 2 minutes" },
-              { icon: Brain,  step: "2", title: "Practice Daily",      desc: "Attempt quizzes with real marking schemes, browse PYQs, and track wrong answers" },
+              { icon: Users, step: "1", title: "Choose Your Path", desc: "Register free, pick School / College / Competitive, select your exam, stream, and subjects in under 2 minutes" },
+              { icon: Brain, step: "2", title: "Practice Daily", desc: "Attempt quizzes with real marking schemes, browse PYQs, and track wrong answers" },
               { icon: Trophy, step: "3", title: "See Your Percentile", desc: "Every quiz shows your score, negative marks, and estimated percentile vs all test-takers" },
             ].map(item => (
               <div key={item.step} className="text-center">
@@ -448,16 +471,16 @@ export function LandingPage() {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             {[
-              { name: "Priya S.", goal: "NEET 2027",    score: "89%", quote: "The +4/−1 quiz engine is exactly like the real NEET. I finally understand where I lose marks — wrong guesses!" },
+              { name: "Priya S.", goal: "NEET 2027", score: "89%", quote: "The +4/−1 quiz engine is exactly like the real NEET. I finally understand where I lose marks — wrong guesses!" },
               { name: "Rohan P.", goal: "SSC Class 10", score: "81%", quote: "Marathi medium papers and quizzes are perfectly organised. My prelims score jumped 12 marks." },
-              { name: "Sneha K.", goal: "JEE Mains",    score: "94%", quote: "Switching between Board and JEE content is seamless. Each level has its own curated content." },
+              { name: "Sneha K.", goal: "JEE Mains", score: "94%", quote: "Switching between Board and JEE content is seamless. Each level has its own curated content." },
             ].map(t => (
               <div
                 key={t.name}
                 className="glass-card-light rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-100"
               >
                 <div className="flex gap-0.5 mb-3">
-                  {[1,2,3,4,5].map(i => <Star key={i} size={12} className="text-[#FF7A00] fill-[#FF7A00] sm:w-[14px] sm:h-[14px]" />)}
+                  {[1, 2, 3, 4, 5].map(i => <Star key={i} size={12} className="text-[#FF7A00] fill-[#FF7A00] sm:w-[14px] sm:h-[14px]" />)}
                 </div>
                 <p className="text-gray-600 text-xs sm:text-sm italic mb-4">"{t.quote}"</p>
                 <div className="flex items-center justify-between gap-2">
@@ -665,7 +688,7 @@ function LandingContentExplorer({
 
     // Otherwise scroll to the results section / first card
     const firstCard = document.querySelector("[data-result-card]") as HTMLElement | null;
-    
+
     if (firstCard) {
       firstCard.scrollIntoView({ behavior: "smooth", block: "center" });
       setHighlightResults(true);
@@ -867,9 +890,8 @@ function LandingContentExplorer({
                 setFilterYear("");
                 setTimeout(handleScrollToResults, 60);
               }}
-              className={`p-4 rounded-xl text-left flex items-center justify-between gap-3 cursor-pointer ${
-                activeTab === "papers" ? "tab-card-active" : "tab-card-inactive"
-              }`}
+              className={`p-4 rounded-xl text-left flex items-center justify-between gap-3 cursor-pointer ${activeTab === "papers" ? "tab-card-active" : "tab-card-inactive"
+                }`}
               style={{
                 "--tab-accent": "#1E3A8A",
                 "--tab-shadow": "rgba(30,58,138,0.14)",
@@ -918,9 +940,8 @@ function LandingContentExplorer({
                 setFilterYear("");
                 setTimeout(handleScrollToResults, 60);
               }}
-              className={`p-4 rounded-xl text-left flex items-center justify-between gap-3 cursor-pointer ${
-                activeTab === "quizzes" ? "tab-card-active" : "tab-card-inactive"
-              }`}
+              className={`p-4 rounded-xl text-left flex items-center justify-between gap-3 cursor-pointer ${activeTab === "quizzes" ? "tab-card-active" : "tab-card-inactive"
+                }`}
               style={{
                 "--tab-accent": "#7C3AED",
                 "--tab-shadow": "rgba(124,58,237,0.14)",
@@ -935,7 +956,7 @@ function LandingContentExplorer({
                 </div>
                 <div>
                   <div className="font-bold text-[13px] sm:text-sm" style={{ fontFamily: "Poppins, sans-serif", color: activeTab === "quizzes" ? "#5B21B6" : "#64748B" }}>
-                    MCQ Quizzes
+                    Instant Rank Challenger
                   </div>
                   <div className="flex items-center gap-1.5 mt-1">
                     <span
@@ -948,14 +969,14 @@ function LandingContentExplorer({
                       <span className="tab-badge-dot" style={{ "--badge-dot-color": activeTab === "quizzes" ? "#7C3AED" : "#CBD5E1" } as React.CSSProperties} />
                       Objective
                     </span>
-                    <span className="text-[10px] text-gray-400 font-medium hidden sm:inline">· Negative marking</span>
+                    <span className="text-[10px] text-gray-400 font-medium hidden sm:inline">· Speed tests under pressure</span>
                   </div>
                 </div>
               </div>
               <span className={`tab-count-pill ${activeTab === "quizzes" ? "active" : "inactive"}`}
                 style={{ "--tab-accent": "#7C3AED", "--tab-shadow": "rgba(124,58,237,0.25)" } as React.CSSProperties}
               >
-                {filteredQuizzes.length} <span className="font-medium hidden min-[420px]:inline">quizzes</span>
+                {filteredQuizzes.length} <span className="font-medium hidden min-[420px]:inline">tests</span>
               </span>
             </button>
           </div>
@@ -1008,9 +1029,8 @@ function LandingContentExplorer({
                         <button
                           key={m.id}
                           onClick={() => setFilterMedium(filterMedium === m.id ? "" : m.id)}
-                          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border flex-shrink-0 touch-target-min animate-apple-unveil ${
-                            filterMedium === m.id ? "bg-[#1E3A8A] text-white border-transparent shadow-sm" : "bg-[#F1F3F8] text-gray-600 border-[#E2E6EF] hover:bg-[#E8ECF4]"
-                          }`}
+                          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border flex-shrink-0 touch-target-min animate-apple-unveil ${filterMedium === m.id ? "bg-[#1E3A8A] text-white border-transparent shadow-sm" : "bg-[#F1F3F8] text-gray-600 border-[#E2E6EF] hover:bg-[#E8ECF4]"
+                            }`}
                         >
                           <Languages size={13} className="inline mr-1 -mt-0.5" /> {m.label} {filterMedium === m.id && m.id !== "" && <Check size={11} className="inline ml-0.5 -mt-px" />}
                         </button>
@@ -1038,9 +1058,8 @@ function LandingContentExplorer({
                           key={s.id}
                           style={{ animationDelay: `${idx * 0.03}s` }}
                           onClick={() => setFilterSubject(filterSubject === s.id ? "" : s.id)}
-                          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border flex-shrink-0 touch-target-min animate-apple-unveil ${
-                            filterSubject === s.id ? "bg-[#1E3A8A] text-white border-transparent shadow-sm" : "bg-[#F1F3F8] text-gray-600 border-[#E2E6EF] hover:bg-[#E8ECF4]"
-                          }`}
+                          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border flex-shrink-0 touch-target-min animate-apple-unveil ${filterSubject === s.id ? "bg-[#1E3A8A] text-white border-transparent shadow-sm" : "bg-[#F1F3F8] text-gray-600 border-[#E2E6EF] hover:bg-[#E8ECF4]"
+                            }`}
                         >
                           <SubjectIcon name={s.name} size={13} className="inline mr-1 -mt-0.5" /> {s.name} {filterSubject === s.id && <Check size={11} className="inline ml-0.5 -mt-px" />}
                         </button>
@@ -1068,9 +1087,8 @@ function LandingContentExplorer({
                           <button
                             key={t}
                             onClick={() => setFilterType(filterType === t ? "" : t)}
-                            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border flex-shrink-0 animate-apple-unveil ${
-                              filterType === t ? "bg-[#1E3A8A] text-white border-transparent shadow-sm" : "bg-[#F1F3F8] text-gray-600 border-[#E2E6EF] hover:bg-[#E8ECF4]"
-                            }`}
+                            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border flex-shrink-0 animate-apple-unveil ${filterType === t ? "bg-[#1E3A8A] text-white border-transparent shadow-sm" : "bg-[#F1F3F8] text-gray-600 border-[#E2E6EF] hover:bg-[#E8ECF4]"
+                              }`}
                           >
                             {PAPER_TYPE_CONFIG[t]?.label ?? t} {filterType === t && <Check size={11} className="inline ml-0.5 -mt-px" />}
                           </button>
@@ -1094,9 +1112,8 @@ function LandingContentExplorer({
                           <button
                             key={y}
                             onClick={() => setFilterYear(filterYear === y ? "" : y)}
-                            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border flex-shrink-0 animate-apple-unveil ${
-                              filterYear === y ? "bg-[#1E3A8A] text-white border-transparent shadow-sm" : "bg-[#F1F3F8] text-gray-600 border-[#E2E6EF] hover:bg-[#E8ECF4]"
-                            }`}
+                            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border flex-shrink-0 animate-apple-unveil ${filterYear === y ? "bg-[#1E3A8A] text-white border-transparent shadow-sm" : "bg-[#F1F3F8] text-gray-600 border-[#E2E6EF] hover:bg-[#E8ECF4]"
+                              }`}
                           >
                             {y} {filterYear === y && <Check size={11} className="inline ml-0.5 -mt-px" />}
                           </button>
@@ -1150,25 +1167,23 @@ function LandingContentExplorer({
         {/* ── Dynamic Live Status & Controls Header (Smooth Scroll & Highlight Target) ── */}
         <div
           id="results-grid-header"
-          className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl border transition-all duration-500 ${
-            highlightResults
+          className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl border transition-all duration-500 ${highlightResults
               ? "border-blue-500 ring-4 ring-blue-500/30 scale-[1.01] shadow-2xl bg-blue-50/95"
               : "bg-[#F8F9FC]/90 backdrop-blur-md border-[#E2E6EF] shadow-sm"
-          }`}
+            }`}
         >
 
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-bold text-[#1E3A8A] font-['Poppins'] flex items-center gap-1.5">
               <Sparkles size={14} className="text-amber-500 animate-pulse" />
-              Showing {activeTab === "papers" ? sortedPapers.length : sortedQuizzes.length} {activeTab === "papers" ? "Subjective Papers" : "Objective Quizzes"}
+              Showing {activeTab === "papers" ? sortedPapers.length : sortedQuizzes.length} {activeTab === "papers" ? "Subjective Papers" : "Rank Challenges"}
             </span>
             <button
               onClick={() => setShowOnlyBookmarks(!showOnlyBookmarks)}
-              className={`text-[11px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1 transition-all border ${
-                showOnlyBookmarks
+              className={`text-[11px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1 transition-all border ${showOnlyBookmarks
                   ? "bg-amber-400 text-slate-900 border-amber-500 shadow-sm scale-105"
                   : "bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100"
-              }`}
+                }`}
             >
               <Star size={11} className={showOnlyBookmarks ? "fill-slate-900" : "fill-amber-400"} />
               Saved Bookmarks ({bookmarkedIds.length})
@@ -1232,13 +1247,11 @@ function LandingContentExplorer({
                     key={p.id}
                     data-result-card
                     style={{ animationDelay: `${idx * 0.04}s` }}
-                    className={`rounded-2xl border motion-card-hover animate-stagger-card transition-all duration-500 ${
-                      highlightResults
+                    className={`rounded-2xl border motion-card-hover animate-stagger-card transition-all duration-500 ${highlightResults
                         ? "border-blue-500 ring-2 ring-blue-400/40 shadow-[0_0_20px_rgba(37,99,235,0.25)] bg-blue-50/60 scale-[1.015]"
                         : "bg-white border-gray-100 hover:border-blue-200"
-                    } ${
-                      viewMode === "grid" ? "p-5 flex flex-col justify-between" : "p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4"
-                    }`}
+                      } ${viewMode === "grid" ? "p-5 flex flex-col justify-between" : "p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4"
+                      }`}
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-2">
@@ -1306,13 +1319,11 @@ function LandingContentExplorer({
                     key={q.id}
                     data-result-card
                     style={{ animationDelay: `${idx * 0.04}s` }}
-                    className={`rounded-2xl border motion-card-hover animate-stagger-card transition-all duration-500 ${
-                      highlightResults
+                    className={`rounded-2xl border motion-card-hover animate-stagger-card transition-all duration-500 ${highlightResults
                         ? "border-purple-500 ring-2 ring-purple-400/40 shadow-[0_0_20px_rgba(124,58,237,0.25)] bg-purple-50/60 scale-[1.015]"
                         : "bg-white border-gray-100 hover:border-violet-200"
-                    } ${
-                      viewMode === "grid" ? "p-5 flex flex-col justify-between" : "p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4"
-                    }`}
+                      } ${viewMode === "grid" ? "p-5 flex flex-col justify-between" : "p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4"
+                      }`}
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-2">
@@ -1339,9 +1350,8 @@ function LandingContentExplorer({
 
                     <button
                       onClick={() => onRequireAuth("Attempt Full Quiz")}
-                      className={`py-2.5 rounded-xl text-xs font-bold bg-[#FF7A00] text-white hover:bg-[#E66E00] transition-colors flex items-center justify-center gap-1.5 shadow-sm active:scale-95 ${
-                        viewMode === "grid" ? "w-full mt-4" : "px-5 flex-shrink-0"
-                      }`}
+                      className={`py-2.5 rounded-xl text-xs font-bold bg-[#FF7A00] text-white hover:bg-[#E66E00] transition-colors flex items-center justify-center gap-1.5 shadow-sm active:scale-95 ${viewMode === "grid" ? "w-full mt-4" : "px-5 flex-shrink-0"
+                        }`}
                     >
                       <Brain size={14} /> Start Quiz Practice
                     </button>

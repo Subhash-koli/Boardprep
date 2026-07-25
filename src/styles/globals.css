@@ -8,6 +8,13 @@
 
 /*  Film Grain (Blue Sections) — 4% opacity noise
     Base frequency 0.65 | 3 octaves | fractalNoise | desaturated   */
+/* ── Prevent Horizontal Screen Overflow ────────────────────────── */
+html, body {
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+  position: relative;
+}
+
 :root {
   --grain-blue-url: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
 
@@ -378,13 +385,15 @@
 /* ── Decorative Gradient Orb (behind feature grids) ────────────── */
 .section-bg-orb {
   position: relative;
+  overflow: hidden;
+  max-width: 100%;
 }
 
 .section-bg-orb::before {
   content: '';
   position: absolute;
-  width: 500px;
-  height: 500px;
+  width: min(500px, 90vw);
+  height: min(500px, 90vw);
   border-radius: 50%;
   background: radial-gradient(circle, rgba(59, 130, 246, 0.06) 0%, transparent 70%);
   top: 50%;
@@ -392,6 +401,21 @@
   transform: translate(-50%, -50%);
   pointer-events: none;
   z-index: 0;
+}
+
+/* ── Mobile & Desktop Scroll Margin System ─────────────────────── */
+#content-explorer-section,
+#education-level-step,
+#results-grid-header {
+  scroll-margin-top: 88px;
+}
+
+@media (max-width: 640px) {
+  #content-explorer-section,
+  #education-level-step,
+  #results-grid-header {
+    scroll-margin-top: 72px;
+  }
 }
 
 /* ── Premium Tab Switcher ──────────────────────────────────────── */
@@ -510,8 +534,76 @@
   animation: tabIconPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+/* ── Hero Glass Capsule Dock & Pills (Apple Dynamic Dock) ─────── */
+.hero-pill-dock {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 20px;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  touch-action: pan-x;
+}
 
-/* ── Stat card pulse animation (hero) ───────────────────────────── */
+.hero-pill-dock::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .hero-pill-dock {
+    justify-content: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 9999px;
+  }
+}
+
+.hero-pill-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5.5px;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  .hero-pill-item {
+    gap: 6.5px;
+    padding: 5px 14px;
+    font-size: 12px;
+  }
+}
+
+.hero-pill-item:hover {
+  transform: translateY(-2px) scale(1.05);
+  background: rgba(255, 255, 255, 0.18);
+  border-color: var(--pill-glow, rgba(255, 255, 255, 0.4));
+  box-shadow: 0 4px 16px var(--pill-shadow, rgba(255, 122, 0, 0.35));
+  color: white;
+}
+
+
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }

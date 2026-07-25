@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { Bookmark, BookOpen, Brain, Trash2, Eye, ChevronRight, FileText, SlidersHorizontal } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { papers, quizzes, PAPER_TYPE_CONFIG, DIFFICULTY_CONFIG } from "../data/mockData";
@@ -64,18 +64,17 @@ export function Bookmarks() {
       {/* ── Tabs ── */}
       <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-5 w-full sm:w-fit">
         {([
-          { value: "all",     label: "All",     count: totalCount },
-          { value: "papers",  label: "Papers",  count: papersCount },
+          { value: "all", label: "All", count: totalCount },
+          { value: "papers", label: "Papers", count: papersCount },
           { value: "quizzes", label: "Quizzes", count: quizzesCount },
         ] as const).map(t => (
           <button
             key={t.value}
             onClick={() => setTab(t.value)}
-            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 min-h-[40px] cursor-pointer select-none ${
-              tab === t.value
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 min-h-[40px] cursor-pointer select-none ${tab === t.value
                 ? "bg-gradient-to-r from-[#1E3A8A] to-[#2563EB] text-white shadow-[0_4px_12px_rgba(30,58,138,0.35)]"
                 : "text-gray-500 hover:text-[#1E3A8A] hover:bg-white/60 active:scale-95"
-            }`}
+              }`}
           >
             {t.label}
             {t.count > 0 && (
@@ -154,7 +153,7 @@ export function Bookmarks() {
           {tab === "all" && (
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold text-gray-800 font-['Poppins'] flex items-center gap-2 text-sm">
-                <Brain size={16} className="text-violet-600" /> MCQ Quizzes
+                <Brain size={16} className="text-violet-600" /> Instant Rank Challenger
                 <span className="text-xs text-gray-400 font-normal">({quizzesCount})</span>
               </h3>
               <button onClick={() => setTab("quizzes")} className="text-xs text-[#1E3A8A] hover:underline">

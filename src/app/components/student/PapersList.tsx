@@ -12,8 +12,6 @@ import type { HierarchicalFilterState } from "./HierarchicalFilter";
 import { SubjectIcon } from "../shared/GoalIcons";
 
 
-const YEARS = [2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018];
-
 interface FilterState {
   subject: string;
   year: number | "";
@@ -24,11 +22,11 @@ interface FilterState {
 // ── Sort Dropdown ─────────────────────────────────────────────────────────────
 type SortKey = "popular" | "newest" | "oldest" | "marks-high" | "marks-low";
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: "popular",    label: "Most Popular" },
-  { value: "newest",     label: "Newest First" },
-  { value: "oldest",     label: "Oldest First" },
-  { value: "marks-high", label: "Most Marks"  },
-  { value: "marks-low",  label: "Fewest Marks" },
+  { value: "popular", label: "Most Popular" },
+  { value: "newest", label: "Newest First" },
+  { value: "oldest", label: "Oldest First" },
+  { value: "marks-high", label: "Most Marks" },
+  { value: "marks-low", label: "Fewest Marks" },
 ];
 
 // Pill button helper
@@ -105,9 +103,8 @@ function PaperCard({
           </div>
           <button
             onClick={onBookmark}
-            className={`flex-shrink-0 p-1.5 rounded-xl transition-colors ${
-              bookmarked ? "text-[#F97316] bg-orange-50" : "text-gray-300 hover:text-[#F97316] hover:bg-orange-50"
-            }`}
+            className={`flex-shrink-0 p-1.5 rounded-xl transition-colors ${bookmarked ? "text-[#F97316] bg-orange-50" : "text-gray-300 hover:text-[#F97316] hover:bg-orange-50"
+              }`}
             aria-label={bookmarked ? "Remove bookmark" : "Bookmark paper"}
           >
             {bookmarked ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
@@ -195,11 +192,10 @@ function PaperCard({
           </button>
           <button
             onClick={() => setExpanded(e => !e)}
-            className={`px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all min-h-[40px] border ${
-              expanded
+            className={`px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all min-h-[40px] border ${expanded
                 ? "bg-[#1E3A8A]/10 text-[#1E3A8A] border-[#1E3A8A]/20"
                 : "bg-gray-100 text-gray-600 border-transparent hover:bg-gray-200"
-            }`}
+              }`}
             title={expanded ? "Hide details" : "Show details"}
           >
             <ChevronRight
@@ -219,18 +215,18 @@ function PaperCard({
 // ── Main Component ────────────────────────────────────────────────────────────
 export function PapersList() {
   const { setView, setSelectedPaperId, toggleBookmark, isBookmarked } = useApp();
-  const [search, setSearch]     = useState("");
+  const [search, setSearch] = useState("");
   const [hierFilter, setHierFilter] = useState<HierarchicalFilterState>(EMPTY_FILTER);
-  const [filters, setFilters]   = useState<FilterState>({ subject: "", year: "", type: "", medium: "" });
-  const [sort, setSort]         = useState<SortKey>("popular");
+  const [filters, setFilters] = useState<FilterState>({ subject: "", year: "", type: "", medium: "" });
+  const [sort, setSort] = useState<SortKey>("popular");
   const [sortOpen, setSortOpen] = useState(false);
-  const [page, setPage]         = useState(1);
+  const [page, setPage] = useState(1);
   const sortRef = useRef<HTMLDivElement>(null);
   const PER_PAGE = 12;
 
   // Resolve hierarchical filter to goalCategory
-  const cat      = resolveGoalCategory(hierFilter) || undefined;
-  const stream   = hierFilter.stream || undefined;
+  const cat = resolveGoalCategory(hierFilter) || undefined;
+  const stream = hierFilter.stream || undefined;
 
   // Close sort dropdown on outside click
   useEffect(() => {
@@ -278,24 +274,24 @@ export function PapersList() {
       const selectedSub = availableSubjects.find(s => s.id === filters.subject || s.name === filters.subject);
       if (selectedSub && p.subject !== selectedSub.name && p.subjectId !== filters.subject) return false;
     }
-    if (filters.year    && p.year !== filters.year)          return false;
-    if (filters.type    && p.type !== filters.type)          return false;
-    if (filters.medium  && p.medium !== filters.medium)      return false;
+    if (filters.year && p.year !== filters.year) return false;
+    if (filters.type && p.type !== filters.type) return false;
+    if (filters.medium && p.medium !== filters.medium) return false;
     return true;
   });
 
 
   // Sort
   filtered = [...filtered].sort((a, b) => {
-    if (sort === "popular")    return b.analytics.downloads - a.analytics.downloads;
-    if (sort === "newest")     return b.year - a.year;
-    if (sort === "oldest")     return a.year - b.year;
+    if (sort === "popular") return b.analytics.downloads - a.analytics.downloads;
+    if (sort === "newest") return b.year - a.year;
+    if (sort === "oldest") return a.year - b.year;
     if (sort === "marks-high") return b.marks - a.marks;
-    if (sort === "marks-low")  return a.marks - b.marks;
+    if (sort === "marks-low") return a.marks - b.marks;
     return 0;
   });
 
-  const paginated  = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
   const activeFilterCount = [filters.subject, filters.year, filters.type, filters.medium].filter(Boolean).length;
 
@@ -368,9 +364,8 @@ export function PapersList() {
                   <button
                     key={opt.value}
                     onClick={() => { setSort(opt.value); setSortOpen(false); }}
-                    className={`w-full text-left px-4 py-2.5 text-sm min-h-[44px] transition-colors ${
-                      sort === opt.value ? "bg-blue-50 text-[#1E3A8A] font-semibold" : "text-gray-700 hover:bg-gray-50"
-                    }`}
+                    className={`w-full text-left px-4 py-2.5 text-sm min-h-[44px] transition-colors ${sort === opt.value ? "bg-blue-50 text-[#1E3A8A] font-semibold" : "text-gray-700 hover:bg-gray-50"
+                      }`}
                   >
                     {opt.label}
                   </button>
@@ -450,10 +445,10 @@ export function PapersList() {
                       active={filters.medium === m}
                       onClick={() => updateFilters({ medium: m as Medium | "" })}
                     >
-                      {m === ""             ? "All"
-                       : m === "english"     ? "English"
-                       : m === "semi-english" ? "Semi-English"
-                       : "Marathi"}
+                      {m === "" ? "All"
+                        : m === "english" ? "English"
+                          : m === "semi-english" ? "Semi-English"
+                            : "Marathi"}
                     </Pill>
                   ))}
                 </div>
@@ -530,9 +525,8 @@ export function PapersList() {
             <button
               key={p}
               onClick={() => { setPage(p); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-              className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${
-                page === p ? "bg-[#1E3A8A] text-white" : "bg-white text-gray-600 border border-gray-200 hover:border-[#1E3A8A]"
-              }`}
+              className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${page === p ? "bg-[#1E3A8A] text-white" : "bg-white text-gray-600 border border-gray-200 hover:border-[#1E3A8A]"
+                }`}
             >
               {p}
             </button>

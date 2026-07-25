@@ -149,11 +149,11 @@ export function QuizList() {
       <div>
         <h2 className="text-lg font-bold text-[#1E3A8A] font-['Poppins'] flex items-center gap-2">
           <Brain size={18} className="text-[#1E3A8A]" />
-          MCQ Quizzes
+          Instant Rank Challenger
         </h2>
         <p className="text-gray-500 text-sm mt-0.5">
           <span className="font-medium text-gray-600">{filterBreadcrumb(hierFilter)}</span>
-          {" "}&middot; <span className="font-medium text-gray-700">{filtered.length}</span> quizzes
+          {" "}&middot; <span className="font-medium text-gray-700">{filtered.length}</span> rank challenges
         </p>
       </div>
 
