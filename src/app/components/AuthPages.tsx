@@ -55,8 +55,8 @@ function AuthLayout({ children, title, subtitle }: { children: React.ReactNode; 
   );
 }
 
-// ── Student Login Form ────────────────────────────────────────────────────────
-function StudentLoginForm({ onSuccess, onRegister }: { onSuccess: () => void; onRegister: () => void }) {
+// ── Unified Login Form (Role Auto-Detection) ──────────────────────────────────
+function UnifiedLoginForm({ onSuccessStudent, onSuccessAdmin, onRegister }: { onSuccessStudent: () => void; onSuccessAdmin: () => void; onRegister: () => void }) {
   const { setUser, setAuthEmail } = useApp();
   const [subView, setSubView] = useState<"login" | "forgot">("login");
 
@@ -75,20 +75,19 @@ function StudentLoginForm({ onSuccess, onRegister }: { onSuccess: () => void; on
     setError("");
     if (!email || !password) { setError("Please fill in all fields."); return; }
     setLoading(true);
+
     setTimeout(() => {
       setLoading(false);
-      setUser({
-        id: "u_demo",
-        name: "Priya Sharma",
-        email,
-        goals: [seedGoal1, seedGoal2],
-        currentGoalId: "",
-        medium: "semi-english",
-        streak: 15,
-        isAdmin: false,
-      });
-      onSuccess();
-    }, 1000);
+      const lowerEmail = email.toLowerCase().trim();
+
+      if (lowerEmail.includes("admin")) {
+        setUser({ id: "admin_1", name: "System Admin", email: lowerEmail, goals: [], currentGoalId: "", medium: "english", streak: 0, isAdmin: true });
+        onSuccessAdmin();
+      } else {
+        setUser({ id: "u_demo", name: "Priya Sharma", email: lowerEmail, goals: [seedGoal1, seedGoal2], currentGoalId: "", medium: "semi-english", streak: 15, isAdmin: false });
+        onSuccessStudent();
+      }
+    }, 800);
   };
 
   const handleForgot = (e: React.FormEvent) => {
@@ -106,10 +105,7 @@ function StudentLoginForm({ onSuccess, onRegister }: { onSuccess: () => void; on
         </div>
         <p className="text-gray-600 mb-1 font-semibold">OTP sent!</p>
         <p className="text-gray-500 text-sm mb-6">Check <strong>{fEmail}</strong> and enter the code to reset your password.</p>
-        <button onClick={() => { setFSent(false); setSubView("login"); }}
-          className="w-full bg-[#1E3A8A] hover:bg-blue-900 text-white py-3 rounded-xl font-semibold text-sm transition-colors">
-          Back to Login
-        </button>
+        <button onClick={() => { setFSent(false); setSubView("login"); }} className="w-full bg-[#1E3A8A] hover:bg-blue-900 text-white py-3 rounded-xl font-semibold text-sm transition-colors">Back to Login</button>
       </div>
     );
     return (
@@ -121,10 +117,7 @@ function StudentLoginForm({ onSuccess, onRegister }: { onSuccess: () => void; on
         <p className="text-gray-500 text-xs mb-5">We'll send a 6-digit OTP to reset your password.</p>
         <form onSubmit={handleForgot}>
           <InputField label="Email address" type="email" value={fEmail} onChange={setFEmail} placeholder="you@email.com" icon={Mail} />
-          <button type="submit" disabled={fLoading || !fEmail}
-            className="w-full bg-[#1E3A8A] hover:bg-blue-900 text-white py-3 rounded-xl transition-colors disabled:opacity-60 font-semibold text-sm">
-            {fLoading ? "Sending OTP..." : "Send OTP"}
-          </button>
+          <button type="submit" disabled={fLoading || !fEmail} className="w-full bg-[#1E3A8A] hover:bg-blue-900 text-white py-3 rounded-xl transition-colors disabled:opacity-60 font-semibold text-sm">{fLoading ? "Sending OTP..." : "Send OTP"}</button>
         </form>
       </div>
     );
@@ -141,89 +134,35 @@ function StudentLoginForm({ onSuccess, onRegister }: { onSuccess: () => void; on
       />
       {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
       <div className="flex justify-end mb-4">
-        <button type="button" onClick={() => setSubView("forgot")} className="text-[#1E3A8A] text-sm hover:underline">
-          Forgot password?
-        </button>
+        <button type="button" onClick={() => setSubView("forgot")} className="text-[#1E3A8A] text-sm hover:underline font-medium">Forgot password?</button>
       </div>
-      <button type="submit" disabled={loading}
-        className="w-full bg-[#1E3A8A] hover:bg-blue-900 text-white py-3 rounded-xl transition-colors disabled:opacity-60 font-semibold">
-        {loading ? "Logging in..." : "Login"}
-      </button>
-      <p className="text-center text-sm text-gray-500 mt-6">
-        Don't have an account?{" "}
-        <button type="button" onClick={onRegister} className="text-[#1E3A8A] font-semibold hover:underline">Register free</button>
+      <button type="submit" disabled={loading} className="w-full bg-[#1E3A8A] hover:bg-blue-900 text-white py-3 rounded-xl transition-colors disabled:opacity-60 font-semibold text-sm shadow-md">{loading ? "Logging in..." : "Login"}</button>
+      <div className="mt-4 p-3 bg-blue-50/80 rounded-xl border border-blue-100 text-[11px] text-gray-600 space-y-1">
+        <p className="font-semibold text-[#1E3A8A] flex items-center gap-1">
+          <Shield size={12} className="text-[#1E3A8A]" /> Role Auto-Detection Active
+        </p>
+        <p className="text-gray-500">System automatically routes you to Student or Admin panel based on your account credentials.</p>
+        <div className="pt-1 flex flex-col sm:flex-row gap-2 font-mono text-[10px] text-gray-500 border-t border-blue-100/80">
+          <span>🎓 Student: <strong>student@email.com</strong></span>
+          <span>🛡️ Admin: <strong>admin@pariksha.in</strong></span>
+        </div>
+      </div>
+      <p className="text-center text-sm text-gray-500 mt-5">
+        Don't have an account? <button type="button" onClick={onRegister} className="text-[#1E3A8A] font-semibold hover:underline">Register free</button>
       </p>
-    </form>
-  );
-}
-
-// ── Admin Login Form ──────────────────────────────────────────────────────────
-function AdminLoginForm({ onSuccess }: { onSuccess: () => void }) {
-  const { setUser } = useApp();
-  const [email, setEmail]       = useState("admin@ParikshaCrack.in");
-  const [password, setPassword] = useState("admin123");
-  const [adminKey, setAdminKey] = useState("PARIKSHA_ADMIN_2026");
-  const [showPwd, setShowPwd]   = useState(false);
-  const [error, setError]       = useState("");
-  const [loading, setLoading]   = useState(false);
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password || !adminKey) { setError("All fields are required."); return; }
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      if (adminKey !== "PARIKSHA_ADMIN_2026") { setError("Invalid admin key."); return; }
-      setUser({ id: "admin_1", name: "Admin", email, goals: [], currentGoalId: "", medium: "english", streak: 0, isAdmin: true });
-      onSuccess();
-    }, 800);
-  };
-
-  return (
-    <form onSubmit={handleLogin}>
-      {/* Admin badge */}
-      <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 mb-5">
-        <Shield size={14} className="text-slate-500 flex-shrink-0" />
-        <p className="text-xs text-slate-500">Authorized admin access only. Enter your admin credentials.</p>
-      </div>
-
-      <InputField label="Admin Email" type="email" value={email} onChange={setEmail} placeholder="admin@pariksha.in" icon={Mail} />
-      <InputField
-        label="Password" type={showPwd ? "text" : "password"} value={password} onChange={setPassword}
-        placeholder="Admin password" icon={Lock}
-        rightIcon={showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
-        onRightIconClick={() => setShowPwd(!showPwd)}
-      />
-      <InputField label="Admin Secret Key" type="text" value={adminKey} onChange={setAdminKey}
-        placeholder="PARIKSHA_ADMIN_XXXX" icon={KeyRound} mono />
-
-      {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
-
-      <button type="submit" disabled={loading}
-        className="w-full bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-xl transition-colors disabled:opacity-60 font-semibold">
-        {loading ? "Authenticating..." : "Login to Admin Panel"}
-      </button>
-
-      <div className="mt-4 p-3 bg-blue-50 rounded-xl text-xs text-blue-600">
-        <strong>Demo credentials:</strong> admin@ParikshaCrack.in / admin123<br />
-        Key: PARIKSHA_ADMIN_2026
-      </div>
     </form>
   );
 }
 
 // ── Unified Login Modal ───────────────────────────────────────────────────────
 export function LoginModal() {
-  const { showLoginModal, setShowLoginModal, setView, loginModalTab, setLoginModalTab } = useApp();
-
-  // Close on Escape
+  const { showLoginModal, setShowLoginModal, setView } = useApp();
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setShowLoginModal(false); };
     if (showLoginModal) document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, [showLoginModal, setShowLoginModal]);
 
-  // Lock body scroll
   useEffect(() => {
     document.body.style.overflow = showLoginModal ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
@@ -231,33 +170,22 @@ export function LoginModal() {
 
   if (!showLoginModal) return null;
 
-  const isAdmin = loginModalTab === "admin";
-
   const handleStudentSuccess = () => { setShowLoginModal(false); setView("papers"); };
   const handleAdminSuccess   = () => { setShowLoginModal(false); setView("admin-dashboard"); };
   const handleRegister       = () => { setShowLoginModal(false); setView("register"); };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Login">
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/55 backdrop-blur-sm" onClick={() => setShowLoginModal(false)} />
-
-      {/* Modal card */}
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-modal-in">
-        {/* Top gradient bar — changes colour per tab */}
-        <div className={`h-1.5 w-full transition-all duration-300 ${isAdmin ? "bg-gradient-to-r from-slate-700 to-slate-900" : "bg-gradient-to-r from-[#1E3A8A] to-[#2563EB]"}`} />
-
+        <div className="h-1.5 w-full bg-gradient-to-r from-[#1E3A8A] via-[#2563EB] to-indigo-600" />
         {/* Header */}
         <div className="px-6 pt-5 pb-4 flex items-start justify-between border-b border-gray-100">
           <div className="flex items-center gap-2.5">
             <img src={LogoImage} alt="ParikshaCrack" className="w-8 h-8 object-contain" />
             <div>
-              <h2 className="text-lg font-bold text-[#1E3A8A] leading-tight" style={{ fontFamily: "Poppins, sans-serif" }}>
-                {isAdmin ? "Admin Access" : "Welcome back!"}
-              </h2>
-              <p className="text-gray-400 text-xs">
-                {isAdmin ? "Restricted to authorized personnel only" : "Login to continue your exam preparation"}
-              </p>
+              <h2 className="text-lg font-bold text-[#1E3A8A] leading-tight" style={{ fontFamily: "Poppins, sans-serif" }}>Welcome back!</h2>
+              <p className="text-gray-400 text-xs">Login to continue your exam preparation</p>
             </div>
           </div>
           <button
@@ -269,38 +197,13 @@ export function LoginModal() {
           </button>
         </div>
 
-        {/* Tab switcher */}
-        <div className="px-6 pt-4">
-          <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
-            <button
-              onClick={() => setLoginModalTab("student")}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                !isAdmin
-                  ? "bg-white text-[#1E3A8A] shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              <GraduationCap size={15} /> Student
-            </button>
-            <button
-              onClick={() => setLoginModalTab("admin")}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                isAdmin
-                  ? "bg-slate-900 text-white shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              <Shield size={15} /> Admin
-            </button>
-          </div>
-        </div>
-
         {/* Form area */}
         <div className="px-6 py-5">
-          {isAdmin
-            ? <AdminLoginForm onSuccess={handleAdminSuccess} />
-            : <StudentLoginForm onSuccess={handleStudentSuccess} onRegister={handleRegister} />
-          }
+          <UnifiedLoginForm
+            onSuccessStudent={handleStudentSuccess}
+            onSuccessAdmin={handleAdminSuccess}
+            onRegister={handleRegister}
+          />
         </div>
       </div>
 
