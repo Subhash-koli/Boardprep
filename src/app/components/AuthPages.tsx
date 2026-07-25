@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, CheckCircle, X, Shield, GraduationCap, KeyRound } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, CheckCircle, X, Shield } from "lucide-react";
 import { useApp } from "./context/AppContext";
 import { seedGoal1, seedGoal2 } from "./context/AppContext";
 
