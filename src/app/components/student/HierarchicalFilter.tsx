@@ -169,11 +169,18 @@ export function HierarchicalFilter({ value, onChange }: HierarchicalFilterProps)
     <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(248,249,252,0.92)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(226,230,239,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
 
       {/* ── Level 1: 3 main buttons with Single-Focus Sibling Hiding ── */}
-      <div className="p-3 sm:p-4">
+      <div id="education-level-step" className="p-3 sm:p-4 transition-all duration-500 rounded-2xl">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
-            Education Level
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+              Step 1: Education Level
+            </p>
+            {!value.level && (
+              <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200/80 animate-pulse">
+                Select below ↓
+              </span>
+            )}
+          </div>
           {value.level && (
             <button
               onClick={() => onChange(EMPTY_FILTER)}

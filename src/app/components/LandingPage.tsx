@@ -650,18 +650,27 @@ function LandingContentExplorer({
   const [highlightResults, setHighlightResults] = useState(false);
 
   const handleScrollToResults = () => {
-    // Find the first actual result card, not just the header
+    // If user hasn't selected an Education Level yet, guide them directly to Step 1: Education Level
+    if (!hierFilter.level) {
+      const eduLevelEl = document.getElementById("education-level-step");
+      if (eduLevelEl) {
+        eduLevelEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        eduLevelEl.classList.add("ring-4", "ring-blue-500/50", "bg-blue-50/80", "scale-[1.015]");
+        setTimeout(() => {
+          eduLevelEl.classList.remove("ring-4", "ring-blue-500/50", "bg-blue-50/80", "scale-[1.015]");
+        }, 2200);
+        return;
+      }
+    }
+
+    // Otherwise scroll to the results section / first card
     const firstCard = document.querySelector("[data-result-card]") as HTMLElement | null;
     
     if (firstCard) {
-      // Scroll the first card into view with some offset
       firstCard.scrollIntoView({ behavior: "smooth", block: "center" });
-      
-      // Highlight ALL result cards with a "found you!" pulse
       setHighlightResults(true);
       setTimeout(() => setHighlightResults(false), 2800);
     } else {
-      // Fallback: scroll to the results header if no cards exist
       const header = document.getElementById("results-grid-header");
       if (header) {
         header.scrollIntoView({ behavior: "smooth", block: "start" });
