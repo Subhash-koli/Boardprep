@@ -127,11 +127,11 @@ h1, h2, h3, h4, h5, h6 {
   isolation: isolate;
 }
 
-/* ── White / Off-White Sections: Paper Grain ────────────────────── */
+/* ── White / Off-White Sections: Paper Grain & Micro-Textures ────── */
 
 /* Standard off-white paper sections */
 .texture-paper {
-  background-color: #F5F6FA;
+  background-color: #F8FAFC;
   background-image: var(--grain-paper-url);
   background-size: 200px 200px;
   background-repeat: repeat;
@@ -145,12 +145,48 @@ h1, h2, h3, h4, h5, h6 {
   background-repeat: repeat;
 }
 
-/* Pure white with barely-there grain */
+/* Pure white with micro-dot grid + paper grain */
 .texture-paper-white {
+  background-color: #FFFFFF;
+  background-image:
+    var(--grain-paper-url),
+    radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.03) 0%, transparent 60%),
+    radial-gradient(circle at 90% 80%, rgba(124, 58, 237, 0.025) 0%, transparent 60%);
+  background-size: 200px 200px, 100% 100%, 100% 100%;
+  background-repeat: repeat, no-repeat, no-repeat;
+}
+
+/* Technical micro-dot grid on pure white */
+.texture-paper-white-grid {
+  position: relative;
+  background-color: #FFFFFF;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='2' cy='2' r='1' fill='%231E3A8A' opacity='0.045'/%3E%3C/svg%3E"),
+    var(--grain-paper-url);
+  background-size: 24px 24px, 200px 200px;
+  background-repeat: repeat, repeat;
+}
+
+/* Apple ambient glow canvas on pure white */
+.texture-paper-white-glow {
+  position: relative;
+  background-color: #FFFFFF;
+  background-image:
+    var(--grain-paper-url),
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(59, 130, 246, 0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 90% 90%, rgba(139, 92, 246, 0.04) 0%, transparent 60%);
+  background-size: 200px 200px, 100% 100%, 100% 100%;
+  background-repeat: repeat, no-repeat, no-repeat;
+}
+
+/* Stripe satin paper finish */
+.texture-paper-white-satin {
+  position: relative;
   background-color: #FFFFFF;
   background-image: var(--grain-paper-url);
   background-size: 200px 200px;
   background-repeat: repeat;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -1px 0 rgba(226, 230, 239, 0.6);
 }
 
 /* ── Glassmorphism Cards ─────────────────────────────────────────── */

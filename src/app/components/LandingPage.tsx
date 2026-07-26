@@ -278,7 +278,92 @@ export function LandingPage() {
       {/* ── SECTION DIVIDER ─────────────────────────────────────────── */}
       <div className="section-divider" />
 
+      {/* ── 100% Free — Light Blue (#F4F8FF) + Paper Grain ───────────── */}
+      <section className="texture-paper-blue py-14 sm:py-20 px-3 sm:px-4">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-10 sm:mb-14">
+            <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-4">
+              <Gift size={13} /> 100% Free — No Catch
+            </div>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl mb-3 font-heading font-bold text-[#1E3A8A] tracking-tight">
+              Everything You Need. Completely Free.
+            </h2>
+            <p className="text-slate-600 font-display text-sm sm:text-base max-w-xl mx-auto">
+              No subscriptions. No hidden fees. No paywalls. Every student deserves quality exam preparation.
+            </p>
+          </div>
 
+          {/* Free plan card — blue gradient + film grain + shimmer */}
+          <div
+            className="relative rounded-2xl border-2 overflow-hidden free-card-shine"
+            style={{
+              borderColor: "#3B82F6",
+              background: "linear-gradient(135deg, #0F172A 0%, #1E3A8A 50%, #1E40AF 100%)",
+              boxShadow: "0 20px 60px rgba(30,58,138,0.35), 0 0 0 2px rgba(59,130,246,0.2)",
+            }}
+          >
+            {/* Film grain over the card */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E\")",
+                backgroundSize: "300px 300px",
+                mixBlendMode: "overlay",
+              }}
+            />
+            {/* Radial glow */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{ background: "radial-gradient(ellipse 80% 60% at 50% 20%, rgba(96,165,250,0.2) 0%, transparent 70%)" }}
+            />
+
+            {/* FREE FOREVER badge */}
+            <div className="absolute -top-0 left-1/2 -translate-x-1/2">
+              <span className="bg-green-500 text-white text-[11px] font-bold px-5 py-1.5 rounded-b-xl shadow-md tracking-wide">
+                FREE FOREVER
+              </span>
+            </div>
+
+            <div className="p-6 sm:p-8 pt-10 sm:pt-12 relative z-10">
+              <div className="text-center mb-6">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <Heart size={20} className="text-red-400" />
+                  <span className="text-3xl sm:text-5xl font-heading font-extrabold text-white">
+                    Free
+                  </span>
+                </div>
+                <p className="text-blue-200 text-sm sm:text-base font-display">Full access to every feature — no limits, no upgrades needed</p>
+              </div>
+
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
+                {freeFeatures.map(f => (
+                  <li key={f} className="flex items-start gap-2.5 text-sm">
+                    <CheckCircle size={16} className="flex-shrink-0 mt-0.5 text-green-300" />
+                    <span className="text-blue-50 font-display">{f}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="text-center">
+                <button
+                  onClick={() => setView("register")}
+                  className="px-10 py-3.5 rounded-xl text-sm font-bold font-heading transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
+                  style={{
+                    backgroundColor: "white",
+                    color: "#1E3A8A",
+                    boxShadow: "0 4px 20px rgba(255,255,255,0.25)",
+                  }}
+                >
+                  Get Started — It's Free
+                </button>
+                <p className="text-blue-300 text-xs mt-4 font-display">No credit card required. No account limits. Just sign up and start learning.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="section-divider" />
 
       {/* ── Features — Off-White + Paper Grain + Gradient Orb ───────── */}
       <section className="texture-paper py-14 sm:py-20 px-3 sm:px-4">
@@ -329,8 +414,8 @@ export function LandingPage() {
 
       <div className="section-divider" />
 
-      {/* ── Exam Goals — White + Paper Grain + Premium Cards ────────── */}
-      <section className="texture-paper-white py-12 sm:py-18 px-3 sm:px-4">
+      {/* ── Exam Goals — White + Micro-Dot Grid + Premium Cards ────────── */}
+      <section className="texture-paper-white-grid py-12 sm:py-18 px-3 sm:px-4">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10 sm:mb-14">
             <h2
@@ -497,92 +582,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      <div className="section-divider" />
 
-      {/* ── 100% Free — Light Blue (#F4F8FF) + Paper Grain ───────────── */}
-      <section className="texture-paper-blue py-14 sm:py-20 px-3 sm:px-4">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-10 sm:mb-14">
-            <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-4">
-              <Gift size={13} /> 100% Free — No Catch
-            </div>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl mb-3" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}>
-              Everything You Need. Completely Free.
-            </h2>
-            <p className="text-gray-500 text-sm sm:text-base max-w-xl mx-auto">
-              No subscriptions. No hidden fees. No paywalls. Every student deserves quality exam preparation.
-            </p>
-          </div>
-
-          {/* Free plan card — blue gradient + film grain + shimmer */}
-          <div
-            className="relative rounded-2xl border-2 overflow-hidden free-card-shine"
-            style={{
-              borderColor: "#3B82F6",
-              background: "linear-gradient(135deg, #0F172A 0%, #1E3A8A 50%, #1E40AF 100%)",
-              boxShadow: "0 20px 60px rgba(30,58,138,0.35), 0 0 0 2px rgba(59,130,246,0.2)",
-            }}
-          >
-            {/* Film grain over the card */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E\")",
-                backgroundSize: "300px 300px",
-                mixBlendMode: "overlay",
-              }}
-            />
-            {/* Radial glow */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{ background: "radial-gradient(ellipse 80% 60% at 50% 20%, rgba(96,165,250,0.2) 0%, transparent 70%)" }}
-            />
-
-            {/* FREE FOREVER badge */}
-            <div className="absolute -top-0 left-1/2 -translate-x-1/2">
-              <span className="bg-green-500 text-white text-[11px] font-bold px-5 py-1.5 rounded-b-xl shadow-md tracking-wide">
-                FREE FOREVER
-              </span>
-            </div>
-
-            <div className="p-6 sm:p-8 pt-10 sm:pt-12 relative z-10">
-              <div className="text-center mb-6">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <Heart size={20} className="text-red-400" />
-                  <span className="text-3xl sm:text-5xl" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 800, color: "white" }}>
-                    Free
-                  </span>
-                </div>
-                <p className="text-blue-200 text-sm sm:text-base">Full access to every feature — no limits, no upgrades needed</p>
-              </div>
-
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
-                {freeFeatures.map(f => (
-                  <li key={f} className="flex items-start gap-2.5 text-sm">
-                    <CheckCircle size={16} className="flex-shrink-0 mt-0.5 text-green-300" />
-                    <span className="text-blue-50">{f}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="text-center">
-                <button
-                  onClick={() => setView("register")}
-                  className="px-10 py-3.5 rounded-xl text-sm font-bold transition-all duration-200 hover:scale-105 active:scale-95"
-                  style={{
-                    backgroundColor: "white",
-                    color: "#1E3A8A",
-                    boxShadow: "0 4px 20px rgba(255,255,255,0.25)",
-                  }}
-                >
-                  Get Started — It's Free
-                </button>
-                <p className="text-blue-300 text-xs mt-4">No credit card required. No account limits. Just sign up and start learning.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* ── CTA — Blue Gradient + Film Grain + Radial Glow ───────────── */}
       <section className="texture-blue-cta py-10 sm:py-16 px-3 sm:px-4 relative">
@@ -1154,11 +1154,13 @@ function LandingContentExplorer({
                 </p>
                 <button
                   onClick={handleScrollToResults}
-                  className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-[#1E3A8A] via-[#2563EB] to-[#7C3AED] hover:from-[#152e72] hover:to-[#6d28d9] text-white text-xs sm:text-sm font-bold shadow-lg shadow-blue-500/25 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 group cursor-pointer"
+                  className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl bg-gradient-to-r from-[#1E3A8A] via-[#2563EB] to-[#7C3AED] hover:from-[#152e72] hover:to-[#6d28d9] text-white text-xs sm:text-sm font-bold shadow-lg shadow-blue-500/25 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 group cursor-pointer min-w-0"
                 >
-                  <span>Explore {activeTab === "papers" ? sortedPapers.length : sortedQuizzes.length} Matching Results</span>
-                  <ArrowDownCircle size={17} className="group-hover:translate-y-0.5 transition-transform" />
-                  <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px] font-mono">Enter ↵</span>
+                  <span className="whitespace-nowrap truncate sm:whitespace-normal font-display">
+                    Explore {activeTab === "papers" ? sortedPapers.length : sortedQuizzes.length} Matching Results
+                  </span>
+                  <ArrowDownCircle size={16} className="group-hover:translate-y-0.5 transition-transform flex-shrink-0" />
+                  <span className="hidden sm:inline-flex bg-white/20 px-2 py-0.5 rounded-full text-[10px] font-mono flex-shrink-0">Enter ↵</span>
                 </button>
               </div>
             </div>

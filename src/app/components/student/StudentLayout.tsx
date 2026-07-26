@@ -136,6 +136,28 @@ export function StudentLayout({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("keydown", handler);
   }, [openSearch]);
 
+  // ── Reset & Close Search Drawer ─────────────────────────────────────────────
+  const handleCloseDrawer = useCallback(() => {
+    setHierFilter(EMPTY_FILTER);
+    setModalSearch("");
+    setModalSubject("");
+    setModalType("");
+    setModalYear("");
+    setSearchDrawerOpen(false);
+  }, []);
+
+  // Escape key closes drawer and resets all filters
+  useEffect(() => {
+    if (!searchDrawerOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleCloseDrawer();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [searchDrawerOpen, handleCloseDrawer]);
+
   // ── Auto-focus search input when drawer opens ──────────────────────────────
   useEffect(() => {
     if (searchDrawerOpen) {
@@ -343,7 +365,7 @@ export function StudentLayout({ children }: { children: ReactNode }) {
       {/* ── Global Search & Filter Drawer Modal ── */}
       {searchDrawerOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSearchDrawerOpen(false)} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleCloseDrawer} />
           <div className="relative bg-white rounded-3xl max-w-3xl w-full p-5 sm:p-6 shadow-2xl z-10 animate-modal-zoom space-y-4 max-h-[90vh] overflow-y-auto">
 
             {/* Modal Header + Floating Match Counter */}
@@ -362,7 +384,11 @@ export function StudentLayout({ children }: { children: ReactNode }) {
                 <span className="hidden sm:flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 animate-apple-unveil">
                   🎯 {matchingPapers.length} papers
                 </span>
-                <button onClick={() => setSearchDrawerOpen(false)} className="p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100">
+                <button
+                  onClick={handleCloseDrawer}
+                  className="p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+                  title="Clear filters & close"
+                >
                   <X size={18} />
                 </button>
               </div>
@@ -610,7 +636,7 @@ export function StudentLayout({ children }: { children: ReactNode }) {
               >
                 Clear All Filters
               </button>
-              <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                 <button
                   onClick={() => {
                     if (modalSearch.trim()) { addRecentSearch(modalSearch.trim()); setRecentSearches(getRecentSearches()); }
@@ -627,7 +653,7 @@ export function StudentLayout({ children }: { children: ReactNode }) {
                     setSearchDrawerOpen(false);
                     setView("papers");
                   }}
-                  className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs font-bold bg-[#1E3A8A] text-white hover:bg-[#1D4ED8] shadow-sm flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
+                  className="w-full sm:w-auto px-4 sm:px-5 py-2.5 rounded-xl text-xs font-bold bg-[#1E3A8A] text-white hover:bg-[#1D4ED8] shadow-sm flex items-center justify-center gap-2 active:scale-95 cursor-pointer whitespace-nowrap"
                 >
                   <FileText size={15} /> Find Question Papers ({matchingPapers.length})
                 </button>
@@ -637,7 +663,7 @@ export function StudentLayout({ children }: { children: ReactNode }) {
                     setSearchDrawerOpen(false);
                     setView("quizzes");
                   }}
-                  className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs font-bold bg-[#FF7A00] text-white hover:bg-[#E66E00] shadow-sm flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
+                  className="w-full sm:w-auto px-4 sm:px-5 py-2.5 rounded-xl text-xs font-bold bg-[#FF7A00] text-white hover:bg-[#E66E00] shadow-sm flex items-center justify-center gap-2 active:scale-95 cursor-pointer whitespace-nowrap"
                 >
                   <Brain size={15} /> Find Rank Challenges
                 </button>

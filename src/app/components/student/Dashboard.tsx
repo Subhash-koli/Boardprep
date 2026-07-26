@@ -1,9 +1,10 @@
-import { Flame, BookOpen, Brain, Star, TrendingUp, ChevronRight, Bell, Zap, Target, Calendar, Trophy, CheckCircle } from "lucide-react";
+import { Flame, BookOpen, Brain, Star, TrendingUp, ChevronRight, ChevronLeft, Bell, Zap, Target, Calendar, Trophy, CheckCircle, Check, Play, ExternalLink, SlidersHorizontal } from "lucide-react";
 import { GoalIcon } from "../shared/GoalIcons";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useApp } from "../context/AppContext";
 import { announcements, quizzes, papers, scoreTrendData } from "../data/mockData";
 import { DIFFICULTY_CONFIG } from "../data/mockData";
+import { useState, useEffect } from "react";
 
 // ── Stat Card ─────────────────────────────────────────────────────────────────
 function StatCard({ icon: Icon, label, value, color, bg }: { icon: any; label: string; value: string | number; color: string; bg: string }) {
@@ -87,6 +88,99 @@ export function Dashboard() {
   const lastAttempt = goalAttempts[0] ?? null;
   const isNEETorJEE = cat === "neet" || cat === "jee-mains" || cat === "jee-advanced";
 
+  // ── Revision Track State (LocalStorage Persistent) ──────────────────────────
+  const REVISION_STORAGE_KEY = "pariksha_revision_track_v2";
+  const [roadmapDay, setRoadmapDay] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem(`${REVISION_STORAGE_KEY}_day`);
+      return saved ? Math.min(30, Math.max(1, parseInt(saved, 10))) : 14;
+    } catch { return 14; }
+  });
+
+  const [completedTaskKeys, setCompletedTaskKeys] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(`${REVISION_STORAGE_KEY}_tasks`);
+      return saved ? JSON.parse(saved) : ["14_0", "14_1"]; // default tasks 1 & 2 completed for Day 14
+    } catch { return ["14_0", "14_1"]; }
+  });
+
+  const [targetScore, setTargetScore] = useState<string>(() => {
+    try {
+      return localStorage.getItem(`${REVISION_STORAGE_KEY}_score`) ?? "92%+";
+    } catch { return "92%+"; }
+  });
+  const [showScoreMenu, setShowScoreMenu] = useState(false);
+
+  useEffect(() => {
+    try { localStorage.setItem(`${REVISION_STORAGE_KEY}_day`, String(roadmapDay)); } catch {}
+  }, [roadmapDay]);
+
+  useEffect(() => {
+    try { localStorage.setItem(`${REVISION_STORAGE_KEY}_tasks`, JSON.stringify(completedTaskKeys)); } catch {}
+  }, [completedTaskKeys]);
+
+  useEffect(() => {
+    try { localStorage.setItem(`${REVISION_STORAGE_KEY}_score`, targetScore); } catch {}
+  }, [targetScore]);
+
+  const toggleTaskKey = (key: string) => {
+    setCompletedTaskKeys(prev =>
+      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+    );
+  };
+
+  // Helper count for current day
+  const dayTaskKeys = [0, 1, 2].map(idx => `${roadmapDay}_${idx}`);
+  const dayCompletedCount = dayTaskKeys.filter(k => completedTaskKeys.includes(k)).length;
+
+  // Overall 30-day percentage calculation
+  const totalRoadmapPercentage = Math.min(100, Math.max(5, Math.round(((roadmapDay - 1 + dayCompletedCount / 3) / 30) * 100)));
+
+  // Dynamic Task Specifications
+  const currentTasks = [
+    {
+      id: "chapter",
+      title: "Today's High-Weightage Chapter",
+      desc: cat === "neet"
+        ? (roadmapDay % 2 === 0 ? "Genetics & Molecular Biology" : "Human Physiology & Biomolecules")
+        : cat === "jee-mains" || cat === "jee-advanced"
+        ? (roadmapDay % 2 === 0 ? "Integral Calculus & Differential Eq." : "Electrodynamics & Optics")
+        : (roadmapDay % 2 === 0 ? "Trigonometric Identities & Applications" : "Linear Equations & Polynomials"),
+      actionText: "Browse Papers",
+      action: () => setView("papers"),
+    },
+    {
+      id: "pyq",
+      title: "Daily PYQ Challenge",
+      desc: `Solve 2024 Past Paper (Section ${String.fromCharCode(65 + (roadmapDay % 3))})`,
+      actionText: "Solve 2024 PYQ",
+      action: () => {
+        const matchPaper = papers.find(p => (!cat || p.goalCategory === cat) && p.year === 2024) ?? papers[0];
+        if (matchPaper) {
+          setSelectedPaperId(matchPaper.id);
+          setView("paper-detail");
+        } else {
+          setView("papers");
+        }
+      },
+    },
+    {
+      id: "quiz",
+      title: "Smart Speed Quiz",
+      desc: "15 MCQs with live negative marking (+4/-1)",
+      actionText: "Start Speed Quiz",
+      action: () => {
+        const matchQuiz = quizzes.find(q => (!cat || q.goalCategory === cat)) ?? quizzes[0];
+        if (matchQuiz) {
+          setSelectedQuizId(matchQuiz.id);
+          setView("quiz-detail");
+        } else {
+          setView("quizzes");
+        }
+      },
+    },
+  ];
+
   return (
     <div className="max-w-5xl mx-auto space-y-5">
 
@@ -127,13 +221,13 @@ export function Dashboard() {
           <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => setView("quizzes")}
-              className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl text-sm transition-all font-medium min-h-[40px]"
+              className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl text-sm transition-all font-medium min-h-[40px] cursor-pointer"
             >
               <Brain size={15} /> Take a Quiz
             </button>
             <button
               onClick={() => setView("papers")}
-              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm transition-all min-h-[40px]"
+              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm transition-all min-h-[40px] cursor-pointer"
             >
               <BookOpen size={15} /> Browse Papers
             </button>
@@ -143,59 +237,155 @@ export function Dashboard() {
               const msg = `I am on a ${user?.streak ?? 1}-day study streak preparing for ${currentGoal?.shortLabel ?? "HSC Board & NEET"} on ParikshaCrack! Join me: https://parikshacrack.in`;
               window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, "_blank");
             }}
-            className="flex items-center gap-1.5 bg-green-500/80 hover:bg-green-500 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-sm"
+            className="flex items-center gap-1.5 bg-green-500/80 hover:bg-green-500 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-sm cursor-pointer"
           >
             💬 Share Streak on WhatsApp
           </button>
         </div>
       </div>
 
-      {/* ── 30-Day Adaptive Exam Countdown Track ── */}
-      <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
+      {/* ── 30-Day Adaptive Exam Countdown Track (Fully Functional & Interactive) ── */}
+      <div className="rounded-2xl p-4 sm:p-5 transition-all duration-300" style={{ background: "rgba(255,255,255,0.88)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 4px 20px rgba(30,58,138,0.06)" }}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold bg-gradient-to-r from-[#1E3A8A] to-[#2563EB] text-white px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                Day 14 of 30 Roadmap
-              </span>
-              <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
-                46% Completed
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Day Step Switcher */}
+              <div className="inline-flex items-center gap-1 bg-gradient-to-r from-[#1E3A8A] to-[#2563EB] text-white px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider shadow-xs">
+                <button
+                  onClick={() => setRoadmapDay(d => Math.max(1, d - 1))}
+                  className="hover:bg-white/20 rounded p-0.5 transition-colors cursor-pointer"
+                  title="Previous Day"
+                >
+                  <ChevronLeft size={12} />
+                </button>
+                <span>Day {roadmapDay} of 30 Roadmap</span>
+                <button
+                  onClick={() => setRoadmapDay(d => Math.min(30, d + 1))}
+                  className="hover:bg-white/20 rounded p-0.5 transition-colors cursor-pointer"
+                  title="Next Day"
+                >
+                  <ChevronRight size={12} />
+                </button>
+              </div>
+
+              {/* Progress Percentage */}
+              <span className="text-[10px] sm:text-xs text-emerald-700 font-extrabold bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 rounded-full flex items-center gap-1">
+                <CheckCircle size={12} className="text-emerald-600" />
+                {totalRoadmapPercentage}% Completed ({dayCompletedCount}/3 Today)
               </span>
             </div>
-            <h3 className="font-bold text-[#1E3A8A] text-sm font-['Poppins'] mt-1.5">
+
+            <h3 className="font-extrabold text-[#1E3A8A] dark:text-blue-400 text-sm sm:text-base font-heading mt-2 tracking-tight">
               Personalized Revision Track: {currentGoal?.shortLabel ?? "Target Exam"}
             </h3>
           </div>
-          <span className="text-xs text-gray-500 font-medium">
-            🎯 Target Score: <strong className="text-[#1E3A8A]">92%+</strong>
-          </span>
-        </div>
 
-        {/* Progress Bar */}
-        <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden mb-4">
-          <div className="h-full bg-gradient-to-r from-[#1E3A8A] via-[#2563EB] to-emerald-500 rounded-full transition-all duration-700 w-[46%]" />
-        </div>
+          {/* Target Score Pill + Selector Dropdown */}
+          <div className="relative flex-shrink-0">
+            <button
+              onClick={() => setShowScoreMenu(e => !e)}
+              className="text-xs text-gray-700 hover:text-[#1E3A8A] font-semibold bg-slate-50 hover:bg-slate-100 border border-slate-200/80 px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+            >
+              <span>🎯 Target Score: <strong className="text-[#1E3A8A] font-black">{targetScore}</strong></span>
+              <SlidersHorizontal size={12} className="text-slate-400" />
+            </button>
 
-        {/* Daily Tasks Checklists */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {[
-            { title: "Today's High-Weightage Chapter", desc: cat === "neet" ? "Genetics & Molecular Biology" : cat === "jee-mains" ? "Integral Calculus" : "Trigonometric Identities", done: true },
-            { title: "Daily PYQ Challenge", desc: "Solve 2024 Past Paper Section A", done: true },
-            { title: "Smart Speed Quiz", desc: "15 MCQs with live negative marking", done: false },
-          ].map((t, idx) => (
-            <div key={idx} className={`p-3 rounded-xl border transition-all ${t.done ? "bg-emerald-50/70 border-emerald-200" : "bg-gray-50 border-gray-200"}`}>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Task {idx + 1}</span>
-                {t.done ? (
-                  <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5"><CheckCircle size={10} /> Completed</span>
-                ) : (
-                  <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full">Pending</span>
-                )}
+            {showScoreMenu && (
+              <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-slate-200 p-1 z-30 w-36 animate-apple-unveil">
+                <div className="text-[9px] font-bold text-slate-400 px-2 py-1 uppercase tracking-wider">Set Target Score</div>
+                {["85%+", "90%+", "92%+", "95%+", "98%+"].map(score => (
+                  <button
+                    key={score}
+                    onClick={() => { setTargetScore(score); setShowScoreMenu(false); }}
+                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center justify-between ${
+                      targetScore === score ? "bg-blue-50 text-[#1E3A8A]" : "text-slate-700 hover:bg-slate-50"
+                    }`}
+                  >
+                    <span>{score}</span>
+                    {targetScore === score && <Check size={12} className="text-[#1E3A8A]" />}
+                  </button>
+                ))}
               </div>
-              <p className="text-xs font-bold text-gray-800 font-['Poppins']">{t.title}</p>
-              <p className="text-[10px] text-gray-500 mt-0.5 truncate">{t.desc}</p>
-            </div>
-          ))}
+            )}
+          </div>
+        </div>
+
+        {/* Dynamic Animated Progress Bar */}
+        <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden mb-4 p-0.5 border border-slate-200/50">
+          <div
+            className="h-full bg-gradient-to-r from-[#1E3A8A] via-[#2563EB] to-emerald-500 rounded-full transition-all duration-500 ease-out shadow-xs"
+            style={{ width: `${totalRoadmapPercentage}%` }}
+          />
+        </div>
+
+        {/* Interactive Daily Tasks Checklist Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {currentTasks.map((t, idx) => {
+            const taskKey = `${roadmapDay}_${idx}`;
+            const isDone = completedTaskKeys.includes(taskKey);
+
+            return (
+              <div
+                key={t.id}
+                className={`group p-3.5 rounded-2xl border transition-all duration-200 flex flex-col justify-between ${
+                  isDone
+                    ? "bg-emerald-50/80 border-emerald-200/90 shadow-xs"
+                    : "bg-white/90 dark:bg-slate-900/90 border-slate-200/80 hover:border-blue-300 hover:shadow-md"
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 font-mono">
+                      Task {idx + 1}
+                    </span>
+
+                    {/* Interactive Completion Toggle Pill */}
+                    <button
+                      onClick={() => toggleTaskKey(taskKey)}
+                      className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full flex items-center gap-1 transition-all cursor-pointer ${
+                        isDone
+                          ? "bg-emerald-600 text-white shadow-xs"
+                          : "bg-amber-50 text-amber-700 border border-amber-200/80 hover:bg-amber-100"
+                      }`}
+                      title={isDone ? "Mark as Pending" : "Mark as Completed"}
+                    >
+                      {isDone ? <CheckCircle size={11} /> : <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />}
+                      {isDone ? "Completed" : "Pending"}
+                    </button>
+                  </div>
+
+                  <h4 className="text-xs font-extrabold text-slate-900 dark:text-white font-heading group-hover:text-[#1E3A8A] transition-colors leading-snug">
+                    {t.title}
+                  </h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-normal line-clamp-2">
+                    {t.desc}
+                  </p>
+                </div>
+
+                {/* Real Task Action Launch Buttons */}
+                <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                  <button
+                    onClick={t.action}
+                    className={`text-[11px] font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95 ${
+                      isDone
+                        ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                        : "bg-[#1E3A8A] text-white hover:bg-[#1D4ED8]"
+                    }`}
+                  >
+                    <Play size={10} className="fill-current" />
+                    <span>{t.actionText}</span>
+                  </button>
+
+                  <button
+                    onClick={() => toggleTaskKey(taskKey)}
+                    className="text-[10px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                  >
+                    {isDone ? "Undo" : "Complete"}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
