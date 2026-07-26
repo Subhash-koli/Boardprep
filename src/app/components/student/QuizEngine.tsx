@@ -48,77 +48,77 @@ export function QuizDetail() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <button onClick={() => setView("quizzes")} className="flex items-center gap-2 text-gray-500 hover:text-[#1E3A8A] mb-4 text-sm min-h-[44px]">
+    <div className="max-w-2xl mx-auto px-1 sm:px-0">
+      <button onClick={() => setView("quizzes")} className="flex items-center gap-2 text-slate-500 hover:text-[#1E3A8A] mb-3 sm:mb-4 text-xs sm:text-sm font-medium min-h-[44px] cursor-pointer">
         <ArrowLeft size={16} /> Back to Quizzes
       </button>
 
-      <div className="rounded-2xl p-6 mb-5" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
+      <div className="rounded-2xl p-4 sm:p-6 mb-5" style={{ background: "rgba(255,255,255,0.88)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 4px 20px rgba(30,58,138,0.06)" }}>
         {/* Badges */}
-        <div className="flex flex-wrap gap-2 mb-3">
-          <span className={`text-xs px-2.5 py-1 rounded-full capitalize font-medium ${diffColors[quiz.difficulty] ?? diffColors.medium}`}>
+        <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3 text-[10px] sm:text-xs font-medium">
+          <span className={`px-2.5 py-0.5 sm:py-1 rounded-full capitalize font-semibold ${diffColors[quiz.difficulty] ?? diffColors.medium}`}>
             {quiz.difficulty}
           </span>
-          <span className="text-xs bg-blue-50 text-[#1E3A8A] px-2.5 py-1 rounded-full">{quiz.subject}</span>
+          <span className="bg-blue-50 text-[#1E3A8A] px-2.5 py-0.5 sm:py-1 rounded-full font-semibold">{quiz.subject}</span>
           {ms.hasNegativeMarking && (
-            <span className="text-xs bg-red-50 text-red-600 px-2.5 py-1 rounded-full flex items-center gap-1 font-medium">
-              <Zap size={10} /> Negative Marking
+            <span className="bg-red-50 text-red-600 px-2.5 py-0.5 sm:py-1 rounded-full flex items-center gap-1 font-semibold border border-red-200/60">
+              <Zap size={11} /> Negative Marking
             </span>
           )}
         </div>
 
-        <h1 className="text-xl font-bold text-[#1E3A8A] font-['Poppins'] mb-1">{quiz.title}</h1>
-        <p className="text-gray-500 text-sm mb-5">{quiz.chapter}</p>
+        <h1 className="text-base sm:text-xl font-heading font-extrabold text-[#1E3A8A] mb-1 leading-snug tracking-tight">{quiz.title}</h1>
+        <p className="text-slate-500 font-display text-xs sm:text-sm mb-4 sm:mb-5 font-medium">{quiz.chapter}</p>
 
         {/* Stats grid */}
-        <div className="grid grid-cols-3 gap-3 mb-5">
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-3 mb-5">
           {[
             { icon: Brain,  label: "Questions", value: quiz.questionsCount },
             { icon: Clock,  label: "Time Limit", value: `${quiz.timeLimitMinutes} min` },
             { icon: Target, label: "Max Marks",  value: quiz.totalMarks },
           ].map(s => (
-            <div key={s.label} className="text-center bg-gray-50 rounded-xl p-3">
-              <s.icon size={17} className="mx-auto text-[#1E3A8A] mb-1.5" />
-              <div className="font-bold text-sm text-[#1E3A8A] font-['Poppins']">{s.value}</div>
-              <div className="text-[10px] text-gray-400 mt-0.5">{s.label}</div>
+            <div key={s.label} className="text-center bg-slate-50/80 border border-slate-100 rounded-xl p-2 sm:p-3 min-w-0">
+              <s.icon size={16} className="mx-auto text-[#1E3A8A] mb-1 sm:mb-1.5" />
+              <div className="font-extrabold text-xs sm:text-sm text-[#1E3A8A] font-heading truncate">{s.value}</div>
+              <div className="text-[10px] sm:text-xs text-slate-400 mt-0.5 truncate">{s.label}</div>
             </div>
           ))}
         </div>
 
         {/* Marking scheme card */}
-        <div className={`rounded-xl p-4 mb-5 border ${ms.hasNegativeMarking ? "bg-red-50 border-red-200" : "bg-green-50 border-green-200"}`}>
-          <p className={`text-xs font-bold mb-2 font-['Poppins'] ${ms.hasNegativeMarking ? "text-red-800" : "text-green-800"}`}>
+        <div className={`rounded-xl p-3.5 sm:p-4 mb-5 border ${ms.hasNegativeMarking ? "bg-red-50/80 border-red-200" : "bg-emerald-50/80 border-emerald-200"}`}>
+          <p className={`text-xs font-extrabold mb-2 font-heading ${ms.hasNegativeMarking ? "text-red-800" : "text-emerald-800"}`}>
             {ms.label} — Marking Scheme
           </p>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-2.5 sm:gap-4 items-center">
             <div className="flex items-center gap-1.5">
-              <CheckCircle size={13} className="text-green-600" />
-              <span className="text-xs text-green-700 font-semibold">+{ms.correctMarks} correct</span>
+              <CheckCircle size={13} className="text-emerald-600" />
+              <span className="text-[11px] sm:text-xs text-emerald-700 font-bold">+{ms.correctMarks} correct</span>
             </div>
             <div className="flex items-center gap-1.5">
               <XCircle size={13} className="text-red-500" />
-              <span className="text-xs text-red-600 font-semibold">{ms.wrongMarks} wrong</span>
+              <span className="text-[11px] sm:text-xs text-red-600 font-bold">{ms.wrongMarks} wrong</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-xs text-gray-500">0 skipped</span>
+              <span className="text-[11px] sm:text-xs text-slate-500 font-medium">0 skipped</span>
             </div>
           </div>
           {ms.hasNegativeMarking && (
-            <p className="text-[10px] text-red-600 mt-2 flex items-center gap-1">
-              <AlertTriangle size={10} /> Skip if unsure — wrong answer deducts {Math.abs(ms.wrongMarks)} mark{Math.abs(ms.wrongMarks) > 1 ? "s" : ""}
+            <p className="text-[10px] text-red-600 mt-2 flex items-center gap-1 font-medium">
+              <AlertTriangle size={10} className="flex-shrink-0" /> Skip if unsure — wrong answer deducts {Math.abs(ms.wrongMarks)} mark{Math.abs(ms.wrongMarks) > 1 ? "s" : ""}
             </p>
           )}
         </div>
 
         {/* Instructions */}
-        <div className="bg-blue-50 rounded-xl p-4 mb-5">
-          <p className="text-xs font-semibold text-[#1E3A8A] mb-1">Instructions</p>
-          <p className="text-xs text-blue-700 leading-relaxed">{quiz.instructions}</p>
+        <div className="bg-blue-50/80 border border-blue-100 rounded-xl p-3.5 sm:p-4 mb-5">
+          <p className="text-xs font-bold text-[#1E3A8A] mb-1 font-heading">Instructions</p>
+          <p className="text-xs text-blue-800 leading-relaxed font-display">{quiz.instructions}</p>
         </div>
 
-        {/* Mode Selection */}
-        <h3 className="font-semibold text-[#1E3A8A] font-['Poppins'] mb-3">Select Quiz Mode</h3>
-        <div className="grid grid-cols-2 gap-3 mb-5">
+        {/* Mode Selection Grid */}
+        <h3 className="font-bold text-[#1E3A8A] font-heading text-xs sm:text-sm mb-3">Select Quiz Mode</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 mb-5">
           {([
             {
               mode: "practice" as const, icon: BookOpen,
@@ -136,16 +136,18 @@ export function QuizDetail() {
             <button
               key={m.mode}
               onClick={() => setSelectedMode(m.mode)}
-              className={`border-2 rounded-xl p-4 text-left transition-all min-h-[120px] ${selectedMode === m.mode ? "border-[#1E3A8A] bg-blue-50" : "border-gray-200 hover:border-gray-300"}`}
+              className={`border-2 rounded-xl p-3.5 sm:p-4 text-left transition-all cursor-pointer min-h-0 sm:min-h-[120px] ${
+                selectedMode === m.mode ? "border-[#1E3A8A] bg-blue-50/70 shadow-xs" : "border-slate-200/80 hover:border-slate-300 bg-white/70"
+              }`}
             >
-              <m.icon size={20} className={`mb-2 ${selectedMode === m.mode ? "text-[#1E3A8A]" : "text-gray-400"}`} />
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <span className={`text-sm font-semibold font-['Poppins'] ${selectedMode === m.mode ? "text-[#1E3A8A]" : "text-gray-800"}`}>
+              <m.icon size={20} className={`mb-2 ${selectedMode === m.mode ? "text-[#1E3A8A]" : "text-slate-400"}`} />
+              <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                <span className={`text-xs sm:text-sm font-bold font-heading ${selectedMode === m.mode ? "text-[#1E3A8A]" : "text-slate-800"}`}>
                   {m.title}
                 </span>
-                {m.badge && <span className="text-[10px] bg-[#F97316] text-white px-1.5 py-0.5 rounded-full">{m.badge}</span>}
+                {m.badge && <span className="text-[9px] sm:text-[10px] bg-[#F97316] text-white px-1.5 py-0.5 rounded-full font-bold">{m.badge}</span>}
               </div>
-              <p className="text-[11px] text-gray-500 leading-relaxed">{m.desc}</p>
+              <p className="text-[11px] text-slate-500 leading-normal font-display">{m.desc}</p>
             </button>
           ))}
         </div>
@@ -153,7 +155,7 @@ export function QuizDetail() {
         <button
           onClick={startQuiz}
           disabled={!selectedMode}
-          className="w-full bg-[#1E3A8A] hover:bg-[#1D4ED8] disabled:bg-gray-200 disabled:text-gray-400 text-white py-3.5 rounded-xl transition-colors font-semibold font-['Poppins'] flex items-center justify-center gap-2 min-h-[52px]"
+          className="w-full bg-[#1E3A8A] hover:bg-[#1D4ED8] disabled:bg-slate-200 disabled:text-slate-400 text-white py-3 sm:py-3.5 rounded-xl transition-all font-bold font-heading flex items-center justify-center gap-2 text-xs sm:text-sm min-h-[48px] sm:min-h-[52px] cursor-pointer shadow-xs active:scale-95"
         >
           {selectedMode ? `Start ${selectedMode === "practice" ? "Practice" : "Exam"} Mode` : "Select a mode to begin"}
           <ChevronRight size={16} />
