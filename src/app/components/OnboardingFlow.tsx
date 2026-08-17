@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useApp } from "./context/AppContext";
 import type { User } from "./context/AppContext";
+import { updateMe } from "../lib/api";
 import type { GoalCategory, Standard, Stream, Medium, Goal } from "./data/mockData";
 import { GOAL_METADATA, subjects } from "./data/mockData";
 import {
@@ -218,6 +219,11 @@ export default function OnboardingFlow() {
     } as User;
 
     setUser(updatedUser);
+    void updateMe({
+      goals: updatedUser.goals,
+      currentGoalId: updatedUser.currentGoalId,
+      medium: updatedUser.medium,
+    }).catch((err) => console.warn("Could not save onboarding to server", err));
     if (selectedPaperId) {
       setView("paper-detail");
     } else if (selectedQuizId) {

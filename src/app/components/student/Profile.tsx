@@ -4,6 +4,7 @@ import {
   FileText, CheckCircle, Plus, Trash2, ChevronRight, Target, Calendar
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
+import { updateMe } from "../../lib/api";
 import type { Medium } from "../data/mockData";
 import { GOAL_METADATA } from "../data/mockData";
 import { GoalIcon } from "../shared/GoalIcons";
@@ -28,7 +29,10 @@ export function Profile() {
   const totalNegMarks = goalAttempts.reduce((s, a) => s + a.negativeMarks, 0);
 
   const handleSave = () => {
-    if (user) setUser({ ...user, name, phone });
+    if (!user) return;
+    const next = { ...user, name, phone };
+    setUser(next);
+    void updateMe({ name, phone }).catch((err) => console.warn("Could not save profile", err));
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };

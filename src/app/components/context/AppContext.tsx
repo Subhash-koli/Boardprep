@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import type { Medium, QuizAttempt, Goal, GoalCategory, PaperType } from "../data/mockData";
 import { GOAL_METADATA } from "../data/mockData";
+import { fetchMe, getToken, setToken, ApiError, fetchStudentPapers, fetchStudentQuizzes, fetchStudentSubjects, fetchStudentAnnouncements, type StudentPaper, type StudentQuiz, type StudentQuizQuestion, type StudentSubject, type AppAnnouncement } from "../../lib/api";
 
 // ── Global Search Filter (shared between StudentLayout modal → PapersList) ────
 
@@ -98,6 +99,14 @@ interface AppContextType {
   toggleDarkMode: () => void;
   globalSearchFilter: GlobalSearchFilter;
   setGlobalSearchFilter: (f: GlobalSearchFilter) => void;
+  studentSubjects: StudentSubject[];
+  studentPapers: StudentPaper[];
+  studentQuizzes: StudentQuiz[];
+  studentAnnouncements: AppAnnouncement[];
+  studentContentLoading: boolean;
+  refreshStudentContent: () => Promise<void>;
+  activeQuizSession: { quiz: StudentQuiz; questions: StudentQuizQuestion[] } | null;
+  setActiveQuizSession: (session: { quiz: StudentQuiz; questions: StudentQuizQuestion[] } | null) => void;
 }
 
 
@@ -181,6 +190,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginModalTab, setLoginModalTab] = useState<"student" | "admin">("student");
   const [globalSearchFilter, setGlobalSearchFilter] = useState<GlobalSearchFilter>(EMPTY_GLOBAL_FILTER);
+  const [studentSubjects, setStudentSubjects] = useState<StudentSubject[]>([]);
+  const [studentPapers, setStudentPapers] = useState<StudentPaper[]>([]);
+  const [studentQuizzes, setStudentQuizzes] = useState<StudentQuiz[]>([]);
+  const [studentAnnouncements, setStudentAnnouncements] = useState<AppAnnouncement[]>([]);
+  const [studentContentLoading, setStudentContentLoading] = useState(false);
+  const [activeQuizSession, setActiveQuizSession] = useState<{ quiz: StudentQuiz; questions: StudentQuizQuestion[] } | null>(null);
 
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
@@ -227,25 +242,101 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // ── LocalStorage Persistence ─────────────────────────────────────────────
 
+  const [storageReady, setStorageReady] = useState(false);
+
   React.useEffect(() => {
+    let cancelled = false;
     try {
-      const savedUser = localStorage.getItem("parikshacrack_user");
       const savedBookmarks = localStorage.getItem("parikshacrack_bookmarks");
-      if (savedUser) setUser(JSON.parse(savedUser));
       if (savedBookmarks) setBookmarks(JSON.parse(savedBookmarks));
     } catch (err) {
       console.warn("Could not parse saved storage context", err);
     }
+
+    const token = getToken();
+    if (!token) {
+      try { localStorage.removeItem("parikshacrack_user"); } catch { /* ignore */ }
+      setUser(null);
+      setStorageReady(true);
+      return;
+    }
+
+    try {
+      const savedUser = localStorage.getItem("parikshacrack_user");
+      if (savedUser) setUser(JSON.parse(savedUser));
+    } catch (err) {
+      console.warn("Could not parse saved user", err);
+    }
+
+    fetchMe()
+      .then(({ user: next }) => {
+        if (!cancelled) setUser(next as User);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        const status = err instanceof ApiError ? err.status : 0;
+        // Only clear the session for real auth failures, not API restarts / offline.
+        if (status === 401 || status === 403) {
+          setToken(null);
+          setUser(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setStorageReady(true);
+      });
+
+    return () => { cancelled = true; };
   }, []);
 
   React.useEffect(() => {
+    if (!storageReady) return;
     try {
       if (user) localStorage.setItem("parikshacrack_user", JSON.stringify(user));
+      else {
+        localStorage.removeItem("parikshacrack_user");
+        setToken(null);
+      }
       localStorage.setItem("parikshacrack_bookmarks", JSON.stringify(bookmarks));
     } catch (err) {
       console.warn("Could not save context to storage", err);
     }
-  }, [user, bookmarks]);
+  }, [user, bookmarks, storageReady]);
+
+  const refreshStudentContent = React.useCallback(async () => {
+    if (!user || user.isAdmin) {
+      setStudentSubjects([]);
+      setStudentPapers([]);
+      setStudentQuizzes([]);
+      setStudentAnnouncements([]);
+      return;
+    }
+    setStudentContentLoading(true);
+    try {
+      const [subjectsRes, papersRes, quizzesRes, announcementsRes] = await Promise.all([
+        fetchStudentSubjects(),
+        fetchStudentPapers(),
+        fetchStudentQuizzes(),
+        fetchStudentAnnouncements(),
+      ]);
+      setStudentSubjects(subjectsRes.subjects);
+      setStudentPapers(papersRes.papers);
+      setStudentQuizzes(quizzesRes.quizzes);
+      setStudentAnnouncements(announcementsRes.announcements);
+    } catch (err) {
+      console.warn("Could not load student content", err);
+      setStudentSubjects([]);
+      setStudentPapers([]);
+      setStudentQuizzes([]);
+      setStudentAnnouncements([]);
+    } finally {
+      setStudentContentLoading(false);
+    }
+  }, [user]);
+
+  React.useEffect(() => {
+    if (!storageReady || !user || user.isAdmin) return;
+    void refreshStudentContent();
+  }, [storageReady, user, refreshStudentContent]);
 
   // ── Derived current goal ─────────────────────────────────────────────────
 
@@ -315,6 +406,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       loginModalTab, setLoginModalTab,
       darkMode, toggleDarkMode,
       globalSearchFilter, setGlobalSearchFilter,
+      studentSubjects, studentPapers, studentQuizzes, studentAnnouncements, studentContentLoading, refreshStudentContent,
+      activeQuizSession, setActiveQuizSession,
     }}>
       {children}
     </AppContext.Provider>

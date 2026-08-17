@@ -1,22 +1,22 @@
 import { useState } from "react";
 import { Bookmark, BookOpen, Brain, Trash2, Eye, ChevronRight, FileText } from "lucide-react";
 import { useApp } from "../context/AppContext";
-import { papers, quizzes, PAPER_TYPE_CONFIG, DIFFICULTY_CONFIG } from "../data/mockData";
+import { PAPER_TYPE_CONFIG, DIFFICULTY_CONFIG } from "../data/mockData";
 
 type Tab = "all" | "papers" | "quizzes";
 
 export function Bookmarks() {
-  const { bookmarks, toggleBookmark, setView, setSelectedPaperId, setSelectedQuizId } = useApp();
+  const { bookmarks, toggleBookmark, setView, setSelectedPaperId, setSelectedQuizId, studentPapers, studentQuizzes } = useApp();
   const [tab, setTab] = useState<Tab>("all");
 
   const bookmarkedPapers = bookmarks
     .filter(b => b.type === "paper")
-    .map(b => ({ bookmark: b, paper: papers.find(p => p.id === b.refId) }))
+    .map(b => ({ bookmark: b, paper: studentPapers.find(p => p.id === b.refId) }))
     .filter((b): b is { bookmark: typeof b.bookmark; paper: NonNullable<typeof b.paper> } => !!b.paper);
 
   const bookmarkedQuizzes = bookmarks
     .filter(b => b.type === "quiz")
-    .map(b => ({ bookmark: b, quiz: quizzes.find(q => q.id === b.refId) }))
+    .map(b => ({ bookmark: b, quiz: studentQuizzes.find(q => q.id === b.refId) }))
     .filter((b): b is { bookmark: typeof b.bookmark; quiz: NonNullable<typeof b.quiz> } => !!b.quiz);
 
   const totalCount = bookmarks.length;

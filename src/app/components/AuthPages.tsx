@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, CheckCircle, X, Shield } from "lucide-react";
 import { useApp } from "./context/AppContext";
-import { seedGoal1, seedGoal2 } from "./context/AppContext";
+import type { User as AppUser } from "./context/AppContext";
+import { loginAccount, registerAccount, setToken } from "../lib/api";
 
 const LogoImage = new URL("../../imports/logo.png", import.meta.url).href;
 
@@ -70,24 +71,22 @@ function UnifiedLoginForm({ onSuccessStudent, onSuccessAdmin, onRegister }: { on
   const [fLoading, setFLoading] = useState(false);
   const [fSent, setFSent]       = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     if (!email || !password) { setError("Please fill in all fields."); return; }
     setLoading(true);
-
-    setTimeout(() => {
+    try {
+      const data = await loginAccount({ email, password });
+      setToken(data.token);
+      setUser(data.user as AppUser);
+      if (data.user.isAdmin) onSuccessAdmin();
+      else onSuccessStudent();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not log in.");
+    } finally {
       setLoading(false);
-      const lowerEmail = email.toLowerCase().trim();
-
-      if (lowerEmail.includes("admin")) {
-        setUser({ id: "admin_1", name: "System Admin", email: lowerEmail, goals: [], currentGoalId: "", medium: "english", streak: 0, isAdmin: true });
-        onSuccessAdmin();
-      } else {
-        setUser({ id: "u_demo", name: "Priya Sharma", email: lowerEmail, goals: [seedGoal1, seedGoal2], currentGoalId: "", medium: "semi-english", streak: 15, isAdmin: false });
-        onSuccessStudent();
-      }
-    }, 800);
+    }
   };
 
   const handleForgot = (e: React.FormEvent) => {
@@ -132,7 +131,19 @@ function UnifiedLoginForm({ onSuccessStudent, onSuccessAdmin, onRegister }: { on
         rightIcon={showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
         onRightIconClick={() => setShowPwd(!showPwd)}
       />
-      {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
+      {error && (
+        <div className={`mb-3 rounded-xl px-3 py-2.5 text-sm ${
+          error.toLowerCase().includes("blocked")
+            ? "bg-red-50 border border-red-200 text-red-700"
+            : "text-red-500"
+        }`}>
+          {error.toLowerCase().includes("blocked") ? (
+            <p>
+              <span className="font-semibold">Account blocked.</span> Please contact the admin to unblock your account.
+            </p>
+          ) : error}
+        </div>
+      )}
       <div className="flex justify-end mb-4">
         <button type="button" onClick={() => setSubView("forgot")} className="text-[#1E3A8A] text-sm hover:underline font-medium">Forgot password?</button>
       </div>
@@ -143,8 +154,8 @@ function UnifiedLoginForm({ onSuccessStudent, onSuccessAdmin, onRegister }: { on
         </p>
         <p className="text-gray-500">System automatically routes you to Student or Admin panel based on your account credentials.</p>
         <div className="pt-1 flex flex-col sm:flex-row gap-2 font-mono text-[10px] text-gray-500 border-t border-blue-100/80">
-          <span>🎓 Student: <strong>student@email.com</strong></span>
-          <span>🛡️ Admin: <strong>admin@pariksha.in</strong></span>
+          <span>🎓 Student: register a new account</span>
+          <span>🛡️ Admin: <strong>admin@pariksha.in</strong> / admin123</span>
         </div>
       </div>
       <p className="text-center text-sm text-gray-500 mt-5">
@@ -251,7 +262,7 @@ export function AdminLoginShim() {
 
 // ── Register Page ─────────────────────────────────────────────────────────────
 export function RegisterPage() {
-  const { setView, setAuthEmail, setShowLoginModal, setLoginModalTab } = useApp();
+  const { setView, setUser, setShowLoginModal, setLoginModalTab, selectedPaperId, selectedQuizId } = useApp();
   const [name, setName]         = useState("");
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
@@ -259,12 +270,30 @@ export function RegisterPage() {
   const [error, setError]       = useState("");
   const [loading, setLoading]   = useState(false);
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     if (!name || !email || !password) { setError("Please fill in all fields."); return; }
     if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
     setLoading(true);
-    setTimeout(() => { setLoading(false); setAuthEmail(email); setView("verify-otp"); }, 800);
+    try {
+      const data = await registerAccount({ name, email, password });
+      setToken(data.token);
+      setUser(data.user as AppUser);
+      if (data.user.isAdmin) {
+        setView("admin-dashboard");
+      } else if (selectedPaperId) {
+        setView("paper-detail");
+      } else if (selectedQuizId) {
+        setView("quiz-detail");
+      } else {
+        setView("onboarding");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not create account.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const openLoginModal = () => {

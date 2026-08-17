@@ -5,18 +5,32 @@ import {
   Pause, Play, Plus, Grid, Bookmark, BookmarkCheck
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
-import { quizzes } from "../data/mockData";
 import type { QuizAttempt } from "../data/mockData";
+import { startQuiz, type StudentQuiz, type StudentQuizQuestion } from "../../lib/api";
+
+type SessionQuiz = StudentQuiz & { questions: StudentQuizQuestion[] };
+
+function sessionQuizFromContext(
+  activeQuizSession: { quiz: StudentQuiz; questions: StudentQuizQuestion[] } | null,
+): SessionQuiz | null {
+  if (!activeQuizSession) return null;
+  return { ...activeQuizSession.quiz, questions: activeQuizSession.questions };
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Quiz Detail Page
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function QuizDetail() {
-  const { selectedQuizId, setView, setCurrentAttempt } = useApp();
+  const { selectedQuizId, setView, setCurrentAttempt, setActiveQuizSession, studentQuizzes, studentContentLoading } = useApp();
   const [selectedMode, setSelectedMode] = useState<"practice" | "exam" | null>(null);
+  const [starting, setStarting] = useState(false);
+  const [startError, setStartError] = useState("");
 
-  const quiz = quizzes.find(q => q.id === selectedQuizId);
+  const quiz = studentQuizzes.find(q => q.id === selectedQuizId);
+  if (studentContentLoading && !quiz) {
+    return <div className="text-center py-20 text-gray-400"><p>Loading quiz...</p></div>;
+  }
   if (!quiz) return (
     <div className="text-center py-20">
       <Brain size={36} className="mx-auto mb-3 text-gray-200" />
@@ -27,17 +41,30 @@ export function QuizDetail() {
 
   const ms = quiz.markingScheme;
 
-  const startQuiz = () => {
-    if (!selectedMode) return;
-    setCurrentAttempt({
-      quizId: quiz.id,
-      mode: selectedMode,
-      answers: {},
-      flagged: [],
-      currentQuestionIndex: 0,
-      startedAt: new Date().toISOString(),
-    });
-    setView("quiz-attempt");
+  const startQuizAttempt = async () => {
+    if (!selectedMode || !quiz) return;
+    setStartError("");
+    setStarting(true);
+    try {
+      const { quiz: sessionQuiz, questions } = await startQuiz(quiz.id);
+      setActiveQuizSession({
+        quiz: { ...sessionQuiz, markingScheme: quiz.markingScheme },
+        questions,
+      });
+      setCurrentAttempt({
+        quizId: quiz.id,
+        mode: selectedMode,
+        answers: {},
+        flagged: [],
+        currentQuestionIndex: 0,
+        startedAt: new Date().toISOString(),
+      });
+      setView("quiz-attempt");
+    } catch (err) {
+      setStartError(err instanceof Error ? err.message : "Could not start quiz.");
+    } finally {
+      setStarting(false);
+    }
   };
 
   const diffColors: Record<string, string> = {
@@ -152,12 +179,14 @@ export function QuizDetail() {
           ))}
         </div>
 
+        {startError && <p className="text-red-500 text-sm mb-3">{startError}</p>}
+
         <button
-          onClick={startQuiz}
-          disabled={!selectedMode}
+          onClick={() => void startQuizAttempt()}
+          disabled={!selectedMode || starting}
           className="w-full bg-[#1E3A8A] hover:bg-[#1D4ED8] disabled:bg-slate-200 disabled:text-slate-400 text-white py-3 sm:py-3.5 rounded-xl transition-all font-bold font-heading flex items-center justify-center gap-2 text-xs sm:text-sm min-h-[48px] sm:min-h-[52px] cursor-pointer shadow-xs active:scale-95"
         >
-          {selectedMode ? `Start ${selectedMode === "practice" ? "Practice" : "Exam"} Mode` : "Select a mode to begin"}
+          {starting ? "Starting..." : selectedMode ? `Start ${selectedMode === "practice" ? "Practice" : "Exam"} Mode` : "Select a mode to begin"}
           <ChevronRight size={16} />
         </button>
       </div>
@@ -170,8 +199,8 @@ export function QuizDetail() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function QuizAttempt() {
-  const { currentAttempt, setCurrentAttempt, setView, addAttempt } = useApp();
-  const quiz = quizzes.find(q => q.id === currentAttempt?.quizId);
+  const { currentAttempt, setCurrentAttempt, setView, addAttempt, activeQuizSession } = useApp();
+  const quiz = sessionQuizFromContext(activeQuizSession);
   const [qIndex, setQIndex] = useState(currentAttempt?.currentQuestionIndex ?? 0);
   const [answers, setAnswers] = useState<Record<string, "A" | "B" | "C" | "D" | null>>(currentAttempt?.answers ?? {});
   const [flagged, setFlagged] = useState<string[]>(currentAttempt?.flagged ?? []);
@@ -654,13 +683,13 @@ export function QuizAttempt() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function QuizResult() {
-  const { completedAttempts, lastAttemptId, setView, setSelectedQuizId, setCurrentAttempt } = useApp();
+  const { completedAttempts, lastAttemptId, setView, setSelectedQuizId, setCurrentAttempt, studentQuizzes } = useApp();
 
   // Use lastAttemptId to find the correct attempt
   const attempt = lastAttemptId
     ? completedAttempts.find(a => a.id === lastAttemptId) ?? completedAttempts[0]
     : completedAttempts[0];
-  const quiz = quizzes.find(q => q.id === attempt?.quizId);
+  const quiz = studentQuizzes.find(q => q.id === attempt?.quizId);
 
   if (!attempt || !quiz) return (
     <div className="text-center py-20">
@@ -820,12 +849,15 @@ export function QuizResult() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function QuizReview() {
-  const { completedAttempts, lastAttemptId, setView } = useApp();
+  const { completedAttempts, lastAttemptId, setView, activeQuizSession, studentQuizzes } = useApp();
 
   const attempt = lastAttemptId
     ? completedAttempts.find(a => a.id === lastAttemptId) ?? completedAttempts[0]
     : completedAttempts[0];
-  const quiz = quizzes.find(q => q.id === attempt?.quizId);
+  const sessionQuiz = sessionQuizFromContext(activeQuizSession);
+  const quiz = sessionQuiz?.id === attempt?.quizId
+    ? sessionQuiz
+    : null;
 
   if (!attempt || !quiz) return (
     <div className="text-center py-20">

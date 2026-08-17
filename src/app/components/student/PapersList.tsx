@@ -6,7 +6,8 @@ import {
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { EMPTY_GLOBAL_FILTER } from "../context/AppContext";
-import { papers, PAPER_TYPE_CONFIG } from "../data/mockData";
+import { PAPER_TYPE_CONFIG } from "../data/mockData";
+import type { StudentPaper } from "../../lib/api";
 import { MAIN_FOLDERS } from "./FolderExplorer";
 import type { FolderNode, FolderIconType } from "./FolderExplorer";
 
@@ -46,7 +47,7 @@ function PaperRow({
   onView,
   onBookmark,
 }: {
-  paper: (typeof papers)[number];
+  paper: StudentPaper;
   bookmarked: boolean;
   onView: () => void;
   onBookmark: () => void;
@@ -230,7 +231,7 @@ function RootCategoryCard({
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export function PapersList() {
-  const { setView, setSelectedPaperId, toggleBookmark, isBookmarked, globalSearchFilter, setGlobalSearchFilter } = useApp();
+  const { setView, setSelectedPaperId, toggleBookmark, isBookmarked, globalSearchFilter, setGlobalSearchFilter, studentPapers, studentContentLoading } = useApp();
   const [pathStack, setPathStack] = useState<FolderNode[]>([]);
   const [viewMode, setViewMode] = useState<"folders" | "flat">("folders");
   const [sort] = useState<SortKey>("popular");
@@ -277,8 +278,7 @@ export function PapersList() {
   const activeSearch = hasGlobalFilter ? globalSearchFilter.search : "";
 
   // Filter matching papers
-  let filtered = papers.filter(p => {
-    if (p.status !== "published") return false;
+  let filtered = studentPapers.filter(p => {
     if (activeGoal && p.goalCategory !== activeGoal) return false;
     if (activeStream && p.stream && p.stream !== activeStream) return false;
     if (activeSubject && p.subject !== activeSubject) return false;
@@ -309,8 +309,7 @@ export function PapersList() {
     const targetYear = fNode.year ?? activeYear;
     const targetPaperType = fNode.paperType ?? activePaperType;
 
-    return papers.filter(p => {
-      if (p.status !== "published") return false;
+    return studentPapers.filter(p => {
       if (targetGoal && p.goalCategory !== targetGoal) return false;
       if (targetStream && p.stream && p.stream !== targetStream) return false;
       if (targetSubject && p.subject !== targetSubject) return false;

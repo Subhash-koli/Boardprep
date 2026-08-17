@@ -1,9 +1,9 @@
 import { Flame, BookOpen, Brain, Star, TrendingUp, ChevronRight, ChevronLeft, Bell, Zap, Target, Calendar, Trophy, CheckCircle, Check, Play, ExternalLink, SlidersHorizontal } from "lucide-react";
 import { GoalIcon } from "../shared/GoalIcons";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { useApp } from "../context/AppContext";
-import { announcements, quizzes, papers, scoreTrendData } from "../data/mockData";
+import { scoreTrendData } from "../data/mockData";
 import { DIFFICULTY_CONFIG } from "../data/mockData";
+import { useApp } from "../context/AppContext";
 import { useState, useEffect } from "react";
 
 // ── Stat Card ─────────────────────────────────────────────────────────────────
@@ -44,25 +44,24 @@ function CountdownBanner({ days, label, color, category }: { days: number; label
 
 // ── Main Dashboard ────────────────────────────────────────────────────────────
 export function Dashboard() {
-  const { user, currentGoal, setView, setSelectedQuizId, setSelectedPaperId, completedAttempts } = useApp();
+  const { user, currentGoal, setView, setSelectedQuizId, setSelectedPaperId, completedAttempts, studentPapers, studentQuizzes, studentAnnouncements, studentContentLoading } = useApp();
 
   // Goal-aware filtering
   const cat = currentGoal?.category;
 
-  const activeAnnouncements = announcements.filter(a => {
-    if (!a.isActive) return false;
+  const activeAnnouncements = studentAnnouncements.filter(a => {
     if (a.targetGoals.includes("all")) return true;
     if (!cat) return true;
     if (cat && a.targetGoals.includes(cat)) return true;
     return false;
   });
 
-  const recentQuizzes = quizzes
-    .filter(q => (!cat || q.goalCategory === cat) && q.status === "published")
+  const recentQuizzes = studentQuizzes
+    .filter(q => (!cat || q.goalCategory === cat))
     .slice(0, 3);
 
-  const recentPapers = papers
-    .filter(p => (!cat || p.goalCategory === cat) && p.status === "published")
+  const recentPapers = studentPapers
+    .filter(p => (!cat || p.goalCategory === cat))
     .slice(0, 3);
 
   // Stats derived from attempts for current goal

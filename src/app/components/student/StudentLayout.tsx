@@ -7,8 +7,8 @@ import {
 import { useApp } from "../context/AppContext";
 
 import type { View } from "../context/AppContext";
-import { announcements, subjects, papers, PAPER_TYPE_CONFIG } from "../data/mockData";
 import type { PaperType } from "../data/mockData";
+import { PAPER_TYPE_CONFIG } from "../data/mockData";
 import { HierarchicalFilter, EMPTY_FILTER, resolveGoalCategory, filterBreadcrumb } from "./HierarchicalFilter";
 import type { HierarchicalFilterState } from "./HierarchicalFilter";
 
@@ -42,6 +42,7 @@ const navItems: { icon: any; label: string; view: View | "explore" }[] = [
 // ── Notification Bell ─────────────────────────────────────────────────────────
 
 function NotifBell() {
+  const { studentAnnouncements } = useApp();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -54,7 +55,7 @@ function NotifBell() {
   }, []);
 
   // Show all active announcements — no goal filtering
-  const activeAnnouncements = announcements.filter(a => a.isActive);
+  const activeAnnouncements = studentAnnouncements;
 
   const urgentCount = activeAnnouncements.filter(a => a.priority === "urgent").length;
   const badgeCount  = activeAnnouncements.length;
@@ -111,7 +112,7 @@ function NotifBell() {
 // ── Main StudentLayout ────────────────────────────────────────────────────────
 
 export function StudentLayout({ children }: { children: ReactNode }) {
-  const { view, setView, user, setUser, darkMode, toggleDarkMode, setSelectedPaperId, setGlobalSearchFilter } = useApp();
+  const { view, setView, user, setUser, darkMode, toggleDarkMode, setSelectedPaperId, setGlobalSearchFilter, studentSubjects, studentPapers } = useApp();
   const [searchDrawerOpen, setSearchDrawerOpen] = useState(false);
   const [hierFilter, setHierFilter] = useState<HierarchicalFilterState>(EMPTY_FILTER);
   const [modalSearch, setModalSearch] = useState("");
@@ -173,18 +174,17 @@ export function StudentLayout({ children }: { children: ReactNode }) {
 
   const availableSubjects = Array.from(
     new Map(
-      subjects
-        .filter(s => {
+      studentSubjects
+        .filter((s) => {
           if (cat && s.goalCategory !== cat) return false;
-          if (stream && s.stream && s.stream !== stream) return false;
           return true;
         })
-        .map(s => [s.name, s])
+        .map((s) => [s.name, s])
     ).values()
   );
 
   const availableYears = Array.from(
-    new Set(papers.filter(p => p.status === "published").map(p => p.year))
+    new Set(studentPapers.map((p) => p.year))
   ).sort((a, b) => b - a);
 
   const isBoard = cat?.startsWith("board");
@@ -194,10 +194,8 @@ export function StudentLayout({ children }: { children: ReactNode }) {
       ? ["board", "prelims", "model", "practice", "unit-test", "semester", "chapter-wise"]
       : ["pyq", "mock-test", "subject-wise", "chapter-wise", "minor-test", "major-test", "practice"];
 
-  const matchingPapers = papers.filter(p => {
-    if (p.status !== "published") return false;
+  const matchingPapers = studentPapers.filter(p => {
     if (cat && p.goalCategory !== cat) return false;
-    if (stream && p.stream && p.stream !== stream) return false;
     if (modalSearch && !p.title.toLowerCase().includes(modalSearch.toLowerCase()) && !p.subject.toLowerCase().includes(modalSearch.toLowerCase())) return false;
     if (modalSubject) {
       const selectedSub = availableSubjects.find(s => s.id === modalSubject || s.name === modalSubject);

@@ -5,7 +5,8 @@ import {
   GraduationCap, School, Stethoscope, Cog, BookOpen, Layers, Calendar, CalendarDays, FileText
 } from "lucide-react";
 import { useApp, EMPTY_GLOBAL_FILTER } from "../context/AppContext";
-import { quizzes, DIFFICULTY_CONFIG, PAPER_TYPE_CONFIG } from "../data/mockData";
+import { DIFFICULTY_CONFIG, PAPER_TYPE_CONFIG } from "../data/mockData";
+import type { StudentQuiz } from "../../lib/api";
 import { MAIN_FOLDERS } from "./FolderExplorer";
 import type { FolderNode, FolderIconType } from "./FolderExplorer";
 
@@ -54,7 +55,7 @@ function QuizRow({
   onStart,
   onBookmark,
 }: {
-  quiz: (typeof quizzes)[number];
+  quiz: StudentQuiz;
   bookmarked: boolean;
   bestScore?: number;
   onStart: () => void;
@@ -237,7 +238,7 @@ function RootCategoryCard({
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export function QuizList() {
-  const { setView, setSelectedQuizId, toggleBookmark, isBookmarked, completedAttempts, globalSearchFilter, setGlobalSearchFilter } = useApp();
+  const { setView, setSelectedQuizId, toggleBookmark, isBookmarked, completedAttempts, globalSearchFilter, setGlobalSearchFilter, studentQuizzes, studentContentLoading } = useApp();
   const [pathStack, setPathStack] = useState<FolderNode[]>([]);
   const [viewMode, setViewMode] = useState<"folders" | "flat">("folders");
   const [folderSearch, setFolderSearch] = useState("");
@@ -279,10 +280,8 @@ export function QuizList() {
   const activeSearch = hasGlobalFilter ? globalSearchFilter.search : "";
 
   // Filter matching quizzes
-  const filtered = quizzes.filter(q => {
-    if (q.status !== "published") return false;
+  const filtered = studentQuizzes.filter(q => {
     if (activeGoal && q.goalCategory !== activeGoal) return false;
-    if (activeStream && q.stream && q.stream !== activeStream) return false;
     if (activeSubject && q.subject !== activeSubject) return false;
     if (activeSearch && !q.title.toLowerCase().includes(activeSearch.toLowerCase()) && !q.subject.toLowerCase().includes(activeSearch.toLowerCase()) && !(q.chapter && q.chapter.toLowerCase().includes(activeSearch.toLowerCase()))) return false;
     return true;
@@ -291,13 +290,10 @@ export function QuizList() {
   // Helper count
   const countQuizzesInFolder = (fNode: FolderNode): number => {
     const targetGoal = fNode.goalCategory ?? activeGoal;
-    const targetStream = fNode.stream ?? activeStream;
     const targetSubject = fNode.subject ?? activeSubject;
 
-    return quizzes.filter(q => {
-      if (q.status !== "published") return false;
+    return studentQuizzes.filter(q => {
       if (targetGoal && q.goalCategory !== targetGoal) return false;
-      if (targetStream && q.stream && q.stream !== targetStream) return false;
       if (targetSubject && q.subject !== targetSubject) return false;
       return true;
     }).length;

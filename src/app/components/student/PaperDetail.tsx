@@ -1,14 +1,17 @@
 import { ArrowLeft, Bookmark, BookmarkCheck, Eye, Clock, Award, Calendar, FileText, ZoomIn, ZoomOut, Zap, Printer } from "lucide-react";
 import { useState } from "react";
 import { useApp } from "../context/AppContext";
-import { papers, PAPER_TYPE_CONFIG } from "../data/mockData";
+import { PAPER_TYPE_CONFIG } from "../data/mockData";
 
 export function PaperDetail() {
-  const { selectedPaperId, setSelectedPaperId, setView, toggleBookmark, isBookmarked } = useApp();
+  const { selectedPaperId, setSelectedPaperId, setView, toggleBookmark, isBookmarked, studentPapers, studentContentLoading } = useApp();
   const [viewing, setViewing] = useState(false);
   const [zoom, setZoom] = useState(100);
 
-  const paper = papers.find(p => p.id === selectedPaperId);
+  const paper = studentPapers.find(p => p.id === selectedPaperId);
+  if (studentContentLoading && !paper) {
+    return <div className="text-center py-20 text-gray-400"><p>Loading paper...</p></div>;
+  }
   if (!paper) return (
     <div className="text-center py-20 text-gray-400">
       <p>Paper not found.</p>
