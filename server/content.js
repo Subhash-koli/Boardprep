@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { pool } from "./db.js";
 import { toPaper, UPLOADS_DIR } from "./papers.js";
+import { publishDueQuizzes } from "./quizzes.js";
 
 function toChapter(row) {
   return {
@@ -146,6 +147,7 @@ export async function viewStudentPaper(req, res) {
 
 export async function listStudentQuizzes(_req, res) {
   try {
+    await publishDueQuizzes();
     const [rows] = await pool.query(
       "SELECT * FROM quizzes WHERE status = 'published' ORDER BY created_at DESC",
     );
@@ -170,8 +172,51 @@ export async function listStudentQuizzes(_req, res) {
   }
 }
 
+export async function getPublicCatalog(_req, res) {
+  try {
+    await publishDueQuizzes();
+    const [paperRows] = await pool.query(
+      "SELECT * FROM papers WHERE status = 'published' ORDER BY year DESC, created_at DESC",
+    );
+    const [quizRows] = await pool.query(
+      "SELECT * FROM quizzes WHERE status = 'published' ORDER BY created_at DESC",
+    );
+    const [subjectRows] = await pool.query("SELECT * FROM subjects ORDER BY name ASC");
+    const [[studentCount]] = await pool.query("SELECT COUNT(*) AS count FROM users WHERE is_admin = 0");
+    const [[attemptCount]] = await pool.query("SELECT COUNT(*) AS count FROM quiz_attempts");
+
+    const quizzes = await Promise.all(quizRows.map(async (row) => {
+      const [[stats]] = await pool.query(
+        `SELECT COUNT(*) AS totalAttempts, AVG(score) AS avgScore
+         FROM quiz_attempts WHERE quiz_id = ?`,
+        [row.id],
+      );
+      return toStudentQuiz(row, {
+        totalAttempts: Number(stats?.totalAttempts ?? 0),
+        avgScore: stats?.avgScore != null ? Math.round(Number(stats.avgScore) * 10) / 10 : 0,
+      });
+    }));
+
+    return res.json({
+      papers: paperRows.map(toPaper),
+      quizzes,
+      subjects: subjectRows.map((row) => toStudentSubject(row, [])),
+      stats: {
+        students: Number(studentCount?.count ?? 0),
+        papers: paperRows.length,
+        quizzes: quizRows.length,
+        attempts: Number(attemptCount?.count ?? 0),
+      },
+    });
+  } catch (err) {
+    console.error("getPublicCatalog failed:", err);
+    return res.status(500).json({ error: "Could not load catalog." });
+  }
+}
+
 export async function getStudentQuiz(req, res) {
   try {
+    await publishDueQuizzes();
     const id = String(req.params.id || "");
     const [rows] = await pool.query(
       "SELECT * FROM quizzes WHERE id = ? AND status = 'published' LIMIT 1",

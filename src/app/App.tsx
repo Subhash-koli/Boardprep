@@ -66,6 +66,9 @@ function AppContent() {
     if (!user) {
       return <LandingPage />;
     }
+    if (!user.goals?.length) {
+      return <OnboardingFlow />;
+    }
     return (
       <StudentLayout>
         {view === "dashboard"    && <Dashboard />}

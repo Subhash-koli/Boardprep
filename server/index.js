@@ -25,9 +25,13 @@ import {
   getQuiz,
   listQuizzes,
   startQuizSession,
+  submitQuizAttempt,
+  listMyAttempts,
   updateQuiz,
+  updateQuizStatus,
 } from "./quizzes.js";
 import {
+  getPublicCatalog,
   getStudentPaper,
   getStudentQuiz,
   listStudentPapers,
@@ -36,6 +40,8 @@ import {
   viewStudentPaper,
 } from "./content.js";
 import {
+  bulkCreateChapters,
+  bulkCreateSubjects,
   createChapter,
   createSubject,
   deleteChapter,
@@ -83,10 +89,15 @@ app.get("/api/admin/papers/:id/file", requireAdmin, downloadPaper);
 app.get("/api/admin/quizzes", requireAdmin, listQuizzes);
 app.get("/api/admin/quizzes/:id", requireAdmin, getQuiz);
 app.post("/api/admin/quizzes", requireAdmin, createQuiz);
+app.patch("/api/admin/quizzes/:id/status", requireAdmin, updateQuizStatus);
 app.patch("/api/admin/quizzes/:id", requireAdmin, updateQuiz);
 app.delete("/api/admin/quizzes/:id", requireAdmin, deleteQuiz);
 
 app.post("/api/quizzes/:id/start", requireAuth, startQuizSession);
+app.post("/api/quizzes/:id/attempts", requireAuth, submitQuizAttempt);
+app.get("/api/attempts", requireAuth, listMyAttempts);
+
+app.get("/api/public/catalog", getPublicCatalog);
 
 app.get("/api/subjects", requireAuth, listStudentSubjects);
 app.get("/api/papers", requireAuth, listStudentPapers);
@@ -99,9 +110,11 @@ app.get("/api/announcements", requireAuth, listStudentAnnouncements);
 
 app.get("/api/admin/subjects", requireAdmin, listSubjects);
 app.post("/api/admin/subjects", requireAdmin, createSubject);
+app.post("/api/admin/subjects/bulk", requireAdmin, bulkCreateSubjects);
 app.patch("/api/admin/subjects/:id", requireAdmin, updateSubject);
 app.delete("/api/admin/subjects/:id", requireAdmin, deleteSubject);
 app.post("/api/admin/subjects/:subjectId/chapters", requireAdmin, createChapter);
+app.post("/api/admin/chapters/bulk", requireAdmin, bulkCreateChapters);
 app.patch("/api/admin/chapters/:id", requireAdmin, updateChapter);
 app.delete("/api/admin/chapters/:id", requireAdmin, deleteChapter);
 

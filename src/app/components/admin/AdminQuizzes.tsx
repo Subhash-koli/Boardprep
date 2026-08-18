@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { Plus, Search, Edit2, Trash2, CheckCircle, X, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, CheckCircle, X, Loader2, ChevronLeft, ChevronRight, Globe, EyeOff } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import {
   createAdminQuiz,
@@ -7,6 +7,7 @@ import {
   fetchAdminQuiz,
   fetchAdminQuizzes,
   fetchAdminSubjects,
+  setAdminQuizStatus,
   updateAdminQuiz,
   type AdminQuiz,
   type AdminQuizQuestion,
@@ -25,6 +26,7 @@ const EMPTY_FORM = {
   questionsToShow: 10,
   instructions: "Read each question carefully before answering.",
   status: "draft",
+  scheduledAt: "",
 };
 
 const EMPTY_QUESTION: AdminQuizQuestion = {
@@ -68,6 +70,29 @@ function isQuestionFilled(q: AdminQuizQuestion) {
   return Boolean(q.text?.trim() && q.optionA?.trim() && q.optionB?.trim() && q.optionC?.trim() && q.optionD?.trim());
 }
 
+function pad2(n: number) {
+  return String(n).padStart(2, "0");
+}
+
+function toDatetimeLocalValue(iso?: string | null) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
+function minDatetimeLocal() {
+  const d = new Date(Date.now() + 60_000);
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
+function formatScheduleLabel(iso?: string | null) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+}
+
 export function AdminQuizzes() {
   const { view } = useApp();
 
@@ -86,6 +111,7 @@ export function AdminQuizzes() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const [listError, setListError] = useState("");
+  const [statusBusyId, setStatusBusyId] = useState("");
 
   const filledCount = useMemo(() => questions.filter(isQuestionFilled).length, [questions]);
   const goalSubjects = subjectList.filter((s) => s.goalCategory === formData.goalCategory);
@@ -186,6 +212,7 @@ export function AdminQuizzes() {
         questionsToShow: full.questionsToShow || bankSize,
         instructions: full.instructions,
         status: full.status || "draft",
+        scheduledAt: toDatetimeLocalValue(full.scheduledAt),
       });
       setQuestions(createBank(bankSize, full.questions ?? []));
       setActiveQuestionIndex(0);
@@ -204,6 +231,12 @@ export function AdminQuizzes() {
     if (formData.questionsToShow < 1) return "Questions per attempt must be at least 1.";
     if (formData.questionsToShow > formData.bankSize) {
       return "Questions per attempt cannot exceed the total question bank.";
+    }
+    if (formData.status === "scheduled") {
+      if (!formData.scheduledAt) return "Select a publish date and time.";
+      const when = new Date(formData.scheduledAt);
+      if (Number.isNaN(when.getTime())) return "Invalid schedule date and time.";
+      if (when.getTime() <= Date.now()) return "Schedule date and time must be in the future.";
     }
     return "";
   };
@@ -237,6 +270,7 @@ export function AdminQuizzes() {
     questionsToShow: formData.questionsToShow,
     instructions: formData.instructions.trim(),
     status: formData.status,
+    scheduledAt: formData.status === "scheduled" ? formData.scheduledAt : null,
     markingScheme: { id: "board", label: "+1 / 0 (Board)" },
     questions: questions.map((q) => ({
       text: q.text.trim(),
@@ -279,6 +313,20 @@ export function AdminQuizzes() {
       setError(err instanceof Error ? err.message : "Could not save quiz.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleTogglePublish = async (quiz: AdminQuiz) => {
+    const nextStatus = quiz.status === "published" ? "draft" : "published";
+    setStatusBusyId(quiz.id);
+    setListError("");
+    try {
+      const { quiz: updated } = await setAdminQuizStatus(quiz.id, { status: nextStatus });
+      setQuizList((prev) => prev.map((q) => (q.id === updated.id ? { ...updated, questions: undefined } : q)));
+    } catch (err) {
+      setListError(err instanceof Error ? err.message : "Could not update quiz status.");
+    } finally {
+      setStatusBusyId("");
     }
   };
 
@@ -357,12 +405,26 @@ export function AdminQuizzes() {
                       <td className="px-4 py-3 hidden md:table-cell text-sm text-gray-600">{quiz.bankSize ?? quiz.questionsCount}</td>
                       <td className="px-4 py-3 hidden md:table-cell text-sm text-gray-600">{quiz.questionsToShow ?? quiz.questionsCount}</td>
                       <td className="px-4 py-3">
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${quiz.status === "published" ? "bg-green-100 text-green-700" : quiz.status === "scheduled" ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-gray-500"}`}>{quiz.status}</span>
+                        <div>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${quiz.status === "published" ? "bg-green-100 text-green-700" : quiz.status === "scheduled" ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-gray-500"}`}>{quiz.status}</span>
+                          {quiz.status === "scheduled" && quiz.scheduledAt && (
+                            <p className="text-[11px] text-blue-500 mt-1">{formatScheduleLabel(quiz.scheduledAt)}</p>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3 hidden lg:table-cell text-sm text-gray-600">{quiz.analytics.totalAttempts.toLocaleString()}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-1">
-                          <button onClick={() => void handleEdit(quiz)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors">
+                          <button
+                            type="button"
+                            title={quiz.status === "published" ? "Unpublish" : "Publish"}
+                            disabled={statusBusyId === quiz.id}
+                            onClick={() => void handleTogglePublish(quiz)}
+                            className={`p-1.5 rounded-lg transition-colors disabled:opacity-50 ${quiz.status === "published" ? "text-amber-600 hover:bg-amber-50" : "text-green-600 hover:bg-green-50"}`}
+                          >
+                            {statusBusyId === quiz.id ? <Loader2 size={13} className="animate-spin" /> : quiz.status === "published" ? <EyeOff size={13} /> : <Globe size={13} />}
+                          </button>
+                          <button onClick={() => void handleEdit(quiz)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
                             <Edit2 size={13} />
                           </button>
                           <button onClick={() => void handleDelete(quiz.id)} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition-colors">
@@ -441,6 +503,7 @@ export function AdminQuizzes() {
                             ...p,
                             [f.key]: e.target.value,
                             ...(f.key === "goalCategory" ? { subjectId: "", chapter: "" } : {}),
+                            ...(f.key === "status" && e.target.value !== "scheduled" ? { scheduledAt: "" } : {}),
                           }))}
                           className="w-full border border-gray-200 rounded-xl py-2.5 px-3 text-sm focus:outline-none focus:border-[#1E3A8A] bg-gray-50"
                         >
@@ -456,6 +519,27 @@ export function AdminQuizzes() {
                       )}
                     </div>
                   ))}
+                  {formData.status === "scheduled" && (
+                    <div className="sm:col-span-2">
+                      <label className="text-xs text-gray-500 mb-1 block">Publish date and time *</label>
+                      <input
+                        type="datetime-local"
+                        min={minDatetimeLocal()}
+                        value={formData.scheduledAt}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value && new Date(value).getTime() <= Date.now()) {
+                            setError("Schedule date and time must be in the future.");
+                            return;
+                          }
+                          setError("");
+                          setFormData((p) => ({ ...p, scheduledAt: value }));
+                        }}
+                        className="w-full border border-gray-200 rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-[#1E3A8A] bg-gray-50"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">The quiz stays hidden until this time, then it publishes automatically.</p>
+                    </div>
+                  )}
                   <div>
                     <label className="text-xs text-gray-500 mb-1 block">Subject *</label>
                     <select

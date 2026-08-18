@@ -123,6 +123,7 @@ export async function initSchema() {
     ["instructions", "TEXT NULL"],
     ["marking_scheme", "JSON NULL"],
     ["questions_to_show", "INT NOT NULL DEFAULT 10"],
+    ["scheduled_at", "DATETIME NULL"],
     ["updated_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"],
   ];
   for (const [name, def] of quizColumns) {
@@ -162,6 +163,26 @@ export async function initSchema() {
       INDEX idx_quiz_attempts_quiz (quiz_id)
     )
   `);
+
+  const attemptColumns = [
+    ["max_score", "DECIMAL(6,2) NULL"],
+    ["correct_count", "INT NULL"],
+    ["wrong_count", "INT NULL"],
+    ["skipped_count", "INT NULL"],
+    ["negative_marks", "DECIMAL(6,2) NULL"],
+    ["time_taken_seconds", "INT NULL"],
+    ["mode", "VARCHAR(16) NULL"],
+    ["quiz_title", "VARCHAR(500) NULL"],
+    ["subject", "VARCHAR(255) NULL"],
+    ["goal_category", "VARCHAR(64) NULL"],
+  ];
+  for (const [name, def] of attemptColumns) {
+    try {
+      await pool.query(`ALTER TABLE quiz_attempts ADD COLUMN ${name} ${def}`);
+    } catch {
+      // column already exists
+    }
+  }
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS subjects (

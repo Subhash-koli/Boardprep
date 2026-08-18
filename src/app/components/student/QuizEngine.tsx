@@ -2,11 +2,11 @@ import { useState, useEffect, useCallback } from "react";
 import {
   ArrowLeft, Clock, CheckCircle, XCircle, ChevronLeft, ChevronRight,
   Flag, Send, Brain, Target, Timer, BookOpen, Zap, TrendingUp, AlertTriangle, Lightbulb,
-  Pause, Play, Plus, Grid, Bookmark, BookmarkCheck
+  Pause, Play, Plus, Grid, Bookmark, BookmarkCheck, Trophy, Star, ThumbsUp, Sparkles, Flame
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import type { QuizAttempt } from "../data/mockData";
-import { startQuiz, type StudentQuiz, type StudentQuizQuestion } from "../../lib/api";
+import { startQuiz, submitQuizAttempt, type StudentQuiz, type StudentQuizQuestion } from "../../lib/api";
 
 type SessionQuiz = StudentQuiz & { questions: StudentQuizQuestion[] };
 
@@ -199,7 +199,7 @@ export function QuizDetail() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function QuizAttempt() {
-  const { currentAttempt, setCurrentAttempt, setView, addAttempt, activeQuizSession } = useApp();
+  const { currentAttempt, setCurrentAttempt, setView, addAttempt, activeQuizSession, setUser, user } = useApp();
   const quiz = sessionQuizFromContext(activeQuizSession);
   const [qIndex, setQIndex] = useState(currentAttempt?.currentQuestionIndex ?? 0);
   const [answers, setAnswers] = useState<Record<string, "A" | "B" | "C" | "D" | null>>(currentAttempt?.answers ?? {});
@@ -311,10 +311,33 @@ export function QuizAttempt() {
       answers: attemptAnswers,
     };
 
-    addAttempt(attempt);
-    setCurrentAttempt(null);
-    setView("quiz-result");
-  }, [answers, quiz, currentAttempt, timeLeft, submitted, ms]);
+    void (async () => {
+      try {
+        const saved = await submitQuizAttempt(quiz.id, {
+          id: attempt.id,
+          quizId: attempt.quizId,
+          quizTitle: attempt.quizTitle,
+          subject: attempt.subject,
+          goalCategory: attempt.goalCategory,
+          mode: attempt.mode,
+          totalScore: attempt.totalScore,
+          maxScore: attempt.maxScore,
+          percentage: attempt.percentage,
+          correctCount: attempt.correctCount,
+          wrongCount: attempt.wrongCount,
+          skippedCount: attempt.skippedCount,
+          negativeMarks: attempt.negativeMarks,
+          timeTakenSeconds: attempt.timeTakenSeconds,
+        });
+        addAttempt({ ...attempt, id: saved.attempt.id, submittedAt: saved.attempt.submittedAt });
+        if (user) setUser({ ...user, streak: saved.streak });
+      } catch {
+        addAttempt(attempt);
+      }
+      setCurrentAttempt(null);
+      setView("quiz-result");
+    })();
+  }, [answers, quiz, currentAttempt, timeLeft, submitted, ms, addAttempt, setCurrentAttempt, setView, setUser, user]);
 
   if (!quiz || !currentAttempt || !ms) return (
     <div className="text-center py-20">
@@ -708,7 +731,7 @@ export function QuizResult() {
   const grossScore = attempt.correctCount * ms.correctMarks;
   const netScore = attempt.totalScore;
 
-  const emoji = pct >= 90 ? "🏆" : pct >= 75 ? "🌟" : pct >= 60 ? "👍" : pct >= 40 ? "📚" : "💪";
+  const ResultIcon = pct >= 90 ? Trophy : pct >= 75 ? Star : pct >= 60 ? ThumbsUp : pct >= 40 ? BookOpen : Flame;
 
   return (
     <div className="max-w-lg mx-auto space-y-4">
@@ -722,11 +745,11 @@ export function QuizResult() {
         {/* Celebratory confetti animation banner */}
         {pct >= 80 && (
           <div className="mb-4 bg-gradient-to-r from-amber-500 via-orange-500 to-[#1E3A8A] text-white py-2.5 px-4 rounded-xl text-xs font-bold shadow-lg animate-bounce flex items-center justify-center gap-2">
-            <span>🎉</span> <span>MASTERCLASS PERFORMANCE! You scored {pct}%!</span> <span>🎉</span>
+            <Sparkles size={14} /> <span>MASTERCLASS PERFORMANCE! You scored {pct}%!</span> <Sparkles size={14} />
           </div>
         )}
 
-        <div className="text-4xl mb-1">{emoji}</div>
+        <div className="flex justify-center mb-1 text-[#1E3A8A]"><ResultIcon size={36} /></div>
 
         <h1 className={`text-2xl font-bold font-['Poppins'] mb-1 ${passed ? "text-green-700" : "text-red-600"}`}>
           {pct >= 90 ? "Outstanding!" : pct >= 75 ? "Excellent!" : pct >= 60 ? "Good Job!" : pct >= 40 ? "Keep Practicing!" : "Don't Give Up!"}

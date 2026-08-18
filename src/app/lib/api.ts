@@ -253,6 +253,7 @@ export type AdminQuiz = {
   instructions: string;
   markingScheme: { id?: string; label?: string } | null;
   status: "draft" | "published" | "scheduled" | string;
+  scheduledAt?: string | null;
   analytics: { totalAttempts: number; avgScore: number };
   createdAt: string;
   questions?: AdminQuizQuestion[];
@@ -282,6 +283,13 @@ export function updateAdminQuiz(id: string, body: Omit<AdminQuiz, "id" | "analyt
 
 export function deleteAdminQuiz(id: string) {
   return api<{ ok: boolean }>(`/api/admin/quizzes/${id}`, { method: "DELETE" });
+}
+
+export function setAdminQuizStatus(id: string, body: { status: "draft" | "published" | "scheduled"; scheduledAt?: string | null }) {
+  return api<{ quiz: AdminQuiz }>(`/api/admin/quizzes/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
 }
 
 export function startQuizSession(id: string) {
@@ -348,6 +356,26 @@ export function updateAdminChapter(id: string, body: { name: string; chapterNumb
 
 export function deleteAdminChapter(id: string) {
   return api<{ ok: boolean }>(`/api/admin/chapters/${id}`, { method: "DELETE" });
+}
+
+export function bulkCreateAdminSubjects(body: {
+  goalCategory?: string;
+  subjects: { name: string; goalCategory?: string; icon?: string; color?: string }[];
+}) {
+  return api<{ created: AdminSubject[]; skipped: string[]; errors: { row: number; error: string }[] }>(
+    "/api/admin/subjects/bulk",
+    { method: "POST", body: JSON.stringify(body) },
+  );
+}
+
+export function bulkCreateAdminChapters(body: {
+  subjectId: string;
+  chapters: { name: string; chapterNumber?: number }[];
+}) {
+  return api<{ created: AdminChapter[]; skipped: string[]; errors: { row: number; error: string }[] }>(
+    "/api/admin/chapters/bulk",
+    { method: "POST", body: JSON.stringify(body) },
+  );
 }
 
 // ── Student content (published only, from DB) ─────────────────────────────────
@@ -429,6 +457,22 @@ export function fetchStudentSubjects(goalCategory?: string) {
   return api<{ subjects: StudentSubject[] }>(`/api/subjects${qs}`);
 }
 
+export type PublicCatalogStats = {
+  students: number;
+  papers: number;
+  quizzes: number;
+  attempts: number;
+};
+
+export function fetchPublicCatalog() {
+  return api<{
+    papers: StudentPaper[];
+    quizzes: StudentQuiz[];
+    subjects: StudentSubject[];
+    stats: PublicCatalogStats;
+  }>("/api/public/catalog");
+}
+
 export function fetchStudentPapers() {
   return api<{ papers: StudentPaper[] }>("/api/papers");
 }
@@ -444,6 +488,37 @@ export function studentPaperFileUrl(id: string) {
 export function startQuiz(id: string) {
   return api<{ quiz: StudentQuiz; questions: StudentQuizQuestion[] }>(`/api/quizzes/${id}/start`, {
     method: "POST",
+  });
+}
+
+export type StudentQuizAttempt = {
+  id: string;
+  quizId: string;
+  quizTitle: string;
+  subject: string;
+  goalCategory: string;
+  mode: "practice" | "exam";
+  totalScore: number;
+  maxScore: number;
+  percentage: number;
+  correctCount: number;
+  wrongCount: number;
+  skippedCount: number;
+  negativeMarks: number;
+  timeTakenSeconds: number;
+  isCompleted: boolean;
+  submittedAt: string;
+  answers: [];
+};
+
+export function fetchMyAttempts() {
+  return api<{ attempts: StudentQuizAttempt[] }>("/api/attempts");
+}
+
+export function submitQuizAttempt(quizId: string, body: Omit<StudentQuizAttempt, "answers" | "isCompleted" | "submittedAt"> & { submittedAt?: string }) {
+  return api<{ attempt: StudentQuizAttempt; streak: number }>(`/api/quizzes/${quizId}/attempts`, {
+    method: "POST",
+    body: JSON.stringify(body),
   });
 }
 

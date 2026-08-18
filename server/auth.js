@@ -4,6 +4,27 @@ import { pool, toPublicUser } from "./db.js";
 import { hashPassword, verifyPassword } from "./password.js";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_MAX = 80;
+const PASSWORD_MIN = 8;
+const PASSWORD_MAX = 16;
+const SPECIAL_RE = /[^A-Za-z0-9]/;
+
+function validateEmail(email) {
+  if (!email) return "Email is required.";
+  if (email.length > EMAIL_MAX) return "Email must be at most 80 characters.";
+  if (!EMAIL_RE.test(email)) return "Enter a valid email address.";
+  return "";
+}
+
+function validatePassword(password) {
+  if (password.length < PASSWORD_MIN || password.length > PASSWORD_MAX) {
+    return "Password must be 8–16 characters.";
+  }
+  if (!/[a-z]/.test(password)) return "Password must include 1 lowercase letter.";
+  if (!/[A-Z]/.test(password)) return "Password must include 1 uppercase letter.";
+  if (!SPECIAL_RE.test(password)) return "Password must include 1 special character.";
+  return "";
+}
 
 function signToken(user) {
   return jwt.sign(
@@ -26,11 +47,13 @@ export async function register(req, res) {
     if (!name || !email || !password) {
       return res.status(400).json({ error: "Please fill in all fields." });
     }
-    if (!EMAIL_RE.test(email)) {
-      return res.status(400).json({ error: "Enter a valid email address." });
+    const emailError = validateEmail(email);
+    if (emailError) {
+      return res.status(400).json({ error: emailError });
     }
-    if (password.length < 8) {
-      return res.status(400).json({ error: "Password must be at least 8 characters." });
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      return res.status(400).json({ error: passwordError });
     }
 
     const [existing] = await pool.query("SELECT id FROM users WHERE email = ? LIMIT 1", [email]);

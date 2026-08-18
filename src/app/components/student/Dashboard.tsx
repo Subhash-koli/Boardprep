@@ -1,12 +1,11 @@
-import { Flame, BookOpen, Brain, Star, TrendingUp, ChevronRight, ChevronLeft, Bell, Zap, Target, Calendar, Trophy, CheckCircle, Check, Play, ExternalLink, SlidersHorizontal } from "lucide-react";
+import { Flame, BookOpen, Brain, Star, TrendingUp, ChevronRight, Bell, Zap, Target, Trophy, CheckCircle, Play, MessageCircle } from "lucide-react";
 import { GoalIcon } from "../shared/GoalIcons";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { scoreTrendData } from "../data/mockData";
 import { DIFFICULTY_CONFIG } from "../data/mockData";
+import type { GoalCategory } from "../data/mockData";
 import { useApp } from "../context/AppContext";
-import { useState, useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
-// ── Stat Card ─────────────────────────────────────────────────────────────────
 function StatCard({ icon: Icon, label, value, color, bg }: { icon: any; label: string; value: string | number; color: string; bg: string }) {
   return (
     <div className="rounded-2xl p-4 flex flex-col gap-2" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}>
@@ -19,14 +18,11 @@ function StatCard({ icon: Icon, label, value, color, bg }: { icon: any; label: s
   );
 }
 
-// ── Exam Countdown Banner ─────────────────────────────────────────────────────
-function CountdownBanner({ days, label, color, category }: { days: number; label: string; color: string; category: import("../data/mockData").GoalCategory }) {
+function CountdownBanner({ days, label, category }: { days: number; label: string; color?: string; category: GoalCategory }) {
   const urgency = days <= 30 ? "red" : days <= 90 ? "orange" : "blue";
   const bg = urgency === "red" ? "from-red-600 to-red-500" : urgency === "orange" ? "from-orange-500 to-amber-500" : "from-[#1E3A8A] to-blue-600";
   return (
     <div className={`bg-gradient-to-r ${bg} rounded-2xl p-4 flex items-center gap-4 relative overflow-hidden`}>
-      {/* Film grain */}
-      <div className="absolute inset-0 pointer-events-none rounded-2xl" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E\")", backgroundSize: "300px 300px", mixBlendMode: "overlay" }} />
       <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 relative z-10">
         <GoalIcon category={category} size={22} className="text-white" />
       </div>
@@ -42,121 +38,142 @@ function CountdownBanner({ days, label, color, category }: { days: number; label
   );
 }
 
-// ── Main Dashboard ────────────────────────────────────────────────────────────
-export function Dashboard() {
-  const { user, currentGoal, setView, setSelectedQuizId, setSelectedPaperId, completedAttempts, studentPapers, studentQuizzes, studentAnnouncements, studentContentLoading } = useApp();
+function dayKey(date: string | Date) {
+  const d = new Date(date);
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+}
 
-  // Goal-aware filtering
+function computeStudyStreak(dates: string[]) {
+  const days = new Set(dates.map(dayKey));
+  if (!days.size) return 0;
+  const cursor = new Date();
+  cursor.setHours(0, 0, 0, 0);
+  if (!days.has(dayKey(cursor))) {
+    cursor.setDate(cursor.getDate() - 1);
+    if (!days.has(dayKey(cursor))) return 0;
+  }
+  let streak = 0;
+  while (days.has(dayKey(cursor))) {
+    streak += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return streak;
+}
+
+export function Dashboard() {
+  const {
+    user, currentGoal, setView, setSelectedQuizId, setSelectedPaperId,
+    completedAttempts, studentPapers, studentQuizzes, studentAnnouncements,
+    studentContentLoading, refreshStudentContent,
+  } = useApp();
+
+  useEffect(() => {
+    void refreshStudentContent();
+  }, [refreshStudentContent]);
+
   const cat = currentGoal?.category;
+
+  const visibleQuizzes = useMemo(() => {
+    const matched = studentQuizzes.filter(q => !cat || q.goalCategory === cat);
+    return matched.length ? matched : studentQuizzes;
+  }, [studentQuizzes, cat]);
+
+  const visiblePapers = useMemo(() => {
+    const matched = studentPapers.filter(p => !cat || p.goalCategory === cat);
+    return matched.length ? matched : studentPapers;
+  }, [studentPapers, cat]);
 
   const activeAnnouncements = studentAnnouncements.filter(a => {
     if (a.targetGoals.includes("all")) return true;
     if (!cat) return true;
-    if (cat && a.targetGoals.includes(cat)) return true;
-    return false;
+    return a.targetGoals.includes(cat);
   });
 
-  const recentQuizzes = studentQuizzes
-    .filter(q => (!cat || q.goalCategory === cat))
-    .slice(0, 3);
+  const recentQuizzes = visibleQuizzes.slice(0, 3);
+  const recentPapers = visiblePapers.slice(0, 3);
 
-  const recentPapers = studentPapers
-    .filter(p => (!cat || p.goalCategory === cat))
-    .slice(0, 3);
-
-  // Stats derived from attempts for current goal
   const goalAttempts = completedAttempts.filter(a => !cat || a.goalCategory === cat);
   const avgScore = goalAttempts.length > 0
     ? Math.round(goalAttempts.reduce((sum, a) => sum + a.percentage, 0) / goalAttempts.length)
     : 0;
 
-  // Exam countdown
+  const studyStreak = computeStudyStreak(completedAttempts.map(a => a.submittedAt));
+  const attemptedQuizIds = new Set(goalAttempts.map(a => a.quizId));
+  const quizzesAttempted = visibleQuizzes.filter(q => attemptedQuizIds.has(q.id)).length;
+  const coveragePct = visibleQuizzes.length > 0
+    ? Math.round((quizzesAttempted / visibleQuizzes.length) * 100)
+    : 0;
+
   const daysLeft = currentGoal?.examDate
     ? Math.max(0, Math.ceil((new Date(currentGoal.examDate).getTime() - Date.now()) / 86400000))
     : null;
 
-  // Score trend from recent attempts
   const trendData = goalAttempts.length >= 2
-    ? goalAttempts.slice(0, 6).reverse().map((a, i) => ({
+    ? [...goalAttempts].slice(0, 6).reverse().map(a => ({
         date: new Date(a.submittedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" }),
         score: Math.round(a.percentage),
       }))
-    : scoreTrendData;
+    : [];
 
-  // Performance analysis  
   const lastAttempt = goalAttempts[0] ?? null;
   const isNEETorJEE = cat === "neet" || cat === "jee-mains" || cat === "jee-advanced";
 
-  // ── Revision Track State (LocalStorage Persistent) ──────────────────────────
-  const REVISION_STORAGE_KEY = "pariksha_revision_track_v2";
-  const [roadmapDay, setRoadmapDay] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem(`${REVISION_STORAGE_KEY}_day`);
-      return saved ? Math.min(30, Math.max(1, parseInt(saved, 10))) : 14;
-    } catch { return 14; }
-  });
+  const nextQuiz = visibleQuizzes.find(q => !attemptedQuizIds.has(q.id)) ?? visibleQuizzes[0] ?? null;
+  const nextPaper = visiblePapers[0] ?? null;
 
-  const [completedTaskKeys, setCompletedTaskKeys] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem(`${REVISION_STORAGE_KEY}_tasks`);
-      return saved ? JSON.parse(saved) : ["14_0", "14_1"]; // default tasks 1 & 2 completed for Day 14
-    } catch { return ["14_0", "14_1"]; }
-  });
+  const subjectCoverage = useMemo(() => {
+    const bySubject = new Map<string, { attempts: number; best: number }>();
+    for (const quiz of visibleQuizzes) {
+      const key = quiz.subject || "General";
+      if (!bySubject.has(key)) bySubject.set(key, { attempts: 0, best: 0 });
+    }
+    for (const attempt of goalAttempts) {
+      const key = attempt.subject || "General";
+      const current = bySubject.get(key) ?? { attempts: 0, best: 0 };
+      current.attempts += 1;
+      current.best = Math.max(current.best, Math.round(attempt.percentage));
+      bySubject.set(key, current);
+    }
+    return [...bySubject.entries()].slice(0, 6).map(([subject, stats]) => ({ subject, ...stats }));
+  }, [visibleQuizzes, goalAttempts]);
 
-  const [targetScore, setTargetScore] = useState<string>(() => {
-    try {
-      return localStorage.getItem(`${REVISION_STORAGE_KEY}_score`) ?? "92%+";
-    } catch { return "92%+"; }
-  });
-  const [showScoreMenu, setShowScoreMenu] = useState(false);
+  const practiceTopics = useMemo(() => {
+    const topics = [
+      ...visibleQuizzes.map(q => q.chapter || q.subject),
+      ...visiblePapers.map(p => p.subject),
+    ].map(t => String(t || "").trim()).filter(Boolean);
+    return [...new Set(topics)].slice(0, 8);
+  }, [visibleQuizzes, visiblePapers]);
 
-  useEffect(() => {
-    try { localStorage.setItem(`${REVISION_STORAGE_KEY}_day`, String(roadmapDay)); } catch {}
-  }, [roadmapDay]);
+  const shareMessage = studyStreak > 0
+    ? `I am on a ${studyStreak}-day study streak preparing for ${currentGoal?.shortLabel ?? "my exams"} on ParikshaCrack!`
+    : `I am preparing for ${currentGoal?.shortLabel ?? "my exams"} on ParikshaCrack!`;
 
-  useEffect(() => {
-    try { localStorage.setItem(`${REVISION_STORAGE_KEY}_tasks`, JSON.stringify(completedTaskKeys)); } catch {}
-  }, [completedTaskKeys]);
-
-  useEffect(() => {
-    try { localStorage.setItem(`${REVISION_STORAGE_KEY}_score`, targetScore); } catch {}
-  }, [targetScore]);
-
-  const toggleTaskKey = (key: string) => {
-    setCompletedTaskKeys(prev =>
-      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
-    );
-  };
-
-  // Helper count for current day
-  const dayTaskKeys = [0, 1, 2].map(idx => `${roadmapDay}_${idx}`);
-  const dayCompletedCount = dayTaskKeys.filter(k => completedTaskKeys.includes(k)).length;
-
-  // Overall 30-day percentage calculation
-  const totalRoadmapPercentage = Math.min(100, Math.max(5, Math.round(((roadmapDay - 1 + dayCompletedCount / 3) / 30) * 100)));
-
-  // Dynamic Task Specifications
-  const currentTasks = [
+  const todayTasks = [
     {
-      id: "chapter",
-      title: "Today's High-Weightage Chapter",
-      desc: cat === "neet"
-        ? (roadmapDay % 2 === 0 ? "Genetics & Molecular Biology" : "Human Physiology & Biomolecules")
-        : cat === "jee-mains" || cat === "jee-advanced"
-        ? (roadmapDay % 2 === 0 ? "Integral Calculus & Differential Eq." : "Electrodynamics & Optics")
-        : (roadmapDay % 2 === 0 ? "Trigonometric Identities & Applications" : "Linear Equations & Polynomials"),
-      actionText: "Browse Papers",
-      action: () => setView("papers"),
+      id: "quiz",
+      title: nextQuiz ? (attemptedQuizIds.has(nextQuiz.id) ? "Retake a live quiz" : "Take a live quiz") : "No quizzes yet",
+      desc: nextQuiz ? nextQuiz.title : "Published quizzes will appear here.",
+      actionText: nextQuiz ? "Start quiz" : "Browse quizzes",
+      done: Boolean(nextQuiz && attemptedQuizIds.has(nextQuiz.id) && lastAttempt),
+      action: () => {
+        if (nextQuiz) {
+          setSelectedQuizId(nextQuiz.id);
+          setView("quiz-detail");
+        } else {
+          setView("quizzes");
+        }
+      },
     },
     {
-      id: "pyq",
-      title: "Daily PYQ Challenge",
-      desc: `Solve 2024 Past Paper (Section ${String.fromCharCode(65 + (roadmapDay % 3))})`,
-      actionText: "Solve 2024 PYQ",
+      id: "paper",
+      title: nextPaper ? "Open a published paper" : "No papers yet",
+      desc: nextPaper ? `${nextPaper.title}${nextPaper.year ? ` · ${nextPaper.year}` : ""}` : "Admin-uploaded papers will appear here.",
+      actionText: nextPaper ? "Open paper" : "Browse papers",
+      done: false,
       action: () => {
-        const matchPaper = papers.find(p => (!cat || p.goalCategory === cat) && p.year === 2024) ?? papers[0];
-        if (matchPaper) {
-          setSelectedPaperId(matchPaper.id);
+        if (nextPaper) {
+          setSelectedPaperId(nextPaper.id);
           setView("paper-detail");
         } else {
           setView("papers");
@@ -164,33 +181,23 @@ export function Dashboard() {
       },
     },
     {
-      id: "quiz",
-      title: "Smart Speed Quiz",
-      desc: "15 MCQs with live negative marking (+4/-1)",
-      actionText: "Start Speed Quiz",
-      action: () => {
-        const matchQuiz = quizzes.find(q => (!cat || q.goalCategory === cat)) ?? quizzes[0];
-        if (matchQuiz) {
-          setSelectedQuizId(matchQuiz.id);
-          setView("quiz-detail");
-        } else {
-          setView("quizzes");
-        }
-      },
+      id: "review",
+      title: lastAttempt ? "Review your last attempt" : "Track your first score",
+      desc: lastAttempt
+        ? `${lastAttempt.quizTitle} · ${Math.round(lastAttempt.percentage)}%`
+        : "Complete a quiz to see your real score here.",
+      actionText: lastAttempt ? "View quizzes" : "Take a quiz",
+      done: Boolean(lastAttempt),
+      action: () => setView("quizzes"),
     },
   ];
 
   return (
     <div className="max-w-5xl mx-auto space-y-5">
-
-      {/* ── Welcome Hero ── */}
       <div
         className="rounded-2xl p-5 text-white relative overflow-hidden"
         style={{ background: `linear-gradient(135deg, ${currentGoal?.color ?? "#1E3A8A"} 0%, #1D4ED8 100%)` }}
       >
-        {/* Film grain overlay */}
-        <div className="absolute inset-0 pointer-events-none rounded-2xl" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E\")", backgroundSize: "300px 300px", mixBlendMode: "overlay" }} />
-        {/* Decorative circle */}
         <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/5 rounded-full" />
         <div className="absolute -right-2 top-8 w-20 h-20 bg-white/5 rounded-full" />
 
@@ -201,8 +208,8 @@ export function Dashboard() {
             </h2>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
               <span className="text-white/80 text-sm flex items-center gap-1.5">
-                <GoalIcon category={currentGoal.category} size={14} className="text-white/80" />
-                {currentGoal?.shortLabel}
+                {currentGoal ? <GoalIcon category={currentGoal.category} size={14} className="text-white/80" /> : null}
+                {currentGoal?.shortLabel ?? "Complete onboarding to personalise your dashboard"}
               </span>
               {currentGoal?.examDate && (
                 <span className="text-white/60 text-xs">· {daysLeft} days left</span>
@@ -211,7 +218,7 @@ export function Dashboard() {
           </div>
           <div className="flex items-center gap-1.5 bg-white/15 rounded-xl px-3 py-2 flex-shrink-0">
             <Flame size={16} className="text-orange-300" />
-            <span className="font-bold text-sm">{user?.streak ?? 0}</span>
+            <span className="font-bold text-sm">{studyStreak}</span>
             <span className="text-white/70 text-xs hidden sm:block">streak</span>
           </div>
         </div>
@@ -232,189 +239,93 @@ export function Dashboard() {
             </button>
           </div>
           <button
-            onClick={() => {
-              const msg = `I am on a ${user?.streak ?? 1}-day study streak preparing for ${currentGoal?.shortLabel ?? "HSC Board & NEET"} on ParikshaCrack! Join me: https://parikshacrack.in`;
-              window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, "_blank");
-            }}
+            onClick={() => window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`, "_blank")}
             className="flex items-center gap-1.5 bg-green-500/80 hover:bg-green-500 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-sm cursor-pointer"
           >
-            💬 Share Streak on WhatsApp
+            <MessageCircle size={13} /> Share on WhatsApp
           </button>
         </div>
       </div>
 
-      {/* ── 30-Day Adaptive Exam Countdown Track (Fully Functional & Interactive) ── */}
-      <div className="rounded-2xl p-4 sm:p-5 transition-all duration-300" style={{ background: "rgba(255,255,255,0.88)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 4px 20px rgba(30,58,138,0.06)" }}>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+      <div className="rounded-2xl p-4 sm:p-5" style={{ background: "rgba(255,255,255,0.88)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 4px 20px rgba(30,58,138,0.06)" }}>
+        <div className="flex items-start justify-between gap-3 mb-3">
           <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              {/* Day Step Switcher */}
-              <div className="inline-flex items-center gap-1 bg-gradient-to-r from-[#1E3A8A] to-[#2563EB] text-white px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider shadow-xs">
-                <button
-                  onClick={() => setRoadmapDay(d => Math.max(1, d - 1))}
-                  className="hover:bg-white/20 rounded p-0.5 transition-colors cursor-pointer"
-                  title="Previous Day"
-                >
-                  <ChevronLeft size={12} />
-                </button>
-                <span>Day {roadmapDay} of 30 Roadmap</span>
-                <button
-                  onClick={() => setRoadmapDay(d => Math.min(30, d + 1))}
-                  className="hover:bg-white/20 rounded p-0.5 transition-colors cursor-pointer"
-                  title="Next Day"
-                >
-                  <ChevronRight size={12} />
-                </button>
-              </div>
-
-              {/* Progress Percentage */}
-              <span className="text-[10px] sm:text-xs text-emerald-700 font-extrabold bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 rounded-full flex items-center gap-1">
-                <CheckCircle size={12} className="text-emerald-600" />
-                {totalRoadmapPercentage}% Completed ({dayCompletedCount}/3 Today)
-              </span>
-            </div>
-
-            <h3 className="font-extrabold text-[#1E3A8A] dark:text-blue-400 text-sm sm:text-base font-heading mt-2 tracking-tight">
-              Personalized Revision Track: {currentGoal?.shortLabel ?? "Target Exam"}
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Today’s study plan</p>
+            <h3 className="font-extrabold text-[#1E3A8A] text-sm sm:text-base font-heading mt-1">
+              {currentGoal?.shortLabel ?? "Your live content"}
             </h3>
+            <p className="text-xs text-slate-500 mt-1">
+              {studentContentLoading
+                ? "Loading your papers and quizzes…"
+                : `${visiblePapers.length} papers · ${visibleQuizzes.length} quizzes · ${goalAttempts.length} attempts`}
+            </p>
           </div>
-
-          {/* Target Score Pill + Selector Dropdown */}
-          <div className="relative flex-shrink-0">
-            <button
-              onClick={() => setShowScoreMenu(e => !e)}
-              className="text-xs text-gray-700 hover:text-[#1E3A8A] font-semibold bg-slate-50 hover:bg-slate-100 border border-slate-200/80 px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
-            >
-              <span>🎯 Target Score: <strong className="text-[#1E3A8A] font-black">{targetScore}</strong></span>
-              <SlidersHorizontal size={12} className="text-slate-400" />
-            </button>
-
-            {showScoreMenu && (
-              <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-slate-200 p-1 z-30 w-36 animate-apple-unveil">
-                <div className="text-[9px] font-bold text-slate-400 px-2 py-1 uppercase tracking-wider">Set Target Score</div>
-                {["85%+", "90%+", "92%+", "95%+", "98%+"].map(score => (
-                  <button
-                    key={score}
-                    onClick={() => { setTargetScore(score); setShowScoreMenu(false); }}
-                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center justify-between ${
-                      targetScore === score ? "bg-blue-50 text-[#1E3A8A]" : "text-slate-700 hover:bg-slate-50"
-                    }`}
-                  >
-                    <span>{score}</span>
-                    {targetScore === score && <Check size={12} className="text-[#1E3A8A]" />}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <span className="text-[10px] text-emerald-700 font-extrabold bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 rounded-full flex items-center gap-1">
+            <CheckCircle size={12} className="text-emerald-600" />
+            {coveragePct}% quizzes attempted
+          </span>
         </div>
 
-        {/* Dynamic Animated Progress Bar */}
         <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden mb-4 p-0.5 border border-slate-200/50">
           <div
-            className="h-full bg-gradient-to-r from-[#1E3A8A] via-[#2563EB] to-emerald-500 rounded-full transition-all duration-500 ease-out shadow-xs"
-            style={{ width: `${totalRoadmapPercentage}%` }}
+            className="h-full bg-gradient-to-r from-[#1E3A8A] via-[#2563EB] to-emerald-500 rounded-full transition-all duration-500"
+            style={{ width: `${coveragePct}%` }}
           />
         </div>
 
-        {/* Interactive Daily Tasks Checklist Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {currentTasks.map((t, idx) => {
-            const taskKey = `${roadmapDay}_${idx}`;
-            const isDone = completedTaskKeys.includes(taskKey);
-
-            return (
-              <div
-                key={t.id}
-                className={`group p-3.5 rounded-2xl border transition-all duration-200 flex flex-col justify-between ${
-                  isDone
-                    ? "bg-emerald-50/80 border-emerald-200/90 shadow-xs"
-                    : "bg-white/90 dark:bg-slate-900/90 border-slate-200/80 hover:border-blue-300 hover:shadow-md"
-                }`}
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 font-mono">
-                      Task {idx + 1}
-                    </span>
-
-                    {/* Interactive Completion Toggle Pill */}
-                    <button
-                      onClick={() => toggleTaskKey(taskKey)}
-                      className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full flex items-center gap-1 transition-all cursor-pointer ${
-                        isDone
-                          ? "bg-emerald-600 text-white shadow-xs"
-                          : "bg-amber-50 text-amber-700 border border-amber-200/80 hover:bg-amber-100"
-                      }`}
-                      title={isDone ? "Mark as Pending" : "Mark as Completed"}
-                    >
-                      {isDone ? <CheckCircle size={11} /> : <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />}
-                      {isDone ? "Completed" : "Pending"}
-                    </button>
-                  </div>
-
-                  <h4 className="text-xs font-extrabold text-slate-900 dark:text-white font-heading group-hover:text-[#1E3A8A] transition-colors leading-snug">
-                    {t.title}
-                  </h4>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-normal line-clamp-2">
-                    {t.desc}
-                  </p>
+          {todayTasks.map((t, idx) => (
+            <div
+              key={t.id}
+              className={`group p-3.5 rounded-2xl border flex flex-col justify-between ${
+                t.done ? "bg-emerald-50/80 border-emerald-200/90" : "bg-white/90 border-slate-200/80"
+              }`}
+            >
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 font-mono">Task {idx + 1}</span>
+                  <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${
+                    t.done ? "bg-emerald-600 text-white" : "bg-amber-50 text-amber-700 border border-amber-200/80"
+                  }`}>
+                    {t.done ? "Done" : "Open"}
+                  </span>
                 </div>
-
-                {/* Real Task Action Launch Buttons */}
-                <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
-                  <button
-                    onClick={t.action}
-                    className={`text-[11px] font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95 ${
-                      isDone
-                        ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
-                        : "bg-[#1E3A8A] text-white hover:bg-[#1D4ED8]"
-                    }`}
-                  >
-                    <Play size={10} className="fill-current" />
-                    <span>{t.actionText}</span>
-                  </button>
-
-                  <button
-                    onClick={() => toggleTaskKey(taskKey)}
-                    className="text-[10px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
-                  >
-                    {isDone ? "Undo" : "Complete"}
-                  </button>
-                </div>
+                <h4 className="text-xs font-extrabold text-slate-900 leading-snug">{t.title}</h4>
+                <p className="text-[11px] text-slate-500 mt-1 leading-normal line-clamp-2">{t.desc}</p>
               </div>
-            );
-          })}
+              <button
+                onClick={t.action}
+                className="mt-3 pt-2.5 border-t border-slate-100 text-[11px] font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 bg-[#1E3A8A] text-white hover:bg-[#1D4ED8] cursor-pointer w-fit"
+              >
+                <Play size={10} className="fill-current" />
+                {t.actionText}
+              </button>
+            </div>
+          ))}
         </div>
       </div>
 
-
-
-      {/* ── Exam Countdown (if close) ── */}
       {daysLeft !== null && daysLeft <= 180 && currentGoal && (
-        <CountdownBanner
-          days={daysLeft}
-          label={currentGoal.label}
-          color={currentGoal.color}
-          category={currentGoal.category}
-        />
+        <CountdownBanner days={daysLeft} label={currentGoal.label} category={currentGoal.category} />
       )}
 
-      {/* ── Resume Banner (if in-progress attempt) ── */}
       {lastAttempt && (
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-3">
           <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
             <Trophy size={18} className="text-amber-600" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-amber-900 font-['Poppins'] truncate">Last: {lastAttempt.quizTitle}</p>
+            <p className="text-sm font-semibold text-amber-900 font-['Poppins'] truncate">Last attempt: {lastAttempt.quizTitle}</p>
             <p className="text-xs text-amber-700 mt-0.5">
               Score: {lastAttempt.totalScore}/{lastAttempt.maxScore} ({Math.round(lastAttempt.percentage)}%)
               {lastAttempt.negativeMarks < 0 && ` · -${Math.abs(lastAttempt.negativeMarks)} negative`}
             </p>
           </div>
           <button
-            onClick={() => setView("quizzes")}
+            onClick={() => {
+              setSelectedQuizId(lastAttempt.quizId);
+              setView("quiz-detail");
+            }}
             className="flex-shrink-0 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-3 py-2 rounded-xl transition-colors min-h-[36px]"
           >
             Practice Again
@@ -422,15 +333,13 @@ export function Dashboard() {
         </div>
       )}
 
-      {/* ── Stats Row ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard icon={BookOpen} label="Papers Available" value={papers.filter(p => p.goalCategory === cat).length} color="text-blue-600"   bg="bg-blue-50" />
-        <StatCard icon={Brain}    label="Quizzes Taken"   value={goalAttempts.length}                                                        color="text-violet-600" bg="bg-violet-50" />
-        <StatCard icon={Star}     label="Avg. Score"      value={avgScore > 0 ? `${avgScore}%` : "—"}                                        color="text-orange-600" bg="bg-orange-50" />
-        <StatCard icon={Flame}    label="Day Streak"      value={user?.streak ?? 0}                                                           color="text-red-500"   bg="bg-red-50" />
+        <StatCard icon={BookOpen} label="Papers Available" value={visiblePapers.length} color="text-blue-600" bg="bg-blue-50" />
+        <StatCard icon={Brain} label="Live Quizzes" value={visibleQuizzes.length} color="text-violet-600" bg="bg-violet-50" />
+        <StatCard icon={Star} label="Avg. Score" value={avgScore > 0 ? `${avgScore}%` : "—"} color="text-orange-600" bg="bg-orange-50" />
+        <StatCard icon={Flame} label="Study Streak" value={studyStreak} color="text-red-500" bg="bg-red-50" />
       </div>
 
-      {/* ── NEET/JEE specific marking info ── */}
       {isNEETorJEE && (
         <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-start gap-3">
           <Target size={18} className="text-emerald-600 flex-shrink-0 mt-0.5" />
@@ -445,10 +354,7 @@ export function Dashboard() {
         </div>
       )}
 
-      {/* ── Score Trend + Subject Progress ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-
-        {/* Score Trend Chart */}
         <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
           <h3 className="font-semibold text-[#1E3A8A] font-['Poppins'] mb-4 flex items-center gap-2 text-sm">
             <TrendingUp size={16} /> Score Trend
@@ -474,54 +380,69 @@ export function Dashboard() {
           ) : (
             <div className="h-40 flex flex-col items-center justify-center text-gray-400">
               <TrendingUp size={32} className="mb-2 opacity-30" />
-              <p className="text-sm">Take quizzes to see your trend</p>
+              <p className="text-sm">Take at least two quizzes to see your trend</p>
             </div>
           )}
         </div>
 
-        {/* Subject breakdown (goal subjects) */}
         <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
           <h3 className="font-semibold text-[#1E3A8A] font-['Poppins'] mb-4 flex items-center gap-2 text-sm">
             <Target size={16} /> Subject Coverage
           </h3>
-          {recentQuizzes.length === 0 ? (
+          {subjectCoverage.length === 0 ? (
             <div className="h-40 flex flex-col items-center justify-center text-gray-400">
               <Brain size={32} className="mb-2 opacity-30" />
-              <p className="text-sm text-center">No quizzes taken yet{currentGoal ? ` for ${currentGoal.shortLabel}` : ''}</p>
+              <p className="text-sm text-center">No published quizzes{currentGoal ? ` for ${currentGoal.shortLabel}` : ""} yet</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {recentQuizzes.map(q => {
-                const attemptsForQuiz = goalAttempts.filter(a => a.quizId === q.id);
-                const bestScore = attemptsForQuiz.length > 0
-                  ? Math.round(Math.max(...attemptsForQuiz.map(a => a.percentage)))
-                  : 0;
-                const pct = bestScore;
-                return (
-                  <div key={q.id}>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="text-gray-700 font-medium truncate max-w-[60%]">{q.subject}</span>
-                      <span className="text-gray-500 flex-shrink-0">{attemptsForQuiz.length} attempt{attemptsForQuiz.length !== 1 ? "s" : ""}</span>
-                    </div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-700"
-                        style={{
-                          width: `${pct}%`,
-                          background: pct >= 70 ? "#16A34A" : pct >= 40 ? (currentGoal?.color ?? "#1E3A8A") : "#F97316"
-                        }}
-                      />
-                    </div>
-                    <div className="text-[10px] text-gray-400 mt-0.5">{pct > 0 ? `${pct}% best score` : "Not attempted"}</div>
+              {subjectCoverage.map(item => (
+                <div key={item.subject}>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-gray-700 font-medium truncate max-w-[60%]">{item.subject}</span>
+                    <span className="text-gray-500 flex-shrink-0">{item.attempts} attempt{item.attempts !== 1 ? "s" : ""}</span>
                   </div>
-                );
-              })}
+                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{
+                        width: `${item.best}%`,
+                        background: item.best >= 70 ? "#16A34A" : item.best >= 40 ? (currentGoal?.color ?? "#1E3A8A") : "#F97316",
+                      }}
+                    />
+                  </div>
+                  <div className="text-[10px] text-gray-400 mt-0.5">{item.best > 0 ? `${item.best}% best score` : "Not attempted"}</div>
+                </div>
+              ))}
             </div>
           )}
         </div>
       </div>
 
-      {/* ── Announcements ── */}
+      {goalAttempts.length > 0 && (
+        <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
+          <h3 className="font-semibold text-[#1E3A8A] font-['Poppins'] mb-4 flex items-center gap-2 text-sm">
+            <Trophy size={16} /> Recent Attempts
+          </h3>
+          <div className="space-y-2">
+            {goalAttempts.slice(0, 4).map(a => (
+              <div key={a.id} className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
+                <div className="w-9 h-9 bg-violet-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Brain size={15} className="text-violet-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-gray-800 truncate">{a.quizTitle}</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">
+                    {new Date(a.submittedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })} · {a.correctCount} correct · {a.wrongCount} wrong
+                  </p>
+                </div>
+                <span className="text-sm font-bold text-[#1E3A8A]">{Math.round(a.percentage)}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {activeAnnouncements.length > 0 && (
         <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
           <h3 className="font-semibold text-[#1E3A8A] font-['Poppins'] mb-4 flex items-center gap-2 text-sm">
@@ -556,13 +477,10 @@ export function Dashboard() {
         </div>
       )}
 
-      {/* ── Quick Access: Quizzes + Papers ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-
-        {/* Recent Quizzes */}
         <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-[#1E3A8A] font-['Poppins'] text-sm">Recommended Quizzes</h3>
+            <h3 className="font-semibold text-[#1E3A8A] font-['Poppins'] text-sm">Live Quizzes</h3>
             <button onClick={() => setView("quizzes")} className="text-[#1E3A8A] text-xs flex items-center gap-1 hover:underline">
               View all <ChevronRight size={12} />
             </button>
@@ -570,12 +488,12 @@ export function Dashboard() {
           {recentQuizzes.length === 0 ? (
             <div className="text-center py-6 text-gray-400">
               <Brain size={28} className="mx-auto mb-2 opacity-30" />
-              <p className="text-xs">No quizzes{currentGoal ? ` for ${currentGoal.shortLabel}` : ''} yet</p>
+              <p className="text-xs">No published quizzes{currentGoal ? ` for ${currentGoal.shortLabel}` : ""} yet</p>
             </div>
           ) : (
             <div className="space-y-2">
               {recentQuizzes.map(q => {
-                const diffCfg = DIFFICULTY_CONFIG[q.difficulty] ?? DIFFICULTY_CONFIG.medium;
+                const diffCfg = DIFFICULTY_CONFIG[q.difficulty as keyof typeof DIFFICULTY_CONFIG] ?? DIFFICULTY_CONFIG.medium;
                 return (
                   <button
                     key={q.id}
@@ -595,7 +513,7 @@ export function Dashboard() {
                         >
                           {diffCfg.label}
                         </span>
-                        {q.markingScheme.hasNegativeMarking && (
+                        {q.markingScheme?.hasNegativeMarking && (
                           <span className="text-[10px] bg-red-50 text-red-600 px-1.5 py-0.5 rounded-full">−marking</span>
                         )}
                       </div>
@@ -608,10 +526,9 @@ export function Dashboard() {
           )}
         </div>
 
-        {/* Recent Papers */}
         <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-[#1E3A8A] font-['Poppins'] text-sm">Top Papers</h3>
+            <h3 className="font-semibold text-[#1E3A8A] font-['Poppins'] text-sm">Published Papers</h3>
             <button onClick={() => setView("papers")} className="text-[#1E3A8A] text-xs flex items-center gap-1 hover:underline">
               View all <ChevronRight size={12} />
             </button>
@@ -619,7 +536,7 @@ export function Dashboard() {
           {recentPapers.length === 0 ? (
             <div className="text-center py-6 text-gray-400">
               <BookOpen size={28} className="mx-auto mb-2 opacity-30" />
-              <p className="text-xs">No papers{currentGoal ? ` for ${currentGoal.shortLabel}` : ''} yet</p>
+              <p className="text-xs">No published papers{currentGoal ? ` for ${currentGoal.shortLabel}` : ""} yet</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -634,7 +551,9 @@ export function Dashboard() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-gray-800 truncate font-['Poppins']">{p.title}</p>
-                    <p className="text-[10px] text-gray-400 mt-0.5">{p.subject} · {p.year} · {p.marks}M · {p.analytics.downloads.toLocaleString()} downloads</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">
+                      {[p.subject, p.year, p.marks ? `${p.marks}M` : null].filter(Boolean).join(" · ")}
+                    </p>
                   </div>
                   <ChevronRight size={13} className="text-gray-400 flex-shrink-0" />
                 </button>
@@ -644,59 +563,22 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* ── Practice Suggestions ── */}
-      <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-2xl p-5">
-        <div className="flex items-center gap-2 mb-3">
-          <Zap size={17} className="text-[#F97316]" />
-          <h3 className="font-semibold text-orange-800 font-['Poppins'] text-sm">Practice Suggestions</h3>
-        </div>
-        <p className="text-xs text-orange-700 mb-3">Based on your goal, prioritise these high-weightage topics:</p>
-        <div className="flex flex-wrap gap-2">
-          {(cat === "neet"
-            ? ["Genetics & Evolution", "Chemical Bonding", "Mechanics", "Plant Physiology", "Human Reproduction"]
-            : cat === "jee-mains" || cat === "jee-advanced"
-            ? ["Calculus", "Electrostatics", "Organic Chemistry", "Coordinate Geometry", "Thermodynamics"]
-            : cat === "mht-cet-pcb" || cat === "mht-cet-pcm"
-            ? ["Electromagnetic Induction", "Chemical Equilibrium", "Definite Integration", "Genetics", "Matrices"]
-            : ["Trigonometry", "Chemical Reactions", "Statistics", "Geography", "History"]
-          ).map(t => (
-            <span key={t} className="bg-white text-orange-700 border border-orange-200 text-xs px-3 py-1.5 rounded-full font-medium">
-              {t}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Maharashtra District Leaderboard ── */}
-      <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(30,58,138,0.06)" }}>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="font-semibold text-[#1E3A8A] font-['Poppins'] text-sm flex items-center gap-2">
-              <Trophy size={16} className="text-amber-500" /> Top Aspirants in Maharashtra
-            </h3>
-            <p className="text-gray-400 text-xs mt-0.5">Weekly district toppers based on quiz accuracy & streaks</p>
+      {practiceTopics.length > 0 && (
+        <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-2xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Zap size={17} className="text-[#F97316]" />
+            <h3 className="font-semibold text-orange-800 font-['Poppins'] text-sm">From your library</h3>
           </div>
-          <span className="text-[10px] bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-semibold">Live Regional Ranks</span>
+          <p className="text-xs text-orange-700 mb-3">Subjects and chapters from published papers and quizzes:</p>
+          <div className="flex flex-wrap gap-2">
+            {practiceTopics.map(t => (
+              <span key={t} className="bg-white text-orange-700 border border-orange-200 text-xs px-3 py-1.5 rounded-full font-medium">
+                {t}
+              </span>
+            ))}
+          </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {[
-            { rank: 1, name: "Aarav Deshmukh", district: "Pune", score: "98.4%", badge: "🥇 1st Place", color: "bg-amber-50 border-amber-200 text-amber-800" },
-            { rank: 2, name: "Saniya Kulkarni", district: "Nagpur", score: "96.8%", badge: "🥈 2nd Place", color: "bg-slate-50 border-slate-200 text-slate-700" },
-            { rank: 3, name: "Rohan Patil", district: "Nashik", score: "95.2%", badge: "🥉 3rd Place", color: "bg-orange-50 border-orange-200 text-orange-800" },
-          ].map(top => (
-            <div key={top.name} className={`rounded-xl p-3.5 border ${top.color} flex items-center gap-3`}>
-              <div className="w-9 h-9 rounded-xl bg-white shadow-sm flex items-center justify-center font-bold text-sm flex-shrink-0 font-['Poppins']">
-                #{top.rank}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-bold truncate font-['Poppins']">{top.name}</p>
-                <p className="text-[10px] opacity-75">{top.district} District · {top.score}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
     </div>
   );
 }
-

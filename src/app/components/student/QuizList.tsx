@@ -2,13 +2,13 @@ import React, { useState, useRef, useEffect } from "react";
 import {
   Brain, Clock, Target, ChevronRight, Bookmark, BookmarkCheck, Zap,
   Folder, FolderOpen, ArrowLeft, List, FolderTree, Award, Info, Search,
-  GraduationCap, School, Stethoscope, Cog, BookOpen, Layers, Calendar, CalendarDays, FileText
+  GraduationCap, School, Stethoscope, Cog, BookOpen, Layers, Calendar, CalendarDays, FileText, X
 } from "lucide-react";
 import { useApp, EMPTY_GLOBAL_FILTER } from "../context/AppContext";
 import { DIFFICULTY_CONFIG, PAPER_TYPE_CONFIG } from "../data/mockData";
 import type { StudentQuiz } from "../../lib/api";
-import { MAIN_FOLDERS } from "./FolderExplorer";
 import type { FolderNode, FolderIconType } from "./FolderExplorer";
+import { buildQuizFolders } from "./contentFolders";
 
 // ── Contextual Icon Helper ────────────────────────────────────────────────────
 function FolderIcon({ iconType, size = 20, className = "" }: { iconType?: FolderIconType; size?: number; className?: string }) {
@@ -30,9 +30,9 @@ function FolderIcon({ iconType, size = 20, className = "" }: { iconType?: Folder
 // ── Category badge color helper ───────────────────────────────────────────────
 function getOrganizerBadge(iconType?: FolderIconType): { label: string; bg: string; text: string; border: string } | null {
   switch (iconType) {
-    case "by-subject": return { label: "📐 Subjects", bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" };
-    case "by-type": return { label: "📜 Paper Types", bg: "bg-violet-50", text: "text-violet-700", border: "border-violet-200" };
-    case "by-year": return { label: "📅 Years", bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" };
+    case "by-subject": return { label: "Subjects", bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" };
+    case "by-type": return { label: "Paper Types", bg: "bg-violet-50", text: "text-violet-700", border: "border-violet-200" };
+    case "by-year": return { label: "Years", bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" };
     default: return null;
   }
 }
@@ -193,11 +193,7 @@ function RootCategoryCard({
         {/* Icon + Title Row */}
         <div className="flex items-start gap-3.5">
           <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br ${folder.color ?? "from-purple-600 to-indigo-700"} text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}>
-            {folder.emoji ? (
-              <span className="text-xl sm:text-2xl">{folder.emoji}</span>
-            ) : (
-              <FolderIcon iconType={folder.iconType} size={24} />
-            )}
+            <FolderIcon iconType={folder.iconType} size={24} />
           </div>
 
           <div className="min-w-0 flex-1">
@@ -238,12 +234,34 @@ function RootCategoryCard({
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export function QuizList() {
-  const { setView, setSelectedQuizId, toggleBookmark, isBookmarked, completedAttempts, globalSearchFilter, setGlobalSearchFilter, studentQuizzes, studentContentLoading } = useApp();
+  const {
+    setView, setSelectedQuizId, toggleBookmark, isBookmarked, completedAttempts,
+    globalSearchFilter, setGlobalSearchFilter, studentQuizzes, studentContentLoading,
+    user, currentGoal, refreshStudentContent,
+  } = useApp();
   const [pathStack, setPathStack] = useState<FolderNode[]>([]);
-  const [viewMode, setViewMode] = useState<"folders" | "flat">("folders");
+  const [viewMode, setViewMode] = useState<"folders" | "flat">("flat");
   const [folderSearch, setFolderSearch] = useState("");
 
   const breadcrumbRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    void refreshStudentContent();
+  }, [refreshStudentContent]);
+
+  const studentGoalCats = new Set(
+    (user?.goals ?? []).map((g) => g.category).filter(Boolean),
+  );
+  if (currentGoal?.category) studentGoalCats.add(currentGoal.category);
+
+  const matchingQuizzes = studentQuizzes.filter((q) => {
+    if (studentGoalCats.size === 0) return true;
+    if (!q.goalCategory) return true;
+    return studentGoalCats.has(q.goalCategory);
+  });
+  const scopedQuizzes = matchingQuizzes.length > 0 ? matchingQuizzes : studentQuizzes;
+
+  const contentFolders = buildQuizFolders(scopedQuizzes);
 
   // Check if globalSearchFilter has any active filters
   const hasGlobalFilter = Boolean(globalSearchFilter.search || globalSearchFilter.goalCategory || globalSearchFilter.subject || globalSearchFilter.paperType || globalSearchFilter.year);
@@ -271,7 +289,7 @@ export function QuizList() {
   // Active folder level
   const currentFolder = pathStack.length > 0 ? pathStack[pathStack.length - 1] : null;
   const isRootLevel = pathStack.length === 0;
-  const childFolders = currentFolder ? currentFolder.children ?? [] : MAIN_FOLDERS;
+  const childFolders = currentFolder ? currentFolder.children ?? [] : contentFolders;
 
   // Filter conditions (from folder navigation OR global search)
   const activeGoal = hasGlobalFilter ? (globalSearchFilter.goalCategory || undefined) : pathStack.find(f => f.goalCategory)?.goalCategory;
@@ -280,7 +298,7 @@ export function QuizList() {
   const activeSearch = hasGlobalFilter ? globalSearchFilter.search : "";
 
   // Filter matching quizzes
-  const filtered = studentQuizzes.filter(q => {
+  const filtered = scopedQuizzes.filter(q => {
     if (activeGoal && q.goalCategory !== activeGoal) return false;
     if (activeSubject && q.subject !== activeSubject) return false;
     if (activeSearch && !q.title.toLowerCase().includes(activeSearch.toLowerCase()) && !q.subject.toLowerCase().includes(activeSearch.toLowerCase()) && !(q.chapter && q.chapter.toLowerCase().includes(activeSearch.toLowerCase()))) return false;
@@ -292,7 +310,7 @@ export function QuizList() {
     const targetGoal = fNode.goalCategory ?? activeGoal;
     const targetSubject = fNode.subject ?? activeSubject;
 
-    return studentQuizzes.filter(q => {
+    return scopedQuizzes.filter(q => {
       if (targetGoal && q.goalCategory !== targetGoal) return false;
       if (targetSubject && q.subject !== targetSubject) return false;
       return true;
@@ -307,14 +325,8 @@ export function QuizList() {
 
   // Filter child folders by search + suppress empty leaf folders
   const visibleFolders = childFolders.filter(f => {
-    // Search filter
     if (folderSearch && !f.name.toLowerCase().includes(folderSearch.toLowerCase())) return false;
-    // Suppress empty leaf folders (no children & 0 quizzes)
-    if (!f.children || f.children.length === 0) {
-      const count = countQuizzesInFolder(f);
-      if (count === 0) return false;
-    }
-    return true;
+    return countQuizzesInFolder(f) > 0;
   });
 
   // Map quizId → best attempt percentage
@@ -342,13 +354,13 @@ export function QuizList() {
                 </p>
                 <div className="flex flex-wrap items-center gap-1 mt-1">
                   {globalSearchFilter.search && (
-                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">🔍 "{globalSearchFilter.search}"</span>
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 inline-flex items-center gap-1"><Search size={9} /> {globalSearchFilter.search}</span>
                   )}
                   {globalSearchFilter.goalCategory && (
-                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">🎓 {globalSearchFilter.goalCategory}</span>
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 inline-flex items-center gap-1"><GraduationCap size={9} /> {globalSearchFilter.goalCategory}</span>
                   )}
                   {globalSearchFilter.subject && (
-                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-900/50 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800">📐 {globalSearchFilter.subject}</span>
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-900/50 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 inline-flex items-center gap-1"><BookOpen size={9} /> {globalSearchFilter.subject}</span>
                   )}
                 </div>
               </div>
@@ -357,7 +369,7 @@ export function QuizList() {
               onClick={() => { setGlobalSearchFilter(EMPTY_GLOBAL_FILTER); setViewMode("folders"); }}
               className="text-[11px] font-bold text-red-500 hover:text-red-600 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-red-200 dark:border-red-800 hover:border-red-300 transition-all flex items-center gap-1 cursor-pointer active:scale-95 flex-shrink-0"
             >
-              ✕ Clear Search
+              <X size={12} /> Clear Search
             </button>
           </div>
         </div>
@@ -458,6 +470,12 @@ export function QuizList() {
         )}
       </div>
 
+      {studentContentLoading && scopedQuizzes.length === 0 && (
+        <div className="text-center py-14 text-slate-400 rounded-2xl bg-white/80 border border-slate-200">
+          <p className="text-sm">Loading quizzes...</p>
+        </div>
+      )}
+
       {/* ── Root-Level Premium Hero Cards (2×2 Grid) ── */}
       {viewMode === "folders" && isRootLevel && visibleFolders.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -492,14 +510,10 @@ export function QuizList() {
                 {/* Main Folder Info */}
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br ${folder.color ?? "from-purple-600 to-indigo-700"} text-white flex items-center justify-center font-bold shadow-xs group-hover:scale-105 transition-transform flex-shrink-0`}>
-                    {folder.emoji ? (
-                      <span className="text-lg">{folder.emoji}</span>
-                    ) : (
-                      <>
-                        <FolderIcon iconType={folder.iconType} size={20} className="group-hover:hidden" />
-                        <FolderOpen size={20} className="hidden group-hover:block" />
-                      </>
-                    )}
+                    <>
+                      <FolderIcon iconType={folder.iconType} size={20} className="group-hover:hidden" />
+                      <FolderOpen size={20} className="hidden group-hover:block" />
+                    </>
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 flex-wrap">
@@ -543,7 +557,10 @@ export function QuizList() {
           {filtered.length === 0 ? (
             <div className="text-center py-14 text-slate-400 rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/80 dark:border-slate-800 shadow-sm p-4">
               <Brain size={40} className="mx-auto mb-2 opacity-20" />
-              <p className="text-slate-500 font-medium text-xs sm:text-sm">No rank challenges found in this directory</p>
+              <p className="text-slate-500 font-medium text-xs sm:text-sm">
+                {studentContentLoading ? "Loading quizzes..." : "No published quizzes for your exam goal yet."}
+              </p>
+              <p className="text-[11px] text-slate-400 mt-1">Ask your admin to publish quizzes for this goal.</p>
               <button onClick={() => setPathStack([])} className="mt-2 text-[#1E3A8A] dark:text-blue-400 text-xs font-semibold hover:underline">
                 Back to Root Directory
               </button>

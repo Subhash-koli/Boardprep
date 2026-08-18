@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, CheckCircle, X, Shield } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, CheckCircle, X } from "lucide-react";
 import { useApp } from "./context/AppContext";
 import type { User as AppUser } from "./context/AppContext";
 import { loginAccount, registerAccount, setToken } from "../lib/api";
@@ -7,7 +7,37 @@ import { loginAccount, registerAccount, setToken } from "../lib/api";
 const LogoImage = new URL("../../imports/logo.png", import.meta.url).href;
 
 // ── Shared Input Field ────────────────────────────────────────────────────────
-function InputField({ label, type = "text", value, onChange, placeholder, icon: Icon, rightIcon, onRightIconClick, mono }: any) {
+const EMAIL_MAX = 80;
+const PASSWORD_MIN = 8;
+const PASSWORD_MAX = 16;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const SPECIAL_RE = /[^A-Za-z0-9]/;
+
+function validateEmail(email: string) {
+  const value = email.trim();
+  if (!value) return "Email is required.";
+  if (value.length > EMAIL_MAX) return "Email must be at most 80 characters.";
+  if (!EMAIL_RE.test(value)) return "Enter a valid email address.";
+  return "";
+}
+
+function passwordChecks(password: string) {
+  return [
+    { ok: password.length >= PASSWORD_MIN && password.length <= PASSWORD_MAX, label: "8–16 characters" },
+    { ok: /[a-z]/.test(password), label: "1 lowercase letter" },
+    { ok: /[A-Z]/.test(password), label: "1 uppercase letter" },
+    { ok: SPECIAL_RE.test(password), label: "1 special character (!@#$...)" },
+  ];
+}
+
+function validatePassword(password: string) {
+  if (passwordChecks(password).some((item) => !item.ok)) {
+    return "Password must be 8–16 characters with 1 uppercase, 1 lowercase, and 1 special character.";
+  }
+  return "";
+}
+
+function InputField({ label, type = "text", value, onChange, placeholder, icon: Icon, rightIcon, onRightIconClick, mono, maxLength }: any) {
   return (
     <div className="mb-4">
       <label className="block text-sm text-gray-700 mb-1.5" style={{ fontFamily: "Poppins, sans-serif", fontWeight: 500 }}>{label}</label>
@@ -16,6 +46,7 @@ function InputField({ label, type = "text", value, onChange, placeholder, icon: 
         <input
           type={type}
           value={value}
+          maxLength={maxLength}
           onChange={e => onChange(e.target.value)}
           placeholder={placeholder}
           className={`w-full border border-gray-200 rounded-lg py-2.5 pr-4 text-sm focus:outline-none focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A] transition-colors bg-gray-50 ${mono ? "font-mono tracking-wider" : ""}`}
@@ -148,16 +179,6 @@ function UnifiedLoginForm({ onSuccessStudent, onSuccessAdmin, onRegister }: { on
         <button type="button" onClick={() => setSubView("forgot")} className="text-[#1E3A8A] text-sm hover:underline font-medium">Forgot password?</button>
       </div>
       <button type="submit" disabled={loading} className="w-full bg-[#1E3A8A] hover:bg-blue-900 text-white py-3 rounded-xl transition-colors disabled:opacity-60 font-semibold text-sm shadow-md">{loading ? "Logging in..." : "Login"}</button>
-      <div className="mt-4 p-3 bg-blue-50/80 rounded-xl border border-blue-100 text-[11px] text-gray-600 space-y-1">
-        <p className="font-semibold text-[#1E3A8A] flex items-center gap-1">
-          <Shield size={12} className="text-[#1E3A8A]" /> Role Auto-Detection Active
-        </p>
-        <p className="text-gray-500">System automatically routes you to Student or Admin panel based on your account credentials.</p>
-        <div className="pt-1 flex flex-col sm:flex-row gap-2 font-mono text-[10px] text-gray-500 border-t border-blue-100/80">
-          <span>🎓 Student: register a new account</span>
-          <span>🛡️ Admin: <strong>admin@pariksha.in</strong> / admin123</span>
-        </div>
-      </div>
       <p className="text-center text-sm text-gray-500 mt-5">
         Don't have an account? <button type="button" onClick={onRegister} className="text-[#1E3A8A] font-semibold hover:underline">Register free</button>
       </p>
@@ -188,7 +209,7 @@ export function LoginModal() {
     } else if (selectedQuizId) {
       setView("quiz-detail");
     } else {
-      setView("papers");
+      setView("dashboard");
     }
   };
   const handleAdminSuccess   = () => { setShowLoginModal(false); setView("admin-dashboard"); };
@@ -274,7 +295,10 @@ export function RegisterPage() {
     e.preventDefault();
     setError("");
     if (!name || !email || !password) { setError("Please fill in all fields."); return; }
-    if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
+    const emailError = validateEmail(email);
+    if (emailError) { setError(emailError); return; }
+    const passwordError = validatePassword(password);
+    if (passwordError) { setError(passwordError); return; }
     setLoading(true);
     try {
       const data = await registerAccount({ name, email, password });
@@ -306,13 +330,20 @@ export function RegisterPage() {
     <AuthLayout title="Create your account" subtitle="Join thousands of students preparing with ParikshaCrack">
       <form onSubmit={handleRegister}>
         <InputField label="Full name" value={name} onChange={setName} placeholder="Priya Sharma" icon={User} />
-        <InputField label="Email address" type="email" value={email} onChange={setEmail} placeholder="you@email.com" icon={Mail} />
+        <InputField label="Email address" type="email" value={email} onChange={setEmail} placeholder="you@email.com" icon={Mail} maxLength={EMAIL_MAX} />
         <InputField
           label="Password" type={showPwd ? "text" : "password"} value={password} onChange={setPassword}
-          placeholder="Min. 8 characters" icon={Lock}
+          placeholder="8–16 characters" icon={Lock} maxLength={PASSWORD_MAX}
           rightIcon={showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
           onRightIconClick={() => setShowPwd(!showPwd)}
         />
+        <ul className="mb-4 -mt-2 space-y-1">
+          {passwordChecks(password).map((item) => (
+            <li key={item.label} className={`text-xs flex items-center gap-1.5 ${item.ok ? "text-green-600" : "text-gray-400"}`}>
+              <CheckCircle size={12} /> {item.label}
+            </li>
+          ))}
+        </ul>
         {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
         <button type="submit" disabled={loading}
           className="w-full bg-[#1E3A8A] hover:bg-blue-900 text-white py-3 rounded-xl transition-colors disabled:opacity-60 font-semibold">
@@ -464,7 +495,8 @@ export function ResetPasswordPage() {
   const handleReset = (e: React.FormEvent) => {
     e.preventDefault();
     if (otp.join("").length < 6) { setError("Enter 6-digit OTP."); return; }
-    if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
+    const passwordError = validatePassword(password);
+    if (passwordError) { setError(passwordError); return; }
     if (password !== confirm) { setError("Passwords do not match."); return; }
     setLoading(true);
     setTimeout(() => {
@@ -492,7 +524,7 @@ export function ResetPasswordPage() {
           </div>
         </div>
         <InputField label="New Password" type={showPwd ? "text" : "password"} value={password} onChange={setPassword}
-          placeholder="Min. 8 characters" icon={Lock}
+          placeholder="8–16 characters" icon={Lock} maxLength={PASSWORD_MAX}
           rightIcon={showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
           onRightIconClick={() => setShowPwd(!showPwd)}
         />

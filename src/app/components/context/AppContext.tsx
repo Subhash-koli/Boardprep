@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import type { Medium, QuizAttempt, Goal, GoalCategory, PaperType } from "../data/mockData";
 import { GOAL_METADATA } from "../data/mockData";
-import { fetchMe, getToken, setToken, ApiError, fetchStudentPapers, fetchStudentQuizzes, fetchStudentSubjects, fetchStudentAnnouncements, type StudentPaper, type StudentQuiz, type StudentQuizQuestion, type StudentSubject, type AppAnnouncement } from "../../lib/api";
+import { fetchMe, getToken, setToken, ApiError, fetchStudentPapers, fetchStudentQuizzes, fetchStudentSubjects, fetchStudentAnnouncements, fetchMyAttempts, type StudentPaper, type StudentQuiz, type StudentQuizQuestion, type StudentSubject, type AppAnnouncement } from "../../lib/api";
 
 // ── Global Search Filter (shared between StudentLayout modal → PapersList) ────
 
@@ -150,12 +150,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [view, setView] = useState<View>("landing");
   const [user, setUser] = useState<User | null>(null);
 
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>([
-    { id: "bm1", type: "paper", refId: "p1",   createdAt: "2025-01-05" },
-    { id: "bm2", type: "quiz",  refId: "qz1",  createdAt: "2025-01-06" },
-    { id: "bm3", type: "paper", refId: "pn1",  createdAt: "2025-01-07" },
-    { id: "bm4", type: "quiz",  refId: "qzn1", createdAt: "2025-01-08" },
-  ]);
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
 
   const [selectedPaperId, setSelectedPaperId] = useState<string | null>(null);
   const [selectedQuizId, setSelectedQuizId]   = useState<string | null>(null);
@@ -163,29 +158,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [lastAttemptId, setLastAttemptId]     = useState<string | null>(null);
   const [authEmail, setAuthEmail]             = useState("");
 
-  const [completedAttempts, setCompletedAttempts] = useState<QuizAttempt[]>([
-    {
-      id: "att1", quizId: "qz2", quizTitle: "Mathematics — Trigonometry Basics",
-      subject: "Mathematics", goalCategory: "board-10",
-      mode: "practice", totalScore: 8, maxScore: 10, percentage: 80,
-      percentile: 82, correctCount: 8, wrongCount: 0, skippedCount: 2, negativeMarks: 0,
-      timeTakenSeconds: 420, isCompleted: true, submittedAt: "2025-01-08T10:30:00", answers: [],
-    },
-    {
-      id: "att2", quizId: "qz7", quizTitle: "Mathematics — Quadratic Equations",
-      subject: "Mathematics", goalCategory: "board-10",
-      mode: "exam", totalScore: 7, maxScore: 10, percentage: 70,
-      percentile: 68, correctCount: 7, wrongCount: 0, skippedCount: 3, negativeMarks: 0,
-      timeTakenSeconds: 540, isCompleted: true, submittedAt: "2025-01-09T14:15:00", answers: [],
-    },
-    {
-      id: "att3", quizId: "qzn1", quizTitle: "NEET Physics — Laws of Motion",
-      subject: "Physics", goalCategory: "neet",
-      mode: "exam", totalScore: 20, maxScore: 32, percentage: 62.5,
-      percentile: 71, correctCount: 6, wrongCount: 2, skippedCount: 0, negativeMarks: -2,
-      timeTakenSeconds: 1620, isCompleted: true, submittedAt: "2025-01-10T09:00:00", answers: [],
-    },
-  ]);
+  const [completedAttempts, setCompletedAttempts] = useState<QuizAttempt[]>([]);
 
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginModalTab, setLoginModalTab] = useState<"student" | "admin">("student");
@@ -308,25 +281,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setStudentPapers([]);
       setStudentQuizzes([]);
       setStudentAnnouncements([]);
+      setCompletedAttempts([]);
       return;
     }
     setStudentContentLoading(true);
     try {
-      const [subjectsRes, papersRes, quizzesRes, announcementsRes] = await Promise.all([
+      const [subjectsRes, papersRes, quizzesRes, announcementsRes, attemptsRes] = await Promise.all([
         fetchStudentSubjects(),
         fetchStudentPapers(),
         fetchStudentQuizzes(),
         fetchStudentAnnouncements(),
+        fetchMyAttempts(),
       ]);
       setStudentSubjects(subjectsRes.subjects);
       setStudentPapers(papersRes.papers);
       setStudentQuizzes(quizzesRes.quizzes);
       setStudentAnnouncements(announcementsRes.announcements);
+      setCompletedAttempts(attemptsRes.attempts.map((a) => ({
+        ...a,
+        goalCategory: a.goalCategory as GoalCategory,
+        answers: a.answers ?? [],
+      })));
     } catch (err) {
       console.warn("Could not load student content", err);
       setStudentSubjects([]);
       setStudentPapers([]);
       setStudentQuizzes([]);
+      setCompletedAttempts([]);
       setStudentAnnouncements([]);
     } finally {
       setStudentContentLoading(false);

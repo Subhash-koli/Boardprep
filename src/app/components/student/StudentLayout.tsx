@@ -3,6 +3,7 @@ import {
   LayoutDashboard, FileText, Brain, Bookmark, User,
   LogOut, Bell, X, Moon, Sun, Search,
   BookOpen, Layers, CalendarDays, Award, Clock, Eye, Command,
+  GraduationCap, Calendar, Target,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 
@@ -380,7 +381,7 @@ export function StudentLayout({ children }: { children: ReactNode }) {
               <div className="flex items-center gap-2">
                 {/* Live Match Counter Badge */}
                 <span className="hidden sm:flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 animate-apple-unveil">
-                  🎯 {matchingPapers.length} papers
+                  <Target size={12} /> {matchingPapers.length} papers
                 </span>
                 <button
                   onClick={handleCloseDrawer}
@@ -444,37 +445,37 @@ export function StudentLayout({ children }: { children: ReactNode }) {
                 <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mr-1">Active:</span>
                 {hierFilter.level && (
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                    🎓 {filterBreadcrumb(hierFilter)}
+                    <GraduationCap size={10} /> {filterBreadcrumb(hierFilter)}
                     <button onClick={() => { setHierFilter(EMPTY_FILTER); setModalSubject(""); setModalType(""); setModalYear(""); }} className="hover:text-red-500 transition-colors"><X size={10} /></button>
                   </span>
                 )}
                 {modalSubject && (
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-violet-50 text-violet-700 border border-violet-200">
-                    📐 {availableSubjects.find(s => s.id === modalSubject)?.name ?? modalSubject}
+                    <BookOpen size={10} /> {availableSubjects.find(s => s.id === modalSubject)?.name ?? modalSubject}
                     <button onClick={() => setModalSubject("")} className="hover:text-red-500 transition-colors"><X size={10} /></button>
                   </span>
                 )}
                 {modalType && (
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                    📜 {PAPER_TYPE_CONFIG[modalType as PaperType]?.label ?? modalType}
+                    <FileText size={10} /> {PAPER_TYPE_CONFIG[modalType as PaperType]?.label ?? modalType}
                     <button onClick={() => setModalType("")} className="hover:text-red-500 transition-colors"><X size={10} /></button>
                   </span>
                 )}
                 {modalYear && (
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    📅 {modalYear}
+                    <Calendar size={10} /> {modalYear}
                     <button onClick={() => setModalYear("")} className="hover:text-red-500 transition-colors"><X size={10} /></button>
                   </span>
                 )}
                 {modalSearch && (
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-gray-100 text-gray-700 border border-gray-200">
-                    🔍 "{modalSearch}"
+                    <Search size={10} /> {modalSearch}
                     <button onClick={() => setModalSearch("")} className="hover:text-red-500 transition-colors"><X size={10} /></button>
                   </span>
                 )}
                 {/* Mobile Match Counter */}
                 <span className="sm:hidden ml-auto flex items-center gap-1 text-[10px] font-bold text-emerald-700">
-                  🎯 {matchingPapers.length}
+                  <Target size={10} /> {matchingPapers.length}
                 </span>
               </div>
             )}

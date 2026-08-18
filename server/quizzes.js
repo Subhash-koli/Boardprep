@@ -49,6 +49,58 @@ function shufflePick(items, count) {
   return copy.slice(0, count);
 }
 
+function formatScheduledAt(value) {
+  if (!value) return null;
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString();
+}
+
+function isScheduleDue(value) {
+  if (!value) return false;
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return false;
+  if (d.getTime() <= Date.now()) return true;
+  // TiDB DATETIME has no timezone; if the driver treats it as UTC, still honour the wall-clock time.
+  const asLocal = new Date(
+    d.getUTCFullYear(),
+    d.getUTCMonth(),
+    d.getUTCDate(),
+    d.getUTCHours(),
+    d.getUTCMinutes(),
+    d.getUTCSeconds(),
+  );
+  return asLocal.getTime() <= Date.now();
+}
+
+export async function publishDueQuizzes() {
+  const [rows] = await pool.query(
+    `SELECT id, scheduled_at FROM quizzes WHERE status = 'scheduled' AND scheduled_at IS NOT NULL`,
+  );
+  const dueIds = rows.filter((row) => isScheduleDue(row.scheduled_at)).map((row) => row.id);
+
+  if (dueIds.length === 0) return;
+  await pool.query(
+    `UPDATE quizzes SET status = 'published', scheduled_at = NULL WHERE id IN (${dueIds.map(() => "?").join(",")})`,
+    dueIds,
+  );
+}
+
+function toMysqlDateTime(d) {
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+function parseSchedule(status, raw) {
+  if (status !== "scheduled") return { scheduledAt: null };
+  const value = String(raw ?? "").trim();
+  if (!value) return { error: "Select a publish date and time." };
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return { error: "Invalid schedule date and time." };
+  if (d.getTime() <= Date.now()) return { error: "Schedule date and time must be in the future." };
+  return { scheduledAt: toMysqlDateTime(d) };
+}
+
 export async function toQuiz(row, { includeQuestions = false } = {}) {
   const analytics = await getAttemptStats(row.id);
   const bankSize = Number(row.questions_count ?? 0);
@@ -69,6 +121,7 @@ export async function toQuiz(row, { includeQuestions = false } = {}) {
     instructions: row.instructions || "",
     markingScheme: parseMarkingScheme(row.marking_scheme),
     status: row.status || "draft",
+    scheduledAt: formatScheduledAt(row.scheduled_at),
     analytics,
     createdAt: row.created_at,
   };
@@ -159,6 +212,9 @@ function parseQuizBody(body) {
     .slice(0, questionsToShow)
     .reduce((sum, q) => sum + q.marks, 0);
 
+  const schedule = parseSchedule(status, body?.scheduledAt);
+  if (schedule.error) return { error: schedule.error };
+
   return {
     title,
     subject,
@@ -170,6 +226,7 @@ function parseQuizBody(body) {
     totalMarks: Number.isFinite(totalMarks) && totalMarks > 0 ? totalMarks : attemptMarks,
     instructions,
     status,
+    scheduledAt: schedule.scheduledAt,
     bankSize,
     questionsToShow,
     questionsCount: parsedQuestions.length,
@@ -205,6 +262,7 @@ async function saveQuestions(quizId, questions) {
 
 export async function listQuizzes(_req, res) {
   try {
+    await publishDueQuizzes();
     const [rows] = await pool.query("SELECT * FROM quizzes ORDER BY created_at DESC");
     const quizzes = await Promise.all(rows.map((row) => toQuiz(row, { includeQuestions: false })));
     return res.json({ quizzes });
@@ -216,6 +274,7 @@ export async function listQuizzes(_req, res) {
 
 export async function getQuiz(req, res) {
   try {
+    await publishDueQuizzes();
     const id = String(req.params.id || "");
     const [rows] = await pool.query("SELECT * FROM quizzes WHERE id = ? LIMIT 1", [id]);
     if (!rows[0]) return res.status(404).json({ error: "Quiz not found." });
@@ -235,8 +294,8 @@ export async function createQuiz(req, res) {
     await pool.query(
       `INSERT INTO quizzes
         (id, title, subject, subject_id, chapter, difficulty, time_limit_minutes, total_marks,
-         questions_count, questions_to_show, instructions, marking_scheme, goal_category, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         questions_count, questions_to_show, instructions, marking_scheme, goal_category, status, scheduled_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         parsed.title,
@@ -252,6 +311,7 @@ export async function createQuiz(req, res) {
         JSON.stringify(parsed.markingScheme),
         parsed.goalCategory || null,
         parsed.status,
+        parsed.scheduledAt,
       ],
     );
 
@@ -277,7 +337,7 @@ export async function updateQuiz(req, res) {
       `UPDATE quizzes
        SET title = ?, subject = ?, subject_id = ?, chapter = ?, difficulty = ?,
            time_limit_minutes = ?, total_marks = ?, questions_count = ?, questions_to_show = ?,
-           instructions = ?, marking_scheme = ?, goal_category = ?, status = ?
+           instructions = ?, marking_scheme = ?, goal_category = ?, status = ?, scheduled_at = ?
        WHERE id = ?`,
       [
         parsed.title,
@@ -293,6 +353,7 @@ export async function updateQuiz(req, res) {
         JSON.stringify(parsed.markingScheme),
         parsed.goalCategory || null,
         parsed.status,
+        parsed.scheduledAt,
         id,
       ],
     );
@@ -308,6 +369,7 @@ export async function updateQuiz(req, res) {
 
 export async function startQuizSession(req, res) {
   try {
+    await publishDueQuizzes();
     const id = String(req.params.id || "");
     const [rows] = await pool.query(
       "SELECT * FROM quizzes WHERE id = ? AND status = 'published' LIMIT 1",
@@ -339,6 +401,169 @@ export async function startQuizSession(req, res) {
   } catch (err) {
     console.error("startQuizSession failed:", err);
     return res.status(500).json({ error: "Could not start quiz." });
+  }
+}
+
+export async function updateQuizStatus(req, res) {
+  try {
+    await publishDueQuizzes();
+    const id = String(req.params.id || "");
+    const status = String(req.body?.status ?? "").trim();
+    if (!ALLOWED_STATUS.has(status)) {
+      return res.status(400).json({ error: "Invalid status." });
+    }
+
+    const [rows] = await pool.query("SELECT * FROM quizzes WHERE id = ? LIMIT 1", [id]);
+    if (!rows.length) return res.status(404).json({ error: "Quiz not found." });
+    const row = rows[0];
+
+    if (status === "published" || status === "scheduled") {
+      const bankSize = Number(row.questions_count ?? 0);
+      const questionsToShow = Number(row.questions_to_show ?? bankSize);
+      if (bankSize < 1 || bankSize < questionsToShow) {
+        return res.status(400).json({ error: "Complete the question bank before publishing." });
+      }
+    }
+
+    const schedule = parseSchedule(status, req.body?.scheduledAt);
+    if (schedule.error) return res.status(400).json({ error: schedule.error });
+
+    await pool.query(
+      "UPDATE quizzes SET status = ?, scheduled_at = ? WHERE id = ?",
+      [status, schedule.scheduledAt, id],
+    );
+
+    const [updated] = await pool.query("SELECT * FROM quizzes WHERE id = ? LIMIT 1", [id]);
+    return res.json({ quiz: await toQuiz(updated[0]) });
+  } catch (err) {
+    console.error("updateQuizStatus failed:", err);
+    return res.status(500).json({ error: "Could not update quiz status." });
+  }
+}
+
+function toAttempt(row) {
+  const created = row.created_at ? new Date(row.created_at) : new Date();
+  return {
+    id: row.id,
+    quizId: row.quiz_id,
+    quizTitle: row.quiz_title || row.joined_title || "Quiz",
+    subject: row.subject || row.joined_subject || "",
+    goalCategory: row.goal_category || row.joined_goal || "",
+    mode: row.mode === "exam" ? "exam" : "practice",
+    totalScore: Number(row.score ?? 0),
+    maxScore: Number(row.max_score ?? 0),
+    percentage: Number(row.percentage ?? 0),
+    correctCount: Number(row.correct_count ?? 0),
+    wrongCount: Number(row.wrong_count ?? 0),
+    skippedCount: Number(row.skipped_count ?? 0),
+    negativeMarks: Number(row.negative_marks ?? 0),
+    timeTakenSeconds: Number(row.time_taken_seconds ?? 0),
+    isCompleted: true,
+    submittedAt: created.toISOString(),
+    answers: [],
+  };
+}
+
+function dayKey(date) {
+  const d = new Date(date);
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+}
+
+function computeStreakFromDates(dates) {
+  const days = new Set(dates.map(dayKey));
+  if (!days.size) return 0;
+  const cursor = new Date();
+  cursor.setHours(0, 0, 0, 0);
+  if (!days.has(dayKey(cursor))) {
+    cursor.setDate(cursor.getDate() - 1);
+    if (!days.has(dayKey(cursor))) return 0;
+  }
+  let streak = 0;
+  while (days.has(dayKey(cursor))) {
+    streak += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return streak;
+}
+
+async function refreshUserStreak(userId) {
+  const [rows] = await pool.query(
+    "SELECT created_at FROM quiz_attempts WHERE user_id = ? ORDER BY created_at DESC",
+    [userId],
+  );
+  const streak = computeStreakFromDates(rows.map((row) => row.created_at));
+  await pool.query("UPDATE users SET streak = ? WHERE id = ?", [streak, userId]);
+  return streak;
+}
+
+export async function listMyAttempts(req, res) {
+  try {
+    const userId = req.auth?.id;
+    if (!userId) return res.status(401).json({ error: "Please log in." });
+
+    const [rows] = await pool.query(
+      `SELECT a.*, q.title AS joined_title, q.subject AS joined_subject, q.goal_category AS joined_goal
+       FROM quiz_attempts a
+       LEFT JOIN quizzes q ON q.id = a.quiz_id
+       WHERE a.user_id = ?
+       ORDER BY a.created_at DESC
+       LIMIT 100`,
+      [userId],
+    );
+    return res.json({ attempts: rows.map(toAttempt) });
+  } catch (err) {
+    console.error("listMyAttempts failed:", err);
+    return res.status(500).json({ error: "Could not load attempts." });
+  }
+}
+
+export async function submitQuizAttempt(req, res) {
+  try {
+    const userId = req.auth?.id;
+    if (!userId) return res.status(401).json({ error: "Please log in." });
+
+    const quizId = String(req.params.id || "");
+    const [quizRows] = await pool.query("SELECT * FROM quizzes WHERE id = ? LIMIT 1", [quizId]);
+    if (!quizRows[0]) return res.status(404).json({ error: "Quiz not found." });
+    const quiz = quizRows[0];
+
+    const body = req.body ?? {};
+    const id = String(body.id || randomUUID());
+    const score = Number(body.totalScore ?? body.score ?? 0);
+    const maxScore = Number(body.maxScore ?? quiz.total_marks ?? 0);
+    const percentage = Number(body.percentage ?? (maxScore > 0 ? (score / maxScore) * 100 : 0));
+    const mode = body.mode === "exam" ? "exam" : "practice";
+
+    await pool.query(
+      `INSERT INTO quiz_attempts (
+        id, user_id, quiz_id, score, percentage, max_score, correct_count, wrong_count,
+        skipped_count, negative_marks, time_taken_seconds, mode, quiz_title, subject, goal_category
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        id,
+        userId,
+        quizId,
+        score,
+        percentage,
+        maxScore,
+        Number(body.correctCount ?? 0),
+        Number(body.wrongCount ?? 0),
+        Number(body.skippedCount ?? 0),
+        Number(body.negativeMarks ?? 0),
+        Number(body.timeTakenSeconds ?? 0),
+        mode,
+        String(body.quizTitle || quiz.title || "Quiz"),
+        String(body.subject || quiz.subject || ""),
+        String(body.goalCategory || quiz.goal_category || ""),
+      ],
+    );
+
+    const streak = await refreshUserStreak(userId);
+    const [saved] = await pool.query("SELECT * FROM quiz_attempts WHERE id = ? LIMIT 1", [id]);
+    return res.status(201).json({ attempt: toAttempt(saved[0]), streak });
+  } catch (err) {
+    console.error("submitQuizAttempt failed:", err);
+    return res.status(500).json({ error: "Could not save attempt." });
   }
 }
 

@@ -229,7 +229,7 @@ export default function OnboardingFlow() {
     } else if (selectedQuizId) {
       setView("quiz-detail");
     } else {
-      setView("papers");
+      setView("dashboard");
     }
   };
 
