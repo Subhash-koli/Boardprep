@@ -1,14 +1,17 @@
 import { ArrowLeft, Bookmark, BookmarkCheck, Eye, Clock, Award, Calendar, FileText, ZoomIn, ZoomOut, Zap, Printer } from "lucide-react";
 import { useState } from "react";
 import { useApp } from "../context/AppContext";
-import { papers, PAPER_TYPE_CONFIG } from "../data/mockData";
+import { PAPER_TYPE_CONFIG } from "../data/mockData";
 
 export function PaperDetail() {
-  const { selectedPaperId, setSelectedPaperId, setView, toggleBookmark, isBookmarked } = useApp();
+  const { selectedPaperId, setSelectedPaperId, setView, toggleBookmark, isBookmarked, studentPapers, studentContentLoading } = useApp();
   const [viewing, setViewing] = useState(false);
   const [zoom, setZoom] = useState(100);
 
-  const paper = papers.find(p => p.id === selectedPaperId);
+  const paper = studentPapers.find(p => p.id === selectedPaperId);
+  if (studentContentLoading && !paper) {
+    return <div className="text-center py-20 text-gray-400"><p>Loading paper...</p></div>;
+  }
   if (!paper) return (
     <div className="text-center py-20 text-gray-400">
       <p>Paper not found.</p>
@@ -186,7 +189,7 @@ export function PaperDetail() {
       <div className="rounded-2xl p-4 sm:p-5 mt-5 bg-white/80 border border-slate-200/80 shadow-xs">
         <h3 className="mb-3 text-xs sm:text-sm font-bold font-heading text-[#1E3A8A]">Related Papers</h3>
         <div className="space-y-2">
-          {papers.filter(p => (p.goalCategory === paper.goalCategory) && p.id !== paper.id && p.status === "published").slice(0, 3).map(rp => {
+          {studentPapers.filter(p => (p.goalCategory === paper.goalCategory) && p.id !== paper.id).slice(0, 3).map(rp => {
             const rpCfg = PAPER_TYPE_CONFIG[rp.type] ?? PAPER_TYPE_CONFIG["practice"];
             return (
               <button

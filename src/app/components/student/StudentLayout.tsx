@@ -3,12 +3,13 @@ import {
   LayoutDashboard, FileText, Brain, Bookmark, User,
   LogOut, Bell, X, Moon, Sun, Search,
   BookOpen, Layers, CalendarDays, Award, Clock, Eye, Command,
+  GraduationCap, Calendar, Target,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 
 import type { View } from "../context/AppContext";
-import { announcements, subjects, papers, PAPER_TYPE_CONFIG } from "../data/mockData";
 import type { PaperType } from "../data/mockData";
+import { PAPER_TYPE_CONFIG } from "../data/mockData";
 import { HierarchicalFilter, EMPTY_FILTER, resolveGoalCategory, filterBreadcrumb } from "./HierarchicalFilter";
 import type { HierarchicalFilterState } from "./HierarchicalFilter";
 
@@ -42,6 +43,7 @@ const navItems: { icon: any; label: string; view: View | "explore" }[] = [
 // ── Notification Bell ─────────────────────────────────────────────────────────
 
 function NotifBell() {
+  const { studentAnnouncements } = useApp();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -54,7 +56,7 @@ function NotifBell() {
   }, []);
 
   // Show all active announcements — no goal filtering
-  const activeAnnouncements = announcements.filter(a => a.isActive);
+  const activeAnnouncements = studentAnnouncements;
 
   const urgentCount = activeAnnouncements.filter(a => a.priority === "urgent").length;
   const badgeCount  = activeAnnouncements.length;
@@ -111,7 +113,7 @@ function NotifBell() {
 // ── Main StudentLayout ────────────────────────────────────────────────────────
 
 export function StudentLayout({ children }: { children: ReactNode }) {
-  const { view, setView, user, setUser, darkMode, toggleDarkMode, setSelectedPaperId, setGlobalSearchFilter } = useApp();
+  const { view, setView, user, setUser, darkMode, toggleDarkMode, setSelectedPaperId, setGlobalSearchFilter, studentSubjects, studentPapers } = useApp();
   const [searchDrawerOpen, setSearchDrawerOpen] = useState(false);
   const [hierFilter, setHierFilter] = useState<HierarchicalFilterState>(EMPTY_FILTER);
   const [modalSearch, setModalSearch] = useState("");
@@ -173,18 +175,17 @@ export function StudentLayout({ children }: { children: ReactNode }) {
 
   const availableSubjects = Array.from(
     new Map(
-      subjects
-        .filter(s => {
+      studentSubjects
+        .filter((s) => {
           if (cat && s.goalCategory !== cat) return false;
-          if (stream && s.stream && s.stream !== stream) return false;
           return true;
         })
-        .map(s => [s.name, s])
+        .map((s) => [s.name, s])
     ).values()
   );
 
   const availableYears = Array.from(
-    new Set(papers.filter(p => p.status === "published").map(p => p.year))
+    new Set(studentPapers.map((p) => p.year))
   ).sort((a, b) => b - a);
 
   const isBoard = cat?.startsWith("board");
@@ -194,10 +195,8 @@ export function StudentLayout({ children }: { children: ReactNode }) {
       ? ["board", "prelims", "model", "practice", "unit-test", "semester", "chapter-wise"]
       : ["pyq", "mock-test", "subject-wise", "chapter-wise", "minor-test", "major-test", "practice"];
 
-  const matchingPapers = papers.filter(p => {
-    if (p.status !== "published") return false;
+  const matchingPapers = studentPapers.filter(p => {
     if (cat && p.goalCategory !== cat) return false;
-    if (stream && p.stream && p.stream !== stream) return false;
     if (modalSearch && !p.title.toLowerCase().includes(modalSearch.toLowerCase()) && !p.subject.toLowerCase().includes(modalSearch.toLowerCase())) return false;
     if (modalSubject) {
       const selectedSub = availableSubjects.find(s => s.id === modalSubject || s.name === modalSubject);
@@ -382,7 +381,7 @@ export function StudentLayout({ children }: { children: ReactNode }) {
               <div className="flex items-center gap-2">
                 {/* Live Match Counter Badge */}
                 <span className="hidden sm:flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 animate-apple-unveil">
-                  🎯 {matchingPapers.length} papers
+                  <Target size={12} /> {matchingPapers.length} papers
                 </span>
                 <button
                   onClick={handleCloseDrawer}
@@ -446,37 +445,37 @@ export function StudentLayout({ children }: { children: ReactNode }) {
                 <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mr-1">Active:</span>
                 {hierFilter.level && (
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                    🎓 {filterBreadcrumb(hierFilter)}
+                    <GraduationCap size={10} /> {filterBreadcrumb(hierFilter)}
                     <button onClick={() => { setHierFilter(EMPTY_FILTER); setModalSubject(""); setModalType(""); setModalYear(""); }} className="hover:text-red-500 transition-colors"><X size={10} /></button>
                   </span>
                 )}
                 {modalSubject && (
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-violet-50 text-violet-700 border border-violet-200">
-                    📐 {availableSubjects.find(s => s.id === modalSubject)?.name ?? modalSubject}
+                    <BookOpen size={10} /> {availableSubjects.find(s => s.id === modalSubject)?.name ?? modalSubject}
                     <button onClick={() => setModalSubject("")} className="hover:text-red-500 transition-colors"><X size={10} /></button>
                   </span>
                 )}
                 {modalType && (
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                    📜 {PAPER_TYPE_CONFIG[modalType as PaperType]?.label ?? modalType}
+                    <FileText size={10} /> {PAPER_TYPE_CONFIG[modalType as PaperType]?.label ?? modalType}
                     <button onClick={() => setModalType("")} className="hover:text-red-500 transition-colors"><X size={10} /></button>
                   </span>
                 )}
                 {modalYear && (
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    📅 {modalYear}
+                    <Calendar size={10} /> {modalYear}
                     <button onClick={() => setModalYear("")} className="hover:text-red-500 transition-colors"><X size={10} /></button>
                   </span>
                 )}
                 {modalSearch && (
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-gray-100 text-gray-700 border border-gray-200">
-                    🔍 "{modalSearch}"
+                    <Search size={10} /> {modalSearch}
                     <button onClick={() => setModalSearch("")} className="hover:text-red-500 transition-colors"><X size={10} /></button>
                   </span>
                 )}
                 {/* Mobile Match Counter */}
                 <span className="sm:hidden ml-auto flex items-center gap-1 text-[10px] font-bold text-emerald-700">
-                  🎯 {matchingPapers.length}
+                  <Target size={10} /> {matchingPapers.length}
                 </span>
               </div>
             )}

@@ -45,6 +45,8 @@ function AppContent() {
 
   // Admin portal
   if (ADMIN_VIEWS.includes(view)) {
+    if (!user) return <AdminLoginShim />;
+    if (!user.isAdmin) return <LandingPage />;
     return (
       <AdminLayout>
         {view === "admin-dashboard"  && <AdminDashboard />}
@@ -63,6 +65,9 @@ function AppContent() {
   if (STUDENT_VIEWS.includes(view)) {
     if (!user) {
       return <LandingPage />;
+    }
+    if (!user.goals?.length) {
+      return <OnboardingFlow />;
     }
     return (
       <StudentLayout>

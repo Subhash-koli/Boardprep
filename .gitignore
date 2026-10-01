@@ -49,6 +49,9 @@ tmp/
 temp/
 *.tmp
 
+# Uploaded papers
+uploads/papers/
+
 # Development server
 .env.development.local
 

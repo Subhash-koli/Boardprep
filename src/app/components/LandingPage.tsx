@@ -13,8 +13,15 @@ import { useState, useEffect } from "react";
 import { HierarchicalFilter, EMPTY_FILTER, resolveGoalCategory } from "./student/HierarchicalFilter";
 import type { HierarchicalFilterState } from "./student/HierarchicalFilter";
 import { SubjectIcon } from "./shared/GoalIcons";
-import { papers, quizzes, subjects, PAPER_TYPE_CONFIG, DIFFICULTY_CONFIG } from "./data/mockData";
+import { PAPER_TYPE_CONFIG, DIFFICULTY_CONFIG } from "./data/mockData";
 import type { PaperType } from "./data/mockData";
+import { fetchPublicCatalog, type PublicCatalogStats, type StudentPaper, type StudentQuiz, type StudentSubject } from "../lib/api";
+
+const EMPTY_STATS: PublicCatalogStats = { students: 0, papers: 0, quizzes: 0, attempts: 0 };
+
+function formatCount(n: number) {
+  return n.toLocaleString("en-IN");
+}
 
 
 const BGImage = new URL("../../imports/BG.jpg", import.meta.url).href;
@@ -43,41 +50,38 @@ const features = [
   },
 ];
 
-const stats = [
-  { value: "5,200+", label: "Students" },
-  { value: "412+", label: "Papers" },
-  { value: "286+", label: "Quizzes" },
-  { value: "84K+", label: "Attempts" },
-];
-
 const examGoals: {
-  icon: LucideIcon; label: string; iconColor: string; text: string; tags: string[]; comingSoon?: boolean;
+  icon: LucideIcon; label: string; iconColor: string; text: string; tags: string[]; comingSoon?: boolean; goalCategory: string;
   goalBg: string; goalBorder: string; goalBorderHover: string; goalShadow: string; goalAccentGradient: string;
   ringColor: string; chipBorder: string; chipBorderHover: string; chipShadow: string; chipBgHover: string; chipText: string;
 }[] = [
     {
       icon: School, label: "SSC Class 10", iconColor: "text-orange-600", text: "text-orange-700",
+      goalCategory: "board-10",
       goalBg: "linear-gradient(135deg, #FFF7ED 0%, #FFFBF5 60%, #FEF3C7 100%)", goalBorder: "rgba(251,146,60,0.25)", goalBorderHover: "rgba(251,146,60,0.45)", goalShadow: "rgba(251,146,60,0.12)", goalAccentGradient: "linear-gradient(90deg, #F97316, #FDBA74)",
       ringColor: "rgba(251,146,60,0.15)", chipBorder: "rgba(251,146,60,0.2)", chipBorderHover: "rgba(251,146,60,0.4)", chipShadow: "rgba(251,146,60,0.15)", chipBgHover: "#FFF7ED", chipText: "#9A3412",
-      tags: ["Mathematics", "Science", "English", "Marathi", "History"]
+      tags: []
     },
     {
       icon: GraduationCap, label: "HSC Class 12", iconColor: "text-blue-600", text: "text-blue-700",
+      goalCategory: "board-12",
       goalBg: "linear-gradient(135deg, #EFF6FF 0%, #F8FAFF 60%, #E0E7FF 100%)", goalBorder: "rgba(59,130,246,0.25)", goalBorderHover: "rgba(59,130,246,0.45)", goalShadow: "rgba(59,130,246,0.12)", goalAccentGradient: "linear-gradient(90deg, #3B82F6, #93C5FD)",
       ringColor: "rgba(59,130,246,0.15)", chipBorder: "rgba(59,130,246,0.2)", chipBorderHover: "rgba(59,130,246,0.4)", chipShadow: "rgba(59,130,246,0.15)", chipBgHover: "#EFF6FF", chipText: "#1E40AF",
-      tags: ["Physics", "Chemistry", "Maths", "Biology", "Economics"]
+      tags: []
     },
     {
       icon: Atom, label: "JEE Mains", iconColor: "text-violet-600", text: "text-violet-700",
+      goalCategory: "jee-mains",
       goalBg: "linear-gradient(135deg, #F5F3FF 0%, #FAF5FF 60%, #EDE9FE 100%)", goalBorder: "rgba(139,92,246,0.25)", goalBorderHover: "rgba(139,92,246,0.45)", goalShadow: "rgba(139,92,246,0.12)", goalAccentGradient: "linear-gradient(90deg, #8B5CF6, #C4B5FD)",
       ringColor: "rgba(139,92,246,0.15)", chipBorder: "rgba(139,92,246,0.2)", chipBorderHover: "rgba(139,92,246,0.4)", chipShadow: "rgba(139,92,246,0.15)", chipBgHover: "#F5F3FF", chipText: "#5B21B6",
-      tags: ["Physics", "Chemistry", "Mathematics"], comingSoon: true
+      tags: []
     },
     {
       icon: Stethoscope, label: "NEET UG", iconColor: "text-green-600", text: "text-green-700",
+      goalCategory: "neet",
       goalBg: "linear-gradient(135deg, #ECFDF5 0%, #F0FDF4 60%, #D1FAE5 100%)", goalBorder: "rgba(16,185,129,0.25)", goalBorderHover: "rgba(16,185,129,0.45)", goalShadow: "rgba(16,185,129,0.12)", goalAccentGradient: "linear-gradient(90deg, #10B981, #6EE7B7)",
       ringColor: "rgba(16,185,129,0.15)", chipBorder: "rgba(16,185,129,0.2)", chipBorderHover: "rgba(16,185,129,0.4)", chipShadow: "rgba(16,185,129,0.15)", chipBgHover: "#ECFDF5", chipText: "#065F46",
-      tags: ["Physics", "Chemistry", "Botany", "Zoology"], comingSoon: true
+      tags: []
     },
   ];
 
@@ -97,6 +101,59 @@ export function LandingPage() {
   const { setView, setShowLoginModal, setLoginModalTab } = useApp();
   const images = [BGImage, DIGIImage, STDImage, STUPREPImage, STUDYImage];
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [papers, setPapers] = useState<StudentPaper[]>([]);
+  const [quizzes, setQuizzes] = useState<StudentQuiz[]>([]);
+  const [subjects, setSubjects] = useState<StudentSubject[]>([]);
+  const [stats, setStats] = useState<PublicCatalogStats>(EMPTY_STATS);
+  const [catalogLoading, setCatalogLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setCatalogLoading(true);
+    fetchPublicCatalog()
+      .then((data) => {
+        if (cancelled) return;
+        setPapers(data.papers);
+        setQuizzes(data.quizzes);
+        setSubjects(data.subjects);
+        setStats(data.stats);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setPapers([]);
+        setQuizzes([]);
+        setSubjects([]);
+        setStats(EMPTY_STATS);
+      })
+      .finally(() => {
+        if (!cancelled) setCatalogLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  const liveExamGoals = examGoals.map((g) => {
+    const tags = subjects.filter(s => s.goalCategory === g.goalCategory).map(s => s.name).slice(0, 6);
+    const hasContent = papers.some(p => p.goalCategory === g.goalCategory) || quizzes.some(q => q.goalCategory === g.goalCategory) || tags.length > 0;
+    return { ...g, tags, comingSoon: !hasContent };
+  });
+
+  const extraExams = [
+    { icon: BookOpen, label: "Class 9 & 8", goalCategories: ["board-8", "board-9"] },
+    { icon: BookMarked, label: "Class 11", goalCategories: ["board-11"] },
+    { icon: Microscope, label: "MHT-CET PCB", goalCategories: ["mht-cet-pcb"] },
+    { icon: Calculator, label: "MHT-CET PCM", goalCategories: ["mht-cet-pcm"] },
+    { icon: Trophy, label: "JEE Advanced", goalCategories: ["jee-advanced"] },
+  ].map(g => ({
+    ...g,
+    comingSoon: !papers.some(p => g.goalCategories.includes(p.goalCategory)) && !quizzes.some(q => g.goalCategories.includes(q.goalCategory)),
+  }));
+
+  const heroStats = [
+    { value: formatCount(stats.students), label: "Students" },
+    { value: formatCount(stats.papers), label: "Papers" },
+    { value: formatCount(stats.quizzes), label: "Quizzes" },
+    { value: formatCount(stats.attempts), label: "Attempts" },
+  ];
 
   // Carousel rotation
   useEffect(() => {
@@ -235,17 +292,25 @@ export function LandingPage() {
           </h1>
 
           <p className="text-blue-100/90 text-xs sm:text-base mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed px-4 drop-shadow-sm font-medium">
-            Access 400+ past year papers, official marking keys & instant speed tests with zero login friction.
+            {stats.papers > 0
+              ? `Browse ${formatCount(stats.papers)} published papers and ${formatCount(stats.quizzes)} live quizzes — search and filter freely, then log in to attempt or download.`
+              : "Search published papers and speed tests as they go live. Log in to attempt quizzes or view PDFs."}
           </p>
 
           {/* ── SEARCH-FIRST CONTENT EXPLORER (Above the Fold) ──────── */}
           <div id="content-explorer-section" className="mb-8 text-left text-gray-800">
-            <LandingContentExplorer onRequireAuth={() => setShowLoginModal(true)} />
+            <LandingContentExplorer
+              onRequireAuth={() => setShowLoginModal(true)}
+              papers={papers}
+              quizzes={quizzes}
+              subjects={subjects}
+              loading={catalogLoading}
+            />
           </div>
 
           {/* Stats — glass cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mt-6 sm:mt-10 max-w-3xl mx-auto">
-            {stats.map((s, idx) => (
+            {heroStats.map((s, idx) => (
               <div
                 key={s.label}
                 className="rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 text-center transition-all duration-200 hover:scale-105"
@@ -427,7 +492,7 @@ export function LandingPage() {
             <p className="text-gray-500 text-sm sm:text-base mt-4">Browse School · College · Competitive — choose your path and discover content</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-7">
-            {examGoals.map((g, idx) => (
+            {liveExamGoals.map((g, idx) => (
               <div
                 key={g.label}
                 onClick={() => {
@@ -487,13 +552,7 @@ export function LandingPage() {
           </div>
           {/* Extra exam pills — premium chips */}
           <div className="flex flex-wrap gap-2.5 justify-center mt-8">
-            {[
-              { icon: BookOpen, label: "Class 9 & 8" },
-              { icon: BookMarked, label: "Class 11" },
-              { icon: Microscope, label: "MHT-CET PCB" },
-              { icon: Calculator, label: "MHT-CET PCM" },
-              { icon: Trophy, label: "JEE Advanced", comingSoon: true },
-            ].map(g => (
+            {extraExams.map(g => (
               <span
                 key={g.label}
                 onClick={() => {
@@ -546,39 +605,33 @@ export function LandingPage() {
 
       <div className="section-divider" />
 
-      {/* ── Testimonials — White + Paper Grain ───────────────────────── */}
+      {/* ── Recently published ───────────────────────────────────────── */}
       <section className="texture-paper-white py-10 sm:py-14 px-3 sm:px-4">
         <div className="max-w-4xl mx-auto">
           <h2
             className="text-center text-xl sm:text-2xl md:text-3xl mb-8 sm:mb-10"
             style={{ fontFamily: "Poppins, sans-serif", fontWeight: 700, color: "#1E3A8A" }}
           >
-            What Students Say
+            Recently Published
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-            {[
-              { name: "Priya S.", goal: "NEET 2027", score: "89%", quote: "The +4/−1 quiz engine is exactly like the real NEET. I finally understand where I lose marks — wrong guesses!" },
-              { name: "Rohan P.", goal: "SSC Class 10", score: "81%", quote: "Marathi medium papers and quizzes are perfectly organised. My prelims score jumped 12 marks." },
-              { name: "Sneha K.", goal: "JEE Mains", score: "94%", quote: "Switching between Board and JEE content is seamless. Each level has its own curated content." },
-            ].map(t => (
-              <div
-                key={t.name}
-                className="glass-card-light rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-100"
-              >
-                <div className="flex gap-0.5 mb-3">
-                  {[1, 2, 3, 4, 5].map(i => <Star key={i} size={12} className="text-[#FF7A00] fill-[#FF7A00] sm:w-[14px] sm:h-[14px]" />)}
-                </div>
-                <p className="text-gray-600 text-xs sm:text-sm italic mb-4">"{t.quote}"</p>
-                <div className="flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <div className="font-semibold text-gray-800 text-xs sm:text-sm truncate" style={{ fontFamily: "Poppins, sans-serif" }}>{t.name}</div>
-                    <div className="text-gray-400 text-xs">{t.goal}</div>
+          {papers.length === 0 && quizzes.length === 0 ? (
+            <p className="text-center text-gray-500 text-sm">Published papers and quizzes will appear here.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+              {[...papers.slice(0, 3), ...quizzes.slice(0, Math.max(0, 3 - Math.min(papers.length, 3)))].slice(0, 3).map((item) => {
+                const isPaper = "year" in item && "marks" in item && "durationMinutes" in item;
+                return (
+                  <div key={item.id} className="glass-card-light rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-100">
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-50 text-[#1E3A8A]">
+                      {isPaper ? `${PAPER_TYPE_CONFIG[(item as StudentPaper).type as PaperType]?.label ?? (item as StudentPaper).type} · ${(item as StudentPaper).year}` : "Quiz"}
+                    </span>
+                    <p className="font-semibold text-gray-800 text-sm mt-3 leading-snug" style={{ fontFamily: "Poppins, sans-serif" }}>{item.title}</p>
+                    <p className="text-gray-400 text-xs mt-1">{item.subject}</p>
                   </div>
-                  <div className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-semibold whitespace-nowrap">{t.score}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 
@@ -591,7 +644,9 @@ export function LandingPage() {
             Start Preparing Today — 100% Free!
           </h2>
           <p className="text-blue-200 mb-6 sm:mb-8 text-sm sm:text-base px-2">
-            Join 5,200+ students preparing smarter for NEET, JEE, Board exams and more.
+            {stats.students > 0
+              ? `Join ${formatCount(stats.students)} students preparing with ${formatCount(stats.papers)} live papers and ${formatCount(stats.quizzes)} quizzes.`
+              : "Create a free account to attempt quizzes, save bookmarks, and open paper PDFs."}
           </p>
           <button
             onClick={() => setView("register")}
@@ -637,7 +692,7 @@ export function LandingPage() {
           }}
           className="bg-gradient-to-r from-[#1E3A8A] to-[#2563EB] text-white text-xs font-bold px-4 py-3 rounded-full shadow-2xl flex items-center gap-2 border border-white/20 active:scale-95 transition-transform"
         >
-          <Search size={14} /> Browse 400+ Papers
+          <Search size={14} /> Browse {stats.papers > 0 ? `${formatCount(stats.papers)} Papers` : "Papers"}
         </button>
       </div>
     </div>
@@ -649,8 +704,16 @@ export function LandingPage() {
 
 function LandingContentExplorer({
   onRequireAuth,
+  papers,
+  quizzes,
+  subjects,
+  loading,
 }: {
   onRequireAuth: (promptMsg: string) => void;
+  papers: StudentPaper[];
+  quizzes: StudentQuiz[];
+  subjects: StudentSubject[];
+  loading: boolean;
 }) {
   const { setView, setSelectedPaperId, setSelectedQuizId, setShowLoginModal, user } = useApp();
   const [hierFilter, setHierFilter] = useState<HierarchicalFilterState>(EMPTY_FILTER);
@@ -660,7 +723,7 @@ function LandingContentExplorer({
   const [filterType, setFilterType] = useState("");
   const [filterMedium, setFilterMedium] = useState("");
   const [filterYear, setFilterYear] = useState<number | "">("");
-  const [previewPaper, setPreviewPaper] = useState<(typeof papers)[number] | null>(null);
+  const [previewPaper, setPreviewPaper] = useState<StudentPaper | null>(null);
   const [previewIntent, setPreviewIntent] = useState<"view" | "download">("view");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState<"newest" | "downloads" | "marks">("newest");
@@ -722,7 +785,6 @@ function LandingContentExplorer({
   };
 
   const cat = resolveGoalCategory(hierFilter);
-  const stream = hierFilter.stream;
 
   const hasActiveFilters = Boolean(
     search ||
@@ -748,34 +810,34 @@ function LandingContentExplorer({
   const availableSubjects = Array.from(
     new Map(
       subjects
-        .filter(s => {
-          if (cat && s.goalCategory !== cat) return false;
-          if (stream && s.stream && s.stream !== stream) return false;
-          return true;
-        })
+        .filter(s => !cat || s.goalCategory === cat)
         .map(s => [s.name, s])
     ).values()
   );
 
   // Dynamic years list from published papers
   const availableYears = Array.from(
-    new Set(papers.filter(p => p.status === "published").map(p => p.year))
+    new Set(papers.map(p => p.year).filter(Boolean))
   ).sort((a, b) => b - a);
 
-  // Relevant paper types
+  const typesInCatalog = Array.from(new Set(papers.map(p => p.type).filter(Boolean))) as PaperType[];
   const isBoard = cat?.startsWith("board");
-  const relevantTypes: PaperType[] = !cat
-    ? ["board", "prelims", "model", "practice", "unit-test", "semester", "chapter-wise", "pyq", "mock-test", "subject-wise", "minor-test", "major-test"]
-    : isBoard
-      ? ["board", "prelims", "model", "practice", "unit-test", "semester", "chapter-wise"]
-      : ["pyq", "mock-test", "subject-wise", "chapter-wise", "minor-test", "major-test", "practice"];
+  const relevantTypes: PaperType[] = (typesInCatalog.length
+    ? typesInCatalog
+    : (!cat
+      ? ["board", "prelims", "model", "practice", "unit-test", "semester", "chapter-wise", "pyq", "mock-test", "subject-wise", "minor-test", "major-test"]
+      : isBoard
+        ? ["board", "prelims", "model", "practice", "unit-test", "semester", "chapter-wise"]
+        : ["pyq", "mock-test", "subject-wise", "chapter-wise", "minor-test", "major-test", "practice"])
+  ) as PaperType[];
+
+  const liveMediums = Array.from(new Set(papers.map(p => p.medium).filter(Boolean)));
 
   // Filter papers
   const filteredPapers = papers.filter(p => {
-    if (p.status !== "published") return false;
+    if (p.status && p.status !== "published") return false;
     if (showOnlyBookmarks && !bookmarkedIds.includes(p.id)) return false;
     if (cat && p.goalCategory !== cat) return false;
-    if (stream && p.stream && p.stream !== stream) return false;
     if (search && !p.title.toLowerCase().includes(search.toLowerCase()) && !p.subject.toLowerCase().includes(search.toLowerCase())) return false;
     if (filterSubject) {
       const selectedSub = availableSubjects.find(s => s.id === filterSubject || s.name === filterSubject);
@@ -789,11 +851,10 @@ function LandingContentExplorer({
 
   // Filter quizzes
   const filteredQuizzes = quizzes.filter(q => {
-    if (q.status !== "published") return false;
+    if (q.status && q.status !== "published") return false;
     if (showOnlyBookmarks && !bookmarkedIds.includes(q.id)) return false;
     if (cat && q.goalCategory !== cat) return false;
-    if (stream && q.stream && q.stream !== stream) return false;
-    if (search && !q.title.toLowerCase().includes(search.toLowerCase()) && !q.chapter.toLowerCase().includes(search.toLowerCase()) && !q.subject.toLowerCase().includes(search.toLowerCase())) return false;
+    if (search && !q.title.toLowerCase().includes(search.toLowerCase()) && !(q.chapter || "").toLowerCase().includes(search.toLowerCase()) && !q.subject.toLowerCase().includes(search.toLowerCase())) return false;
     if (filterSubject) {
       const selectedSub = availableSubjects.find(s => s.id === filterSubject || s.name === filterSubject);
       if (selectedSub && q.subject !== selectedSub.name && q.subjectId !== filterSubject) return false;
@@ -804,16 +865,23 @@ function LandingContentExplorer({
 
   // Dynamic sorting
   const sortedPapers = [...filteredPapers].sort((a, b) => {
-    if (sortBy === "downloads") return b.analytics.downloads - a.analytics.downloads;
+    if (sortBy === "downloads") return (b.analytics?.downloads ?? 0) - (a.analytics?.downloads ?? 0);
     if (sortBy === "marks") return b.marks - a.marks;
-    return b.year - a.year;
+    const yearDiff = (b.year || 0) - (a.year || 0);
+    if (yearDiff !== 0) return yearDiff;
+    return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
   });
 
   const sortedQuizzes = [...filteredQuizzes].sort((a, b) => {
-    if (sortBy === "downloads") return b.analytics.totalAttempts - a.analytics.totalAttempts;
+    if (sortBy === "downloads") return (b.analytics?.totalAttempts ?? 0) - (a.analytics?.totalAttempts ?? 0);
     if (sortBy === "marks") return b.totalMarks - a.totalMarks;
-    return 0;
+    return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
   });
+
+  const trendingTopics = Array.from(new Set([
+    ...papers.map(p => p.subject),
+    ...quizzes.map(q => q.chapter || q.subject),
+  ].map(t => String(t || "").trim()).filter(Boolean))).slice(0, 4);
 
 
   return (
@@ -1029,9 +1097,10 @@ function LandingContentExplorer({
                   <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide touch-pan-x">
                     {[
                       { id: "", label: "All Mediums" },
-                      { id: "english", label: "English Medium" },
-                      { id: "marathi", label: "Marathi Medium" },
-                      { id: "semi-english", label: "Semi-English" },
+                      ...liveMediums.map(id => ({
+                        id,
+                        label: id === "english" ? "English Medium" : id === "marathi" ? "Marathi Medium" : id === "semi-english" ? "Semi-English" : id,
+                      })),
                     ]
                       .filter(m => !filterMedium || m.id === filterMedium)
                       .map(m => (
@@ -1133,10 +1202,10 @@ function LandingContentExplorer({
               )}
 
 
-              {/* Step 6: Trending Searches */}
+              {trendingTopics.length > 0 && (
               <div className="flex items-center gap-2 overflow-x-auto text-[11px] pt-3 border-t border-gray-100 scrollbar-hide touch-pan-x animate-apple-unveil">
-                <span className="text-gray-400 font-bold flex-shrink-0 flex items-center gap-1"><TrendingUp size={13} className="text-orange-500" /> Trending:</span>
-                {["NEET 2024 Biology", "Class 10 SSC Math", "JEE Mains Physics", "MHT-CET PCM"].map(trend => (
+                <span className="text-gray-400 font-bold flex-shrink-0 flex items-center gap-1"><TrendingUp size={13} className="text-orange-500" /> From your library:</span>
+                {trendingTopics.map(trend => (
                   <button
                     key={trend}
                     onClick={() => setSearch(trend)}
@@ -1146,6 +1215,7 @@ function LandingContentExplorer({
                   </button>
                 ))}
               </div>
+              )}
 
               {/* Step 7: ENTER / APPLY ACTION CTA BUTTON */}
               <div className="pt-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3 animate-apple-unveil">
@@ -1197,7 +1267,7 @@ function LandingContentExplorer({
                 }`}
             >
               <Star size={11} className={showOnlyBookmarks ? "fill-slate-900" : "fill-amber-400"} />
-              Saved Bookmarks ({bookmarkedIds.length})
+              Saved Bookmarks ({bookmarkedIds.filter(id => papers.some(p => p.id === id) || quizzes.some(q => q.id === id)).length})
             </button>
             {hasActiveFilters && (
               <button
@@ -1242,7 +1312,11 @@ function LandingContentExplorer({
         </div>
 
         {/* Content Cards Grid / List */}
-        {activeTab === "papers" ? (
+        {loading ? (
+          <div className="text-center py-12 bg-[#F8F9FC] rounded-2xl border border-[#E2E6EF]">
+            <p className="text-gray-500 font-semibold text-sm">Loading published papers and quizzes…</p>
+          </div>
+        ) : activeTab === "papers" ? (
           sortedPapers.length === 0 ? (
             <div className="text-center py-12 bg-[#F8F9FC] rounded-2xl border border-[#E2E6EF]">
               <BookOpen size={36} className="mx-auto mb-2 text-gray-300" />
@@ -1268,7 +1342,7 @@ function LandingContentExplorer({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-50 text-[#1E3A8A]">
-                            {PAPER_TYPE_CONFIG[p.type]?.label ?? p.type} · {p.year}
+                            {PAPER_TYPE_CONFIG[p.type as PaperType]?.label ?? p.type} · {p.year}
                           </span>
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-semibold text-gray-400 capitalize">{p.medium}</span>
@@ -1289,20 +1363,36 @@ function LandingContentExplorer({
                           <span><Award size={12} className="inline mr-1" /> {p.marks} Marks</span>
                           <span><Clock size={12} className="inline mr-1" /> {p.durationMinutes}m</span>
                           <span className="text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-md text-[10px]">
-                            <Download size={11} className="inline mr-0.5" /> {p.analytics.downloads.toLocaleString()}
+                            <Download size={11} className="inline mr-0.5" /> {(p.analytics?.downloads ?? 0).toLocaleString("en-IN")}
                           </span>
                         </div>
                       </div>
 
                       <div className={`flex items-center gap-2 ${viewMode === "grid" ? "pt-3 border-t border-gray-100 mt-4" : "flex-shrink-0"}`}>
                         <button
-                          onClick={() => { setPreviewIntent("view"); setPreviewPaper(p); }}
+                          onClick={() => {
+                            if (user) {
+                              setSelectedPaperId(p.id);
+                              setView("paper-detail");
+                            } else {
+                              setPreviewIntent("view");
+                              setPreviewPaper(p);
+                            }
+                          }}
                           className="flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-bold bg-[#1E3A8A] text-white hover:bg-[#1D4ED8] transition-colors flex items-center justify-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
                         >
                           <Eye size={13} /> View Paper
                         </button>
                         <button
-                          onClick={() => { setPreviewIntent("download"); setPreviewPaper(p); }}
+                          onClick={() => {
+                            if (user) {
+                              setSelectedPaperId(p.id);
+                              setView("paper-detail");
+                            } else {
+                              setPreviewIntent("download");
+                              setPreviewPaper(p);
+                            }
+                          }}
                           className="py-2 px-3 rounded-xl text-xs font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-1 active:scale-95 cursor-pointer"
                           title="Download PDF"
                         >
@@ -1348,7 +1438,7 @@ function LandingContentExplorer({
             <div>
               <div id="results-cards-container" className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}>
                 {sortedQuizzes.slice(0, visibleCount).map((q, idx) => {
-                  const diffCfg = DIFFICULTY_CONFIG[q.difficulty] ?? DIFFICULTY_CONFIG.medium;
+                  const diffCfg = DIFFICULTY_CONFIG[q.difficulty as keyof typeof DIFFICULTY_CONFIG] ?? DIFFICULTY_CONFIG.medium;
                   return (
                     <div
                       key={q.id}
@@ -1378,7 +1468,7 @@ function LandingContentExplorer({
                           <span><Clock size={12} className="inline mr-1" /> {q.timeLimitMinutes}m</span>
                           <span><Award size={12} className="inline mr-1" /> {q.totalMarks}M</span>
                           <span className="text-violet-700 font-semibold bg-violet-50 px-2 py-0.5 rounded-md text-[10px]">
-                            <Users size={11} className="inline mr-0.5" /> {q.analytics.totalAttempts.toLocaleString()}
+                            <Users size={11} className="inline mr-0.5" /> {(q.analytics?.totalAttempts ?? 0).toLocaleString("en-IN")}
                           </span>
                         </div>
                       </div>
@@ -1465,12 +1555,12 @@ function LandingContentExplorer({
               </div>
               <div className="flex justify-between">
                 <span>Paper Type:</span>
-                <span className="font-bold text-gray-800">{PAPER_TYPE_CONFIG[previewPaper.type]?.label ?? previewPaper.type}</span>
+                <span className="font-bold text-gray-800">{PAPER_TYPE_CONFIG[previewPaper.type as PaperType]?.label ?? previewPaper.type}</span>
               </div>
             </div>
 
             <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-800 text-xs leading-relaxed">
-              <Lightbulb size={14} className="inline text-amber-600 mr-1 flex-shrink-0" /> <strong>Instant Preview:</strong> This paper contains official exam-pattern questions, solution hints, and complete paper solutions.
+              <Lightbulb size={14} className="inline text-amber-600 mr-1 flex-shrink-0" /> {previewPaper.hasFile ? "PDF is ready. Sign in to view or download this published paper." : "This paper is listed, but a PDF has not been uploaded yet."}
             </div>
 
             <div className="flex flex-col gap-2 pt-2">
@@ -1478,7 +1568,8 @@ function LandingContentExplorer({
                 onClick={() => {
                   setSelectedPaperId(previewPaper.id);
                   setPreviewPaper(null);
-                  setView("register");
+                  if (user) setView("paper-detail");
+                  else setView("register");
                 }}
                 className="w-full py-3 bg-[#FF7A00] text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-[#E66E00] transition-colors shadow-md flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
               >

@@ -316,36 +316,36 @@ export const subjects: Subject[] = [
   { id: "s11-mat", name: "Mathematics & Statistics", goalCategory: "board-11", standard: "11", stream: "pcm", icon: "sigma", color: "#6366F1", chaptersCount: 12 },
 
   // Class 12 (HSC)
-  { id: "s11",  name: "Biology",                    goalCategory: "board-12", standard: "12", stream: "pcb", icon: "🧬", color: "#10B981", chaptersCount: 16 },
-  { id: "s12",  name: "Mathematics & Statistics",   goalCategory: "board-12", standard: "12", stream: "pcm", icon: "📊", color: "#6366F1", chaptersCount: 12 },
-  { id: "s13",  name: "Economics",                  goalCategory: "board-12", standard: "12", stream: "commerce", icon: "📈", color: "#F59E0B", chaptersCount: 10 },
-  { id: "s14",  name: "English",                    goalCategory: "board-12", standard: "12", stream: "pcb", icon: "📚", color: "#EF4444", chaptersCount: 8 },
+  { id: "s11",  name: "Biology",                    goalCategory: "board-12", standard: "12", stream: "pcb", icon: "dna", color: "#10B981", chaptersCount: 16 },
+  { id: "s12",  name: "Mathematics & Statistics",   goalCategory: "board-12", standard: "12", stream: "pcm", icon: "sigma", color: "#6366F1", chaptersCount: 12 },
+  { id: "s13",  name: "Economics",                  goalCategory: "board-12", standard: "12", stream: "commerce", icon: "chart", color: "#F59E0B", chaptersCount: 10 },
+  { id: "s14",  name: "English",                    goalCategory: "board-12", standard: "12", stream: "pcb", icon: "book", color: "#EF4444", chaptersCount: 8 },
 
   // NEET UG
-  { id: "sn1",  name: "Physics",                    goalCategory: "neet", icon: "⚡", color: "#3B82F6", chaptersCount: 30 },
-  { id: "sn2",  name: "Chemistry",                  goalCategory: "neet", icon: "🧪", color: "#8B5CF6", chaptersCount: 30 },
-  { id: "sn3",  name: "Botany",                     goalCategory: "neet", icon: "🌿", color: "#16A34A", chaptersCount: 20 },
-  { id: "sn4",  name: "Zoology",                    goalCategory: "neet", icon: "🦴", color: "#22C55E", chaptersCount: 16 },
+  { id: "sn1",  name: "Physics",                    goalCategory: "neet", icon: "atom", color: "#3B82F6", chaptersCount: 30 },
+  { id: "sn2",  name: "Chemistry",                  goalCategory: "neet", icon: "flask", color: "#8B5CF6", chaptersCount: 30 },
+  { id: "sn3",  name: "Botany",                     goalCategory: "neet", icon: "dna", color: "#16A34A", chaptersCount: 20 },
+  { id: "sn4",  name: "Zoology",                    goalCategory: "neet", icon: "microscope", color: "#22C55E", chaptersCount: 16 },
 
   // JEE Mains
-  { id: "sj1",  name: "Physics",                    goalCategory: "jee-mains", icon: "⚡", color: "#7C3AED", chaptersCount: 28 },
-  { id: "sj2",  name: "Chemistry",                  goalCategory: "jee-mains", icon: "🧪", color: "#8B5CF6", chaptersCount: 30 },
-  { id: "sj3",  name: "Mathematics",                goalCategory: "jee-mains", icon: "📐", color: "#6366F1", chaptersCount: 26 },
+  { id: "sj1",  name: "Physics",                    goalCategory: "jee-mains", icon: "atom", color: "#7C3AED", chaptersCount: 28 },
+  { id: "sj2",  name: "Chemistry",                  goalCategory: "jee-mains", icon: "flask", color: "#8B5CF6", chaptersCount: 30 },
+  { id: "sj3",  name: "Mathematics",                goalCategory: "jee-mains", icon: "calculator", color: "#6366F1", chaptersCount: 26 },
 
   // JEE Advanced
-  { id: "sja1", name: "Physics",                    goalCategory: "jee-advanced", icon: "⚡", color: "#4F46E5", chaptersCount: 28 },
-  { id: "sja2", name: "Chemistry",                  goalCategory: "jee-advanced", icon: "🧪", color: "#4338CA", chaptersCount: 30 },
-  { id: "sja3", name: "Mathematics",                goalCategory: "jee-advanced", icon: "📐", color: "#3730A3", chaptersCount: 26 },
+  { id: "sja1", name: "Physics",                    goalCategory: "jee-advanced", icon: "atom", color: "#4F46E5", chaptersCount: 28 },
+  { id: "sja2", name: "Chemistry",                  goalCategory: "jee-advanced", icon: "flask", color: "#4338CA", chaptersCount: 30 },
+  { id: "sja3", name: "Mathematics",                goalCategory: "jee-advanced", icon: "calculator", color: "#3730A3", chaptersCount: 26 },
 
   // MHT-CET PCB
-  { id: "scb1", name: "Physics",                    goalCategory: "mht-cet-pcb", icon: "⚡", color: "#0891B2", chaptersCount: 20 },
-  { id: "scb2", name: "Chemistry",                  goalCategory: "mht-cet-pcb", icon: "🧪", color: "#0E7490", chaptersCount: 20 },
-  { id: "scb3", name: "Biology",                    goalCategory: "mht-cet-pcb", icon: "🧬", color: "#0891B2", chaptersCount: 30 },
+  { id: "scb1", name: "Physics",                    goalCategory: "mht-cet-pcb", icon: "atom", color: "#0891B2", chaptersCount: 20 },
+  { id: "scb2", name: "Chemistry",                  goalCategory: "mht-cet-pcb", icon: "flask", color: "#0E7490", chaptersCount: 20 },
+  { id: "scb3", name: "Biology",                    goalCategory: "mht-cet-pcb", icon: "dna", color: "#0891B2", chaptersCount: 30 },
 
   // MHT-CET PCM
-  { id: "scm1", name: "Physics",                    goalCategory: "mht-cet-pcm", icon: "⚡", color: "#0284C7", chaptersCount: 20 },
-  { id: "scm2", name: "Chemistry",                  goalCategory: "mht-cet-pcm", icon: "🧪", color: "#0369A1", chaptersCount: 20 },
-  { id: "scm3", name: "Mathematics",                goalCategory: "mht-cet-pcm", icon: "📐", color: "#0284C7", chaptersCount: 20 },
+  { id: "scm1", name: "Physics",                    goalCategory: "mht-cet-pcm", icon: "atom", color: "#0284C7", chaptersCount: 20 },
+  { id: "scm2", name: "Chemistry",                  goalCategory: "mht-cet-pcm", icon: "flask", color: "#0369A1", chaptersCount: 20 },
+  { id: "scm3", name: "Mathematics",                goalCategory: "mht-cet-pcm", icon: "calculator", color: "#0284C7", chaptersCount: 20 },
 ];
 
 // ── Chapters ──────────────────────────────────────────────────────────────────
